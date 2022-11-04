@@ -1,0 +1,58 @@
+menu "Example Configuration"
+    config EXAMPLE_DOUBLE_FB
+        bool "Use double Frame Buffer"
+        default "n"
+        help
+            Enable this option, driver will allocate two frame buffers.
+
+    config EXAMPLE_USE_BOUNCE_BUFFER
+        depends on !EXAMPLE_DOUBLE_FB
+        bool "Use bounce buffer"
+        help
+            Enable bounce buffer mode can achieve higher PCLK frequency at the cost of higher CPU consumption.
+
+    config EXAMPLE_AVOID_TEAR_EFFECT_WITH_SEM
+        depends on !EXAMPLE_DOUBLE_FB
+        bool "Avoid tearing effect"
+        default "y"
+        help
+            Enable this option, the example will use a pair of semaphores to avoid the tearing effect.
+            Note, if the Double Frame Buffer is used, then we can also avoid the tearing effect without the lock.
+
+    config EXAMPLE_LCD_TOUCH_ENABLED
+        bool "Enable LCD touch"
+        default y
+        help
+            Enable this option if you wish to use display touch. You can select from three touch controllers.
+
+    choice EXAMPLE_LCD_TOUCH_CONTROLLER
+        prompt "LCD touch controller model"
+        depends on EXAMPLE_LCD_TOUCH_ENABLED
+        default EXAMPLE_LCD_TOUCH_CONTROLLER_FT5X06
+        help
+            Select LCD touch controller model
+
+        config EXAMPLE_LCD_TOUCH_CONTROLLER_GT911
+            bool "GT911"
+
+        config EXAMPLE_LCD_TOUCH_CONTROLLER_TT21100
+            bool "TT21100"
+
+        config EXAMPLE_LCD_TOUCH_CONTROLLER_FT5X06
+            bool "FT5X06"
+    endchoice 
+    
+    choice EXAMPLE_LCD_PANEL
+        prompt "LCD Panel"
+        default EXAMPLE_LCD_PANEL_ST7701S
+        help
+            Select LCD panel controller
+
+        config EXAMPLE_LCD_PANEL_ST7701S
+            bool "ST7701S"
+
+        config EXAMPLE_LCD_PANEL_GC9503V
+            bool "GC9503V"         
+    endchoice 
+    
+endmenu
