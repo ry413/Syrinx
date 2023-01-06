@@ -45,9 +45,42 @@ static const char *TAG = "example";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your LCD spec //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if	defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_UR)
 #define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (18 * 1000 * 1000)
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
+
+#define EXAMPLE_PIN_NUM_BK_LIGHT       (4)
+
+#define EXAMPLE_PIN_NUM_PCLK     (39)
+#define EXAMPLE_PIN_NUM_DE       (40)
+#define EXAMPLE_PIN_NUM_VSYNC    (41)
+#define EXAMPLE_PIN_NUM_HSYNC    (42)
+
+#define EXAMPLE_PIN_NUM_DATA0    (45)  // B0
+#define EXAMPLE_PIN_NUM_DATA1    (48)  // B1
+#define EXAMPLE_PIN_NUM_DATA2    (47)  // B2
+#define EXAMPLE_PIN_NUM_DATA3    (21)  // B3
+#define EXAMPLE_PIN_NUM_DATA4    (14)  // B4
+#define EXAMPLE_PIN_NUM_DATA5    (13)  // G0
+#define EXAMPLE_PIN_NUM_DATA6    (12)  // G1
+#define EXAMPLE_PIN_NUM_DATA7    (11)  // G2
+#define EXAMPLE_PIN_NUM_DATA8    (10)  // G3
+#define EXAMPLE_PIN_NUM_DATA9    (16)  // G4
+#define EXAMPLE_PIN_NUM_DATA10   (17)  // G5
+#define EXAMPLE_PIN_NUM_DATA11   (18)  // R0
+#define EXAMPLE_PIN_NUM_DATA12   (8)   // R1
+#define EXAMPLE_PIN_NUM_DATA13   (3)   // R2
+#define EXAMPLE_PIN_NUM_DATA14   (46)  // R3
+#define EXAMPLE_PIN_NUM_DATA15   (9)   // R4
+
+#define EXAMPLE_PIN_NUM_DISP_EN        (-1)
+#define EXAMPLE_PIN_NUM_RST            (5) // LCD RESET
+#elif defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_AR)
+#define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (18 * 1000 * 1000)
+#define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
+#define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
+
 #define EXAMPLE_PIN_NUM_BK_LIGHT       (45)
 
 #define EXAMPLE_PIN_NUM_PCLK    	   (14)
@@ -73,17 +106,28 @@ static const char *TAG = "example";
 #define EXAMPLE_PIN_NUM_DATA15         (15)   // R4
 
 #define EXAMPLE_PIN_NUM_DISP_EN        (-1)
-
 #define EXAMPLE_PIN_NUM_RST            (-1) // LCD RESET
+#else
+#error "not support hardware"
+#endif
+
 
 // The pixel number in horizontal and vertical
 #define EXAMPLE_LCD_H_RES              480
 #define EXAMPLE_LCD_V_RES              480
 
 #if CONFIG_EXAMPLE_LCD_TOUCH_ENABLED
+#if	defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_UR)
+#define EXAMPLE_I2C_NUM                 0   // I2C number
+#define EXAMPLE_I2C_SCL                 6
+#define EXAMPLE_I2C_SDA                 15
+#elif defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_AR)
 #define EXAMPLE_I2C_NUM                 0   // I2C number
 #define EXAMPLE_I2C_SCL                 6
 #define EXAMPLE_I2C_SDA                 7
+#else
+#error "not support hardware"
+#endif
 #endif
 
 #define EXAMPLE_LVGL_TICK_PERIOD_MS    2
@@ -181,14 +225,36 @@ static void lvgl_task(void *pvParameter)
     assert(sem_gui_ready);
 #endif
 
+#if EXAMPLE_PIN_NUM_RST>=0
+    ESP_LOGI(TAG, "reset pin");
+
+//	gpio_pad_select_gpio(EXAMPLE_PIN_NUM_RST);
+//	gpio_set_direction(EXAMPLE_PIN_NUM_RST, GPIO_MODE_OUTPUT);
+    gpio_config_t rst_gpio_config = {
+        .mode = GPIO_MODE_OUTPUT,
+        .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_BK_LIGHT
+    };
+    ESP_ERROR_CHECK(gpio_config(&rst_gpio_config));
+
+	//Reset the display
+	gpio_set_level(EXAMPLE_PIN_NUM_RST, 0);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+	gpio_set_level(EXAMPLE_PIN_NUM_RST, 1);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+#endif
+
 #if EXAMPLE_PIN_NUM_BK_LIGHT >= 0
     ESP_LOGI(TAG, "Turn off LCD backlight");
+
     gpio_config_t bk_gpio_config = {
         .mode = GPIO_MODE_OUTPUT,
         .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_BK_LIGHT
     };
     ESP_ERROR_CHECK(gpio_config(&bk_gpio_config));
+
+    gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
 #endif
+
     st7701s_init();
 
     ESP_LOGI(TAG, "Install RGB LCD panel driver");
@@ -366,7 +432,7 @@ static void lvgl_task(void *pvParameter)
 #if CONFIG_EXAMPLE_DOUBLE_FB
     disp_drv.full_refresh = true; // the full_refresh mode can maintain the synchronization between the two frame buffers
 #endif
-   lv_disp_t *disp=lv_disp_drv_register(&disp_drv);
+   lv_disp_drv_register(&disp_drv);
 
 #if CONFIG_EXAMPLE_LCD_TOUCH_ENABLED
     static lv_indev_drv_t indev_drv;    // Input device driver (Touch)

@@ -1,56 +1,62 @@
-﻿
-#include "st7701s.h"
+#include <sdkconfig.h>
+#include <stdio.h>
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "driver/gpio.h"
+#include "esp_freertos_hooks.h"
+#include "esp_log.h"
+#include "esp_lcd_panel_io.h"
+#include "esp_lcd_panel_vendor.h"
+#include "esp_lcd_panel_ops.h"
+#include "esp_lcd_panel_interface.h"
+#include "qmsd_lcd_rgb_panel.h"
+#include "qmsd_rgb_init.h"
+#include "qmsd_board_init.h"
 
-//硬件 或 软件SPI
-#define hardware_spi
+#define TAG "QMSD BOARD INIT"
 
-#if	defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_UR)
-#define LCD_PIN_MOSI        48  /*!< for 1-line SPI, this also refered as MOSI */
-#define LCD_PIN_SCLK		45
-#define LCD_PIN_CS          38
-#elif defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_AR)
-#define LCD_PIN_MOSI        9  /*!< for 1-line SPI, this also refered as MOSI */
-#define LCD_PIN_SCLK		10
-#define LCD_PIN_CS          0
-#else
-#error "not support hardware"
-#endif
+#define LCD_VSYNC_GPIO    (41)
+#define LCD_HSYNC_GPIO    (42)
+#define LCD_DE_GPIO       (40)
+#define LCD_PCLK_GPIO     (39)
+#define LCD_DATA0_GPIO    (45)  // B0
+#define LCD_DATA1_GPIO    (48)  // B1
+#define LCD_DATA2_GPIO    (47)  // B2
+#define LCD_DATA3_GPIO    (21)  // B3
+#define LCD_DATA4_GPIO    (14)  // B4
+#define LCD_DATA5_GPIO    (13)  // G0
+#define LCD_DATA6_GPIO    (12) // G1
+#define LCD_DATA7_GPIO    (11) // G2
+#define LCD_DATA8_GPIO    (10) // G3
+#define LCD_DATA9_GPIO    (16) // G4
+#define LCD_DATA10_GPIO   (17) // G5
+#define LCD_DATA11_GPIO   (18) // R0
+#define LCD_DATA12_GPIO   (8) // R1
+#define LCD_DATA13_GPIO   (3) // R2
+#define LCD_DATA14_GPIO   (46) // R3
+#define LCD_DATA15_GPIO   (9) // R4
+#define LCD_DISP_EN_GPIO  (-1)
 
-#if	defined(hardware_spi)
+#define LCD_PIXEL_CLOCK_HZ (10 * 1000 * 1000)
+#define LCD_PIN_MOSI          48  /*!< for 1-line SPI, this also refered as MOSI */
+#define LCD_PIN_SCLK			45
+#define LCD_PIN_CS             38
+#define LCD_PIN_RST            5
+#define LCD_PIN_BK_LIGHT       4
+
+#define LCD_BK_LIGHT_ON_LEVEL  1
+#define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
+
+#define TP_SDA	15
+#define TP_SCL	6
+#define TP_INT	7
+
 static spi_device_handle_t g_spi;
-#else
-#define Delay(t) vTaskDelay(pdMS_TO_TICKS(t))
-#define gpio_set_value(_p, _v) gpio_set_level(_p, _v)
-#define delay_ms(_t) esp_rom_delay_us((_t)*1000)
-#define delay_us(_t) esp_rom_delay_us(_t)
 
-#define LCD_CS_Clr()    gpio_set_level(LCD_PIN_CS, 0)
-#define LCD_CS_Set()    gpio_set_level(LCD_PIN_CS, 1)
-#define LCD_SCK_Clr()   gpio_set_level(LCD_PIN_SCLK, 0)
-#define LCD_SCK_Set()   gpio_set_level(LCD_PIN_SCLK, 1)
-#define LCD_SDA_Clr()   gpio_set_level(LCD_PIN_MOSI, 0)
-#define LCD_SDA_Set()   gpio_set_level(LCD_PIN_MOSI, 1)
-
-static void spi_soft_write_9bits(uint16_t data)
-{
-	uint8_t i;
-	LCD_CS_Clr();
-	for(i = 0; i < 9; i++)
-	{
-        LCD_SCK_Clr();
-		if(data & 0x100)   LCD_SDA_Set();
-		else               LCD_SDA_Clr();
-		delay_us(30);
-        LCD_SCK_Set();
-		delay_us(30);
-		data <<= 1;
-	}
-	LCD_CS_Set();;
-}
-#endif
 static void __spi_send_cmd(uint8_t cmd)
 {
-#if	defined(hardware_spi)
     uint16_t tmp_cmd = (cmd | 0x0000);;
     spi_transaction_ext_t trans = (spi_transaction_ext_t)
     {
@@ -62,16 +68,10 @@ static void __spi_send_cmd(uint8_t cmd)
         .command_bits = 9,
     };
     spi_device_transmit(g_spi, (spi_transaction_t *)&trans);
-#else
-	uint16_t temp = 0;
-	temp = temp | cmd;
-	spi_soft_write_9bits(temp);
-#endif
 }
 
 static void __spi_send_data(uint8_t data)
 {
-#if	defined(hardware_spi)
     uint16_t tmp_data = (data | 0x0100);
     spi_transaction_ext_t trans = (spi_transaction_ext_t){
         .base = {
@@ -81,248 +81,10 @@ static void __spi_send_data(uint8_t data)
         .command_bits = 9,
     };
     spi_device_transmit(g_spi, (spi_transaction_t *)&trans);
-#else
-	uint16_t temp = 0x100;
-	temp = temp | data;
-	spi_soft_write_9bits(temp);
-#endif
 }
 
 static void __lcd_init(void)
 {
-#if defined(CONFIG_EXAMPLE_LCD_PANEL_ST7701S)//深圳博虎 ST7701S 480*480屏
-	//Software reset
-	__spi_send_cmd (0x11);
-	__spi_send_data (0x00);
-	vTaskDelay(pdMS_TO_TICKS(500));
-   //PAGE1
-	__spi_send_cmd(0xFF);
-	__spi_send_data(0x77);
-	__spi_send_data(0x01);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x10);
-
-	__spi_send_cmd(0xC0);
-	__spi_send_data(0x3B);//屏的分辨率
-	__spi_send_data(0x00);
-
-	__spi_send_cmd(0xC1);
-	__spi_send_data(0x0D);//VBP 如果配置为>0B屏幕上边有黑边显示不完整
-	__spi_send_data(0x02);
-
-	__spi_send_cmd(0xC2);
-	__spi_send_data(0x31);
-	__spi_send_data(0x05);
-
-	__spi_send_cmd(0xCd);
-	__spi_send_data(0x08);
-
-	__spi_send_cmd(0xB0);
-	__spi_send_data(0x00); //Positive Voltage Gamma Control
-	__spi_send_data(0x11);
-	__spi_send_data(0x18);
-	__spi_send_data(0x0E);
-	__spi_send_data(0x11);
-	__spi_send_data(0x06);
-	__spi_send_data(0x07);
-	__spi_send_data(0x08);
-	__spi_send_data(0x07);
-	__spi_send_data(0x22);
-	__spi_send_data(0x04);
-	__spi_send_data(0x12);
-	__spi_send_data(0x0F);
-	__spi_send_data(0xAA);
-	__spi_send_data(0x31);
-	__spi_send_data(0x18);
-
-	__spi_send_cmd(0xB1);
-	__spi_send_data(0x00); //Negative Voltage Gamma Control
-	__spi_send_data(0x11);
-	__spi_send_data(0x19);
-	__spi_send_data(0x0E);
-	__spi_send_data(0x12);
-	__spi_send_data(0x07);
-	__spi_send_data(0x08);
-	__spi_send_data(0x08);
-	__spi_send_data(0x08);
-	__spi_send_data(0x22);
-	__spi_send_data(0x04);
-	__spi_send_data(0x11);
-	__spi_send_data(0x11);
-	__spi_send_data(0xA9);
-	__spi_send_data(0x32);
-	__spi_send_data(0x18);
-
-	//PAGE1
-	__spi_send_cmd(0xFF);
-	__spi_send_data(0x77);
-	__spi_send_data(0x01);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x11);
-
-	__spi_send_cmd(0xB0);    __spi_send_data(0x60); //Vop=4.7375v
-	__spi_send_cmd(0xB1);    __spi_send_data(0x32); //VCOM=32
-	__spi_send_cmd(0xB2);    __spi_send_data(0x07); //VGH=15v
-	__spi_send_cmd(0xB3);    __spi_send_data(0x80);
-	__spi_send_cmd(0xB5);    __spi_send_data(0x49); //VGL=-10.17v
-	__spi_send_cmd(0xB7);    __spi_send_data(0x85);
-	__spi_send_cmd(0xB8);    __spi_send_data(0x21); //AVDD=6.6 & AVCL=-4.6
-	__spi_send_cmd(0xC1);    __spi_send_data(0x78);
-	__spi_send_cmd(0xC2);    __spi_send_data(0x78);
-
-	__spi_send_cmd(0xE0);
-	__spi_send_data(0x00);
-	__spi_send_data(0x1B);
-	__spi_send_data(0x02);
-
-	__spi_send_cmd(0xE1);
-	__spi_send_data(0x08);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x07);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x44);
-	__spi_send_data(0x44);
-
-	__spi_send_cmd(0xE2);
-	__spi_send_data(0x11);
-	__spi_send_data(0x11);
-	__spi_send_data(0x44);
-	__spi_send_data(0x44);
-	__spi_send_data(0xED);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0xEC);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-
-	__spi_send_cmd(0xE3);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x11);
-	__spi_send_data(0x11);
-
-	__spi_send_cmd(0xE4);
-	__spi_send_data(0x44);
-	__spi_send_data(0x44);
-
-	__spi_send_cmd(0xE5);
-	__spi_send_data(0x0A);
-	__spi_send_data(0xE9);
-	__spi_send_data(0xD8);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x0C);
-	__spi_send_data(0xEB);
-	__spi_send_data(0xD8);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x0E);
-	__spi_send_data(0xED);
-	__spi_send_data(0xD8);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x10);
-	__spi_send_data(0xEF);
-	__spi_send_data(0xD8);
-	__spi_send_data(0xA0);
-
-	__spi_send_cmd(0xE6);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x11);
-	__spi_send_data(0x11);
-
-	__spi_send_cmd(0xE7);
-	__spi_send_data(0x44);
-	__spi_send_data(0x44);
-
-	__spi_send_cmd(0xE8);
-	__spi_send_data(0x09);
-	__spi_send_data(0xE8);
-	__spi_send_data(0xD8);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x0B);
-	__spi_send_data(0xEA);
-	__spi_send_data(0xD8);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x0D);
-	__spi_send_data(0xEC);
-	__spi_send_data(0xD8);
-	__spi_send_data(0xA0);
-	__spi_send_data(0x0F);
-	__spi_send_data(0xEE);
-	__spi_send_data(0xD8);
-	__spi_send_data(0xA0);
-
-	__spi_send_cmd(0xEB);
-	__spi_send_data(0x02);
-	__spi_send_data(0x00);
-	__spi_send_data(0xE4);
-	__spi_send_data(0xE4);
-	__spi_send_data(0x88);
-	__spi_send_data(0x00);
-	__spi_send_data(0x40);
-
-	__spi_send_cmd(0xEC);
-	__spi_send_data(0x3C);
-	__spi_send_data(0x00);
-
-	__spi_send_cmd(0xED);
-	__spi_send_data(0xAB);
-	__spi_send_data(0x89);
-	__spi_send_data(0x76);
-	__spi_send_data(0x54);
-	__spi_send_data(0x02);
-	__spi_send_data(0xFF);
-	__spi_send_data(0xFF);
-	__spi_send_data(0xFF);
-	__spi_send_data(0xFF);
-	__spi_send_data(0xFF);
-	__spi_send_data(0xFF);
-	__spi_send_data(0x20);
-	__spi_send_data(0x45);
-	__spi_send_data(0x67);
-	__spi_send_data(0x98);
-	__spi_send_data(0xBA);
-
-	__spi_send_cmd(0x36);
-	__spi_send_data(0x00);
-
-	//-----------VAP & VAN---------------
-	__spi_send_cmd(0xFF);
-	__spi_send_data(0x77);
-	__spi_send_data(0x01);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x13);
-
-	__spi_send_cmd(0xE5);
-	__spi_send_data(0xE4);
-
-	__spi_send_cmd(0xFF);
-	__spi_send_data(0x77);
-	__spi_send_data(0x01);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-	__spi_send_data(0x00);
-
-	__spi_send_cmd(0x3A);   //0x70 RGB888, 0x60 RGB666, 0x50 RGB565
-	__spi_send_data(0x60);
-
-	__spi_send_cmd(0x21);   //Display Inversion On
-
-	__spi_send_cmd(0x11);   //Sleep Out
-	vTaskDelay(pdMS_TO_TICKS(100));
-
-	__spi_send_cmd(0x29);   //Display On
-	vTaskDelay(pdMS_TO_TICKS(50));	
-#elif defined(CONFIG_EXAMPLE_LCD_PANEL_GC9503V)	//启明GC9503V 480*480屏
 	__spi_send_cmd (0xF0);
 	__spi_send_data (0x55);
 	__spi_send_data (0xAA);
@@ -886,17 +648,13 @@ static void __lcd_init(void)
 	__spi_send_cmd (0x11);
 	vTaskDelay(pdMS_TO_TICKS(200));
 	__spi_send_cmd (0x29);
-#else
-	#error "no support panel"	
-#endif
 }
 
-void st7701s_init(void)
+static void qmsd_spi_init(int cs_pin, int sclk, int mosi)
 {
-	#if	defined(hardware_spi)
     spi_bus_config_t buscfg = {
-        .sclk_io_num = LCD_PIN_SCLK,
-        .mosi_io_num = LCD_PIN_MOSI,
+        .sclk_io_num = sclk,
+        .mosi_io_num = mosi,
         .miso_io_num = -1,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
@@ -906,38 +664,14 @@ void st7701s_init(void)
 
     spi_device_interface_config_t devcfg =
     {
-        .clock_speed_hz = SPI_MASTER_FREQ_10M,  //Clock out at 10 MHz
+        .clock_speed_hz = SPI_MASTER_FREQ_10M,         //Clock out at 10 MHz
         .mode = 0,                              //SPI mode 0
-        .spics_io_num = LCD_PIN_CS,             //CS pin
+        .spics_io_num = cs_pin,               		//CS pin
         .queue_size = 7,                        //We want to be able to queue 7 transactions at a time
     };
     
     ESP_ERROR_CHECK(spi_bus_add_device(SPI2_HOST, &devcfg, &g_spi));
-    __lcd_init();
-    //st7701s初始化完成后，如果SCLK MOSI复用 释放SPI 让CS置于高电平
-    spi_bus_remove_device(g_spi);
-	spi_bus_free(SPI2_HOST);
-#else
-    gpio_reset_pin(LCD_PIN_CS);
-	gpio_set_direction(LCD_PIN_CS, GPIO_MODE_OUTPUT);
-    gpio_set_level(LCD_PIN_CS, 1);
-
-    gpio_reset_pin(LCD_PIN_SCLK);
-	gpio_set_direction(LCD_PIN_SCLK, GPIO_MODE_OUTPUT);
-    gpio_set_level(LCD_PIN_SCLK, 1);
-
-    gpio_reset_pin(LCD_PIN_MOSI);
-	gpio_set_direction(LCD_PIN_MOSI, GPIO_MODE_OUTPUT);
-    gpio_set_level(LCD_PIN_MOSI, 1);
 
     __lcd_init();
-#endif
-    //如果SCLK MOSI复用 释放SPI 让CS置于高电平
-//    gpio_reset_pin(LCD_PIN_CS);
-    gpio_reset_pin(LCD_PIN_SCLK);
-    gpio_reset_pin(LCD_PIN_MOSI);
-
-    gpio_reset_pin(LCD_PIN_CS);
-	gpio_set_direction(LCD_PIN_CS, GPIO_MODE_OUTPUT);
-    gpio_set_level(LCD_PIN_CS, 1);
 }
+

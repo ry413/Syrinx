@@ -1,15 +1,15 @@
 dependencies:
   espressif/esp_lcd_touch:
-    component_hash: 6fd1de1f41775813d24c8c6454c4e4a88b72a8120e8ae2c1a2190d1479c7bccf
+    component_hash: 805a51c99c8b532ee762a77a03a49b9f5ca2b45413faea63d2146ec85cfcdee2
     source:
       service_url: https://api.components.espressif.com/
       type: service
-    version: 1.0.2
+    version: 1.0.3
   idf:
     component_hash: null
     source:
       type: idf
-    version: 4.4.2
+    version: 4.4.3
 manifest_hash: 7caf81e7f0bb28c2c5a286619553b1664504d8dd7ca72d644edd59852c053582
 target: esp32s3
 version: 1.0.0

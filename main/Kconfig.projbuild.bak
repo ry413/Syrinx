@@ -52,8 +52,7 @@ menu "Example Configuration"
 
         config EXAMPLE_PANEL_ZX3D95CE01S_AR
             bool "ZX3D95CE01S_AR"         
-    endchoice   
-      
+    endchoice     
     choice EXAMPLE_LCD_PANEL
         prompt "LCD Panel"
         default EXAMPLE_LCD_PANEL_ST7701S
