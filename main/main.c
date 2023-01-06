@@ -232,7 +232,8 @@ static void lvgl_task(void *pvParameter)
 //	gpio_set_direction(EXAMPLE_PIN_NUM_RST, GPIO_MODE_OUTPUT);
     gpio_config_t rst_gpio_config = {
         .mode = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_RST
+        .pin_bit_mask = 1ULL << EXAMPLE_PIN_NUM_RST,
+		.pull_up_en=GPIO_PULLUP_ENABLE,
     };
     ESP_ERROR_CHECK(gpio_config(&rst_gpio_config));
 
