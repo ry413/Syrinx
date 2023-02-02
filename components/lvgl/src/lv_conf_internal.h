@@ -1476,6 +1476,38 @@
     #endif
 #endif
 
+#ifndef LV_USE_DCLOCK
+    #ifdef _LV_KCONFIG_PRESENT
+        #ifdef CONFIG_LV_USE_DCLOCK
+            #define LV_USE_DCLOCK CONFIG_LV_USE_DCLOCK
+        #else
+            #define LV_USE_DCLOCK 0
+        #endif
+    #else
+        #define LV_USE_DCLOCK      1
+    #endif
+#endif
+#if LV_USE_DCLOCK
+    #ifndef LV_DCLOCK_TEXT_SELECTION
+        #ifdef CONFIG_LV_DCLOCK_TEXT_SELECTION
+            #define LV_DCLOCK_TEXT_SELECTION CONFIG_LV_DCLOCK_TEXT_SELECTION
+        #else
+            #define LV_DCLOCK_TEXT_SELECTION 1 /*Enable selecting text of the dclock*/
+        #endif
+    #endif
+#endif
+
+#ifndef LV_USE_VIDEO
+    #ifdef _LV_KCONFIG_PRESENT
+        #ifdef CONFIG_LV_USE_VIDEO
+            #define LV_USE_VIDEO CONFIG_LV_USE_VIDEO
+        #else
+            #define LV_USE_VIDEO 0
+        #endif
+    #else
+        #define LV_USE_VIDEO      1
+    #endif
+#endif
 #ifndef LV_USE_LINE
     #ifdef _LV_KCONFIG_PRESENT
         #ifdef CONFIG_LV_USE_LINE
@@ -1653,6 +1685,17 @@
     #endif
 #endif  /*LV_USE_CALENDAR*/
 
+#ifndef LV_USE_CAROUSEL
+    #ifdef _LV_KCONFIG_PRESENT
+        #ifdef CONFIG_LV_USE_CAROUSEL
+            #define LV_USE_CAROUSEL CONFIG_LV_USE_CAROUSEL
+        #else
+            #define LV_USE_CAROUSEL 0
+        #endif
+    #else
+        #define LV_USE_CAROUSEL  1
+    #endif
+#endif
 #ifndef LV_USE_CHART
     #ifdef _LV_KCONFIG_PRESENT
         #ifdef CONFIG_LV_USE_CHART
@@ -1698,6 +1741,18 @@
         #endif
     #else
         #define LV_USE_KEYBOARD   1
+    #endif
+#endif
+
+#ifndef LV_USE_ZH_KEYBOARD
+    #ifdef _LV_KCONFIG_PRESENT
+        #ifdef CONFIG_LV_USE_ZH_KEYBOARD
+            #define LV_USE_ZH_KEYBOARD CONFIG_LV_USE_ZH_KEYBOARD
+        #else
+            #define LV_USE_ZH_KEYBOARD 0
+        #endif
+    #else
+        #define LV_USE_ZH_KEYBOARD   1
     #endif
 #endif
 
@@ -1749,6 +1804,13 @@
     #endif
 #endif
 
+#ifndef LV_USE_ANALOGCLOCK
+#  ifdef CONFIG_LV_USE_ANALOGCLOCK
+#    define LV_USE_ANALOGCLOCK CONFIG_LV_USE_ANALOGCLOCK
+#  else
+#    define  LV_USE_ANALOGCLOCK        1
+#  endif
+#endif
 #ifndef LV_USE_MSGBOX
     #ifdef _LV_KCONFIG_PRESENT
         #ifdef CONFIG_LV_USE_MSGBOX
@@ -1758,6 +1820,18 @@
         #endif
     #else
         #define LV_USE_MSGBOX     1
+    #endif
+#endif
+
+#ifndef LV_USE_RADIOBTN
+    #ifdef _LV_KCONFIG_PRESENT
+        #ifdef CONFIG_LV_USE_RADIOBTN
+            #define LV_USE_RADIOBTN CONFIG_LV_USE_RADIOBTN
+        #else
+            #define LV_USE_RADIOBTN 0
+        #endif
+    #else
+        #define LV_USE_RADIOBTN   1
     #endif
 #endif
 
