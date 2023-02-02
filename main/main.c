@@ -433,7 +433,7 @@ static void lvgl_task(void *pvParameter)
 #if CONFIG_EXAMPLE_DOUBLE_FB
     disp_drv.full_refresh = true; // the full_refresh mode can maintain the synchronization between the two frame buffers
 #endif
-   lv_disp_drv_register(&disp_drv);
+    lv_disp_t *disp=lv_disp_drv_register(&disp_drv);
 
 #if CONFIG_EXAMPLE_LCD_TOUCH_ENABLED
     static lv_indev_drv_t indev_drv;    // Input device driver (Touch)
