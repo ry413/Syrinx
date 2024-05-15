@@ -5,9 +5,9 @@
 #define hardware_spi
 
 #if	defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_UR)
-#define LCD_PIN_MOSI        48  /*!< for 1-line SPI, this also refered as MOSI */
-#define LCD_PIN_SCLK		45
-#define LCD_PIN_CS          38
+#define LCD_PIN_MOSI        40  /*!< for 1-line SPI, this also refered as MOSI */
+#define LCD_PIN_SCLK		39
+#define LCD_PIN_CS          -1
 #elif defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_AR)
 #define LCD_PIN_MOSI        9  /*!< for 1-line SPI, this also refered as MOSI */
 #define LCD_PIN_SCLK		10
@@ -108,7 +108,8 @@ static void __lcd_init(void)
 	__spi_send_data(0x00);
 
 	__spi_send_cmd(0xC1);
-	__spi_send_data(0x0D);//VBP 如果配置为>0B屏幕上边有黑边显示不完整
+	// __spi_send_data(0x0D);//VBP 如果配置为>0B屏幕上边有黑边显示不完整
+	__spi_send_data(0x0B);//VBP 如果配置为>0B屏幕上边有黑边显示不完整
 	__spi_send_data(0x02);
 
 	__spi_send_cmd(0xC2);
@@ -937,7 +938,7 @@ void st7701s_init(void)
     gpio_reset_pin(LCD_PIN_SCLK);
     gpio_reset_pin(LCD_PIN_MOSI);
 
-    gpio_reset_pin(LCD_PIN_CS);
-	gpio_set_direction(LCD_PIN_CS, GPIO_MODE_OUTPUT);
-    gpio_set_level(LCD_PIN_CS, 1);
+//lijian    gpio_reset_pin(LCD_PIN_CS);
+//	gpio_set_direction(LCD_PIN_CS, GPIO_MODE_OUTPUT);
+//    gpio_set_level(LCD_PIN_CS, 1);
 }

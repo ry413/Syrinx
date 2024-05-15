@@ -18,6 +18,11 @@
 
 #include "st7701s.h"
 
+#include "ui.h"
+#include "wifi.h"
+#include "nvs_flash.h"
+
+
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
 #include "lvgl.h"
 #include "lv_demos.h"
@@ -38,6 +43,7 @@
 #elif CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_FT6X06
 #include "esp_lcd_touch_ft6x06.h"
 #endif
+#include <nvs.h>
 #endif
 
 static const char *TAG = "example";
@@ -50,38 +56,38 @@ static const char *TAG = "example";
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
 
-#define EXAMPLE_PIN_NUM_BK_LIGHT       (4)
+#define EXAMPLE_PIN_NUM_BK_LIGHT       (1)
 
-#define EXAMPLE_PIN_NUM_PCLK     (39)
-#define EXAMPLE_PIN_NUM_DE       (40)
-#define EXAMPLE_PIN_NUM_VSYNC    (41)
-#define EXAMPLE_PIN_NUM_HSYNC    (42)
+#define EXAMPLE_PIN_NUM_PCLK     (41)
+#define EXAMPLE_PIN_NUM_DE       (-1)
+#define EXAMPLE_PIN_NUM_VSYNC    (39)
+#define EXAMPLE_PIN_NUM_HSYNC    (38)
 
-#define EXAMPLE_PIN_NUM_DATA0    (45)  // B0
-#define EXAMPLE_PIN_NUM_DATA1    (48)  // B1
-#define EXAMPLE_PIN_NUM_DATA2    (47)  // B2
-#define EXAMPLE_PIN_NUM_DATA3    (21)  // B3
-#define EXAMPLE_PIN_NUM_DATA4    (14)  // B4
-#define EXAMPLE_PIN_NUM_DATA5    (13)  // G0
-#define EXAMPLE_PIN_NUM_DATA6    (12)  // G1
-#define EXAMPLE_PIN_NUM_DATA7    (11)  // G2
-#define EXAMPLE_PIN_NUM_DATA8    (10)  // G3
-#define EXAMPLE_PIN_NUM_DATA9    (16)  // G4
-#define EXAMPLE_PIN_NUM_DATA10   (17)  // G5
-#define EXAMPLE_PIN_NUM_DATA11   (18)  // R0
-#define EXAMPLE_PIN_NUM_DATA12   (8)   // R1
-#define EXAMPLE_PIN_NUM_DATA13   (3)   // R2
-#define EXAMPLE_PIN_NUM_DATA14   (46)  // R3
-#define EXAMPLE_PIN_NUM_DATA15   (9)   // R4
+#define EXAMPLE_PIN_NUM_DATA0    (0)  // B0
+#define EXAMPLE_PIN_NUM_DATA1    (45)  // B1
+#define EXAMPLE_PIN_NUM_DATA2    (48)  // B2
+#define EXAMPLE_PIN_NUM_DATA3    (47)  // B3
+#define EXAMPLE_PIN_NUM_DATA4    (21)  // B4
+#define EXAMPLE_PIN_NUM_DATA5    (14)  // G0
+#define EXAMPLE_PIN_NUM_DATA6    (13)  // G1
+#define EXAMPLE_PIN_NUM_DATA7    (12)  // G2
+#define EXAMPLE_PIN_NUM_DATA8    (11)  // G3
+#define EXAMPLE_PIN_NUM_DATA9    (10)  // G4
+#define EXAMPLE_PIN_NUM_DATA10   (9)  // G5
+#define EXAMPLE_PIN_NUM_DATA11   (46)  // R0
+#define EXAMPLE_PIN_NUM_DATA12   (3)   // R1
+#define EXAMPLE_PIN_NUM_DATA13   (8)   // R2
+#define EXAMPLE_PIN_NUM_DATA14   (18)  // R3
+#define EXAMPLE_PIN_NUM_DATA15   (17)   // R4
 
 #define EXAMPLE_PIN_NUM_DISP_EN        (-1)
-#define EXAMPLE_PIN_NUM_RST            (5) // LCD RESET
+#define EXAMPLE_PIN_NUM_RST            (-1) // LCD RESET
 #elif defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_AR)
 #define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (18 * 1000 * 1000)
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
 
-#define EXAMPLE_PIN_NUM_BK_LIGHT       (45)
+#define EXAMPLE_PIN_NUM_BK_LIGHT       (1)
 
 #define EXAMPLE_PIN_NUM_PCLK    	   (14)
 #define EXAMPLE_PIN_NUM_DE       	   (13)
@@ -119,8 +125,8 @@ static const char *TAG = "example";
 #if CONFIG_EXAMPLE_LCD_TOUCH_ENABLED
 #if	defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_UR)
 #define EXAMPLE_I2C_NUM                 0   // I2C number
-#define EXAMPLE_I2C_SCL                 6
-#define EXAMPLE_I2C_SDA                 15
+#define EXAMPLE_I2C_SCL                 15
+#define EXAMPLE_I2C_SDA                 16
 #elif defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_AR)
 #define EXAMPLE_I2C_NUM                 0   // I2C number
 #define EXAMPLE_I2C_SCL                 6
@@ -311,12 +317,12 @@ static void lvgl_task(void *pvParameter)
 //            .vsync_front_porch = 8,
 //            .vsync_pulse_width = 10,
 
-            .hsync_back_porch = 20,
+            .hsync_back_porch = 1,
             .hsync_front_porch = 4,
-            .hsync_pulse_width = 5,
-            .vsync_back_porch = 20,
+            .hsync_pulse_width = 1,
+            .vsync_back_porch = 10,
             .vsync_front_porch = 4,
-            .vsync_pulse_width = 5,
+            .vsync_pulse_width = 1,
 
             .flags.pclk_active_neg = false,
         },
@@ -415,10 +421,21 @@ static void lvgl_task(void *pvParameter)
     //缓存视实际项目使用MALLOC_CAP_SPIRAM或MALLOC_CAP_DMA
     //优先使用内部MALLOC_CAP_DMA 刷屏会提高一个档次
     //优先使用双buffer
-    buf1 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 120 * sizeof(lv_color_t), MALLOC_CAP_DMA);//MALLOC_CAP_SPIRAM
+
+    // 在分配前打印可用内存
+    // ESP_LOGI("LVGL MALLOC1: ", "Free internal memory before allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    // ESP_LOGI("LVGL MALLOC1: ", "Free DMA memory before allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_DMA));
+    // ESP_LOGI("LVGL MALLOC1: ", "Free SPIRAM memory before allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+
+    buf1 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 120 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);//MALLOC_CAP_SPIRAM
     assert(buf1);
-    buf2 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 120 * sizeof(lv_color_t), MALLOC_CAP_DMA);//MALLOC_CAP_DMA
+    buf2 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 120 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);//MALLOC_CAP_DMA
     assert(buf2);
+
+    // ESP_LOGI("LVGL MALLOC2: ", "Free internal memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    // ESP_LOGI("LVGL MALLOC2: ", "Free DMA memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_DMA));
+    // ESP_LOGI("LVGL MALLOC2: ", "Free SPIRAM memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+
     // initialize LVGL draw buffers
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, EXAMPLE_LCD_H_RES * 120);
 #endif // CONFIG_EXAMPLE_DOUBLE_FB
@@ -456,6 +473,7 @@ static void lvgl_task(void *pvParameter)
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
     ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
 
+    // CREATE Application
     create_demo_application();
 
 	while (1)
@@ -474,17 +492,18 @@ static void lvgl_task(void *pvParameter)
 
 static void create_demo_application(void)
 {
-#if defined CONFIG_LV_USE_DEMO_WIDGETS
-    lv_demo_widgets();
-#elif defined CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER
-    lv_demo_keypad_encoder();
-#elif defined CONFIG_LV_USE_DEMO_BENCHMARK
-    lv_demo_benchmark();
-#elif defined CONFIG_LV_USE_DEMO_STRESS
-    lv_demo_stress();
-#else
-    #error "No demo application selected."
-#endif
+    ui_init();
+// #if defined CONFIG_LV_USE_DEMO_WIDGETS
+//     lv_demo_widgets();
+// #elif defined CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER
+//     lv_demo_keypad_encoder();
+// #elif defined CONFIG_LV_USE_DEMO_BENCHMARK
+//     lv_demo_benchmark();
+// #elif defined CONFIG_LV_USE_DEMO_STRESS
+//     lv_demo_stress();
+// #else
+//     #error "No demo application selected."
+// #endif
 }
 
 
@@ -497,6 +516,7 @@ static void monitor_task(void *pvParameter)
 	{
 		vTaskDelay(5000 / portTICK_PERIOD_MS);
     	ESP_LOGI(TAG,"-INTERNAL RAM left %dKB",heap_caps_get_free_size( MALLOC_CAP_INTERNAL )/1024);
+        ESP_LOGI(TAG, "-     DMA left %dkB",heap_caps_get_free_size( MALLOC_CAP_DMA )/1024);
 		#ifdef CONFIG_SPIRAM
     	ESP_LOGI(TAG,"-     SPI RAM left %dkB",heap_caps_get_free_size( MALLOC_CAP_SPIRAM )/1024);
 		#endif
@@ -512,14 +532,26 @@ static void monitor_task(void *pvParameter)
  *   APPLICATION MAIN
  **********************/
 void app_main() {
-
+    // 检查NVS是否已初始化
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    
+    if (ret == ESP_OK) {
+        ESP_LOGI(TAG, "NVS已初始化/");
+    } else {
+        ESP_LOGE(TAG, "NVS初始化失败: %s", esp_err_to_name(ret));
+    }
     /* If you want to use a task to create the graphic, you NEED to create a Pinned task
      * Otherwise there can be problem such as memory corruption and so on.
      * NOTE: When not using Wi-Fi nor Bluetooth you can pin the guiTask to core 0 */
 	//lvgl的任务优先级不能是0 也不能高 高了影响wifi其他性能,0优先级刷新fps低
     //xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096*2, NULL, 2, NULL, 1);
-    xTaskCreate(&lvgl_task, "lvgl_task", 4096, NULL, 2, NULL);
+    xTaskCreate(lvgl_task, "lvgl_task", 4096, NULL, 2, NULL);
+    xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
+    xTaskCreate(wifi_task, "wifi_task", 4096, NULL, 5, NULL);
 
-    xTaskCreate(&monitor_task, "monitor", 4096, NULL, 1, NULL);
 
 }
