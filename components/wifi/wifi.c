@@ -46,10 +46,10 @@ static void wifi_init_sta(void) {
     esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    cfg.static_rx_buf_num = 5;  // 设置静态接收缓冲区数量
-    cfg.dynamic_rx_buf_num = 8; // 设置动态接收缓冲区数量
-    cfg.static_tx_buf_num = 5;  // 设置静态发送缓冲区数量
-    cfg.dynamic_tx_buf_num = 8; // 设置动态发送缓冲区数量
+    cfg.static_rx_buf_num = 10;  // 设置静态接收缓冲区数量
+    cfg.dynamic_rx_buf_num = 32; // 设置动态接收缓冲区数量
+    cfg.static_tx_buf_num = 10;  // 设置静态发送缓冲区数量
+    cfg.dynamic_tx_buf_num = 32; // 设置动态发送缓冲区数量
 
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
