@@ -14,28 +14,26 @@
 
 #include "wifi.h"
 
+//////////////////// DEFINITIONS ////////////////////
+#define WIFI_CONNECTION_TIMEOUT pdMS_TO_TICKS(30000)  // 30秒超时时间
 
-//////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
-static void updateCurrentTimeLabel();
-static void obtainTime(void* pvParameter);
-static void updateTimeTask(void *pvParameter);
+//////////////////// GLOBAL VARIABLES ////////////////////
 
 // 全局变量用于存储日月时分的时间戳
 time_t globalTime = 0;
 lv_obj_t * currentTimeLabel;
 
-// 时间更新定时器
-static void updateTimeTask(void *pvParameter)
-{
-    while (1)
-    {
-        updateCurrentTimeLabel();
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        globalTime += 1;
-    }
-}
-// 除了被定时器调用外，在每个screen loaded时也会调用
-static void updateCurrentTimeLabel() {
+//////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
+
+static void updateCurrentTimeLabel(void);
+static void obtainTime(void* pvParameter);
+static void updateTimeTask(void *pvParameter);
+static void initTimeTask(void *param);
+
+//////////////////// 不给lvgl事件直接调用的 ////////////////////
+
+// 把globalTime更新到currentTimeLabel上
+static void updateCurrentTimeLabel(void) {
     struct tm timeinfo;
     char timeStr[9];
 
@@ -43,10 +41,10 @@ static void updateCurrentTimeLabel() {
     strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);
     lv_label_set_text(currentTimeLabel, timeStr);
 }
-// 获取时间
+// 从NTP获取时间
 static void obtainTime(void* pvParameter)
 {
-    // NTP服务器列表, 这是macOS上使用ntpdate测试出的一些延迟低的服务器
+    // NTP服务器列表, 这是macOS上使用ntpdate测试出的一些延迟低的服务器, 2024.5.15
     const char* ntp_servers[] = {
         "cn.ntp.org.cn",
         "edu.ntp.org.cn",
@@ -70,8 +68,8 @@ static void obtainTime(void* pvParameter)
     while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
         ESP_LOGI("obtainTime", "等待系统时间设置... (%d/%d) 正在尝试连接服务器: %s", retry, retry_count, ntp_servers[retry % num_ntp_servers]);
 
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
         time(&now);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
         localtime_r(&now, &timeinfo);
     }
 
@@ -89,29 +87,48 @@ static void obtainTime(void* pvParameter)
     xTaskCreate(updateTimeTask, "updateTimeTask", 2048, NULL, 5, NULL);
     vTaskDelete(NULL);
 }
-// ininial actions
-
-// 检查Wi-Fi连接状态，如果连接成功则获取时间
-void initTime(lv_event_t * e)
+// 时间更新定时器
+static void updateTimeTask(void *pvParameter)
 {
-    // 在初始化时间时把默认显示时间的label设置为主界面的, 否则label就空了
-    currentTimeLabel = ui_Header_Main_Time;
-
+    while (1)
+    {
+        updateCurrentTimeLabel();
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        globalTime += 1;
+    }
+}
+// 初始化时间任务
+static void initTimeTask(void *param)
+{
     EventGroupHandle_t wifi_event_group = get_wifi_event_group();
-    EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
+    EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdTRUE, WIFI_CONNECTION_TIMEOUT);
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI("InitTime", "Wi-Fi 已连接");
+        ESP_LOGI("initTimeTask", "Wi-Fi 已连接");
         // 异步, 否则会阻塞UI线程
         xTaskCreate(obtainTime, "obtainTime", 4096, NULL, 5, NULL);
     } else {
-        ESP_LOGE("InitTime", "Wi-Fi 未连接");
+        ESP_LOGE("initTimeTask", "Wi-Fi 未连接");
     }
+    vTaskDelete(NULL); // 删除任务
+}
+
+
+//////////////////// 给lvgl的事件用的回调 //////////////////// 
+
+// initial actions
+void initTime(lv_event_t * e)
+{
+    // 在初始化时间时把默认显示时间的label设置为主界面的, 否则currentTimeLabel为空很危险
+    currentTimeLabel = ui_Header_Main_Time;
+    // 因为要等待WiFi连接才能开始获取事件, 所以创建异步任务, 否则会阻塞界面加载
+    xTaskCreate(initTimeTask, "initTimeTask", 4096, NULL, 5, NULL);
 }
 
 // 由各个screen loaded时调用
 void setTimeMain(lv_event_t * e)
 {
     currentTimeLabel = ui_Header_Main_Time;
+    // 因为主界面的label略微特殊, 防止时间没初始化完就设置上去
     if(globalTime > 0)
         updateCurrentTimeLabel();
 }
