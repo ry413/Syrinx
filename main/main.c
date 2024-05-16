@@ -18,8 +18,10 @@
 
 #include "st7701s.h"
 
-#include "ui.h"
+// #include "../ui/ui.h"
+#include "../uis/ui.h"
 #include "wifi.h"
+#include "backlight.h"
 #include "nvs_flash.h"
 
 
@@ -493,6 +495,7 @@ static void lvgl_task(void *pvParameter)
 static void create_demo_application(void)
 {
     ui_init();
+    initBacklight();
 // #if defined CONFIG_LV_USE_DEMO_WIDGETS
 //     lv_demo_widgets();
 // #elif defined CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER
@@ -540,13 +543,10 @@ void app_main() {
     }
     
     if (ret == ESP_OK) {
-        ESP_LOGI(TAG, "NVS已初始化/");
+        ESP_LOGI(TAG, "NVS已初始化");
     } else {
         ESP_LOGE(TAG, "NVS初始化失败: %s", esp_err_to_name(ret));
     }
-    /* If you want to use a task to create the graphic, you NEED to create a Pinned task
-     * Otherwise there can be problem such as memory corruption and so on.
-     * NOTE: When not using Wi-Fi nor Bluetooth you can pin the guiTask to core 0 */
 	//lvgl的任务优先级不能是0 也不能高 高了影响wifi其他性能,0优先级刷新fps低
     //xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096*2, NULL, 2, NULL, 1);
     xTaskCreate(lvgl_task, "lvgl_task", 4096, NULL, 2, NULL);

@@ -32,23 +32,23 @@ lv_obj_set_style_text_font(ui_Header_Bluetooth_Text, &ui_font_LanTing18, LV_PART
 ui_Header_Bluetooth_Time = lv_label_create(ui_Header_Bluetooth);
 lv_obj_set_width( ui_Header_Bluetooth_Time, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Header_Bluetooth_Time, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Header_Bluetooth_Time, 90 );
+lv_obj_set_x( ui_Header_Bluetooth_Time, 300 );
 lv_obj_set_y( ui_Header_Bluetooth_Time, 0 );
-lv_obj_set_align( ui_Header_Bluetooth_Time, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Header_Bluetooth_Time,"12:00");
+lv_obj_set_align( ui_Header_Bluetooth_Time, LV_ALIGN_LEFT_MID );
+lv_label_set_text(ui_Header_Bluetooth_Time,"");
 lv_obj_set_style_text_color(ui_Header_Bluetooth_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_Header_Bluetooth_Time, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Header_Bluetooth_Time, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_Header_Bluetooth_Volume_Img = lv_img_create(ui_Header_Bluetooth);
-lv_img_set_src(ui_Header_Bluetooth_Volume_Img, &ui_img_490182776);
-lv_obj_set_width( ui_Header_Bluetooth_Volume_Img, LV_SIZE_CONTENT);  /// 22
-lv_obj_set_height( ui_Header_Bluetooth_Volume_Img, LV_SIZE_CONTENT);   /// 20
-lv_obj_set_x( ui_Header_Bluetooth_Volume_Img, 160 );
-lv_obj_set_y( ui_Header_Bluetooth_Volume_Img, 0 );
-lv_obj_set_align( ui_Header_Bluetooth_Volume_Img, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Header_Bluetooth_Volume_Img, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-lv_obj_clear_flag( ui_Header_Bluetooth_Volume_Img, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+ui_Header_Bluetooth_Volume_Icon = lv_img_create(ui_Header_Bluetooth);
+lv_img_set_src(ui_Header_Bluetooth_Volume_Icon, &ui_img_490182776);
+lv_obj_set_width( ui_Header_Bluetooth_Volume_Icon, LV_SIZE_CONTENT);  /// 22
+lv_obj_set_height( ui_Header_Bluetooth_Volume_Icon, LV_SIZE_CONTENT);   /// 20
+lv_obj_set_x( ui_Header_Bluetooth_Volume_Icon, 160 );
+lv_obj_set_y( ui_Header_Bluetooth_Volume_Icon, 0 );
+lv_obj_set_align( ui_Header_Bluetooth_Volume_Icon, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Header_Bluetooth_Volume_Icon, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_clear_flag( ui_Header_Bluetooth_Volume_Icon, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Header_Bluetooth_Volume_Value = lv_label_create(ui_Header_Bluetooth);
 lv_obj_set_width( ui_Header_Bluetooth_Volume_Value, LV_SIZE_CONTENT);  /// 1
@@ -155,14 +155,15 @@ lv_obj_set_style_text_font(ui_Bluetooth_Guide_Text, &ui_font_LanTing18, LV_PART_
 ui_BackToMainWindow3 = lv_imgbtn_create(ui_Bluetooth_WIndow);
 lv_imgbtn_set_src(ui_BackToMainWindow3, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
 lv_imgbtn_set_src(ui_BackToMainWindow3, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
-lv_obj_set_height( ui_BackToMainWindow3, 32);
+lv_obj_set_height( ui_BackToMainWindow3, 50);
 lv_obj_set_width( ui_BackToMainWindow3, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_x( ui_BackToMainWindow3, -220 );
-lv_obj_set_y( ui_BackToMainWindow3, -220 );
+lv_obj_set_x( ui_BackToMainWindow3, -212 );
+lv_obj_set_y( ui_BackToMainWindow3, -212 );
 lv_obj_set_align( ui_BackToMainWindow3, LV_ALIGN_CENTER );
 lv_obj_set_style_img_recolor(ui_BackToMainWindow3, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
 lv_obj_set_style_img_recolor_opa(ui_BackToMainWindow3, 100, LV_PART_MAIN| LV_STATE_PRESSED);
 
 lv_obj_add_event_cb(ui_BackToMainWindow3, ui_event_BackToMainWindow3, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_Bluetooth_WIndow, ui_event_Bluetooth_WIndow, LV_EVENT_ALL, NULL);
 
 }

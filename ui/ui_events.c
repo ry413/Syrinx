@@ -47,10 +47,10 @@ static void obtainTime(void* pvParameter)
     // NTP服务器列表, 这是macOS上使用ntpdate测试出的一些延迟低的服务器, 2024.5.15
     const char* ntp_servers[] = {
         "cn.ntp.org.cn",
-        "edu.ntp.org.cn",
-        "ntp.sjtu.edu.cn",
-        "ntp.aliyun.com",
-        "pool.ntp.org",
+        // "edu.ntp.org.cn",
+        // "ntp.sjtu.edu.cn",
+        // "ntp.aliyun.com",
+        // "pool.ntp.org",
     };
     const int num_ntp_servers = sizeof(ntp_servers) / sizeof(ntp_servers[0]);
 
@@ -128,12 +128,41 @@ void initTime(lv_event_t * e)
 void setTimeMain(lv_event_t * e)
 {
     currentTimeLabel = ui_Header_Main_Time;
-    // 因为主界面的label略微特殊, 防止时间没初始化完就设置上去
+    // 本来只有主界面要加这个防止时间未初始化就更新值, 但是用户有可能会在时间未初始化时乱点点到别的界面, 所以每个界面都加上了
     if(globalTime > 0)
         updateCurrentTimeLabel();
 }
 void setTimeMusic(lv_event_t * e)
 {
     currentTimeLabel = ui_Header_Music_Time;
-    updateCurrentTimeLabel();
+    if(globalTime > 0)
+        updateCurrentTimeLabel();
+}
+
+void setTimeNatureSound(lv_event_t * e)
+{
+    // currentTimeLabel = ui_Header_Nature_Sound_Time
+    if(globalTime > 0)
+        updateCurrentTimeLabel();
+}
+
+void setTimeBluetooth(lv_event_t * e)
+{
+    // currentTimeLabel = ui_Header_Bluetooth_Time2
+    if(globalTime > 0)
+        updateCurrentTimeLabel();
+}
+
+void setTimeMode(lv_event_t * e)
+{
+    currentTimeLabel = ui_Header_Music_Time;
+    if(globalTime > 0)
+        updateCurrentTimeLabel();
+}
+
+void setTimeWakeup(lv_event_t * e)
+{
+    currentTimeLabel = ui_Header_Music_Time;
+    if(globalTime > 0)
+        updateCurrentTimeLabel();
 }

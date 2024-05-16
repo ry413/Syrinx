@@ -17,40 +17,40 @@ lv_obj_t *ui_Main_Window;
 lv_obj_t *ui_Header_Main;
 lv_obj_t *ui_Header_Main_Text;
 lv_obj_t *ui_Header_Main_Time;
-lv_obj_t *ui_Header_Main_Volume_Img;
+lv_obj_t *ui_Header_Main_Volume_Icon;
 lv_obj_t *ui_Header_Main_Volume_Value;
 lv_obj_t *ui_Menu_Items;
 lv_obj_t *ui_Music;
 void ui_event_Music_Btn( lv_event_t * e);
 lv_obj_t *ui_Music_Btn;
-lv_obj_t *ui_Music_Image;
+lv_obj_t *ui_Music_Icon;
 lv_obj_t *ui_Music_Text;
 lv_obj_t *ui_Nature_Sound;
 void ui_event_Nature_Sound_Btn( lv_event_t * e);
 lv_obj_t *ui_Nature_Sound_Btn;
-lv_obj_t *ui_Nature_Sound_Img;
+lv_obj_t *ui_Nature_Sound_Icon;
 lv_obj_t *ui_Nature_Sound_Text;
 lv_obj_t *ui_Bluetooth;
-void ui_event_Music_Button2( lv_event_t * e);
-lv_obj_t *ui_Music_Button2;
-lv_obj_t *ui_Bluetooth_Img;
+void ui_event_Bluetooth_Btn( lv_event_t * e);
+lv_obj_t *ui_Bluetooth_Btn;
+lv_obj_t *ui_Bluetooth_Icon;
 lv_obj_t *ui_Bluetoth_Text;
 lv_obj_t *ui_Mode;
 void ui_event_Mode_Btn( lv_event_t * e);
 lv_obj_t *ui_Mode_Btn;
-lv_obj_t *ui_Mode_Img;
+lv_obj_t *ui_Mode_Icon;
 lv_obj_t *ui_Mode_Text;
 lv_obj_t *ui_Wake_up;
 void ui_event_Wake_up_Btn( lv_event_t * e);
 lv_obj_t *ui_Wake_up_Btn;
-lv_obj_t *ui_Weke_up_Img;
+lv_obj_t *ui_Weke_up_Icon;
 lv_obj_t *ui_Weke_up_Text;
 lv_obj_t *ui_Guide;
 void ui_event_Guide_Btn( lv_event_t * e);
 lv_obj_t *ui_Guide_Btn;
-lv_obj_t *ui_Guide_Img;
+lv_obj_t *ui_Guide_Icon;
 lv_obj_t *ui_Guide_Text;
-lv_obj_t *ui_Logo;
+lv_obj_t *ui_Main_Logo;
 
 
 // SCREEN: ui_Music_Window
@@ -60,36 +60,54 @@ lv_obj_t *ui_Music_Window;
 lv_obj_t *ui_Header_Music;
 lv_obj_t *ui_Header_Music_Text;
 lv_obj_t *ui_Header_Music_Time;
-lv_obj_t *ui_Header_Music_Volume_Img;
+lv_obj_t *ui_Header_Music_Volume_Icon;
 lv_obj_t *ui_Header_Music_Volume_Value;
 void ui_event_BackToMainWindow( lv_event_t * e);
 lv_obj_t *ui_BackToMainWindow;
+lv_obj_t *ui_MusicList;
+lv_obj_t *ui_Music_Item;
+lv_obj_t *ui_Music_Name;
+lv_obj_t *ui_Music_Item_Line;
+lv_obj_t *ui_Music_Item_Icon;
+lv_obj_t *ui_Music_Item1;
+lv_obj_t *ui_Music_Name1;
+lv_obj_t *ui_Music_Item_Line1;
+lv_obj_t *ui_Music_Item_Icon1;
+lv_obj_t *ui_Music_Item2;
+lv_obj_t *ui_Music_Name2;
+lv_obj_t *ui_Music_Item_Line2;
+lv_obj_t *ui_Music_Item_Icon2;
+lv_obj_t *ui_Music_Item3;
+lv_obj_t *ui_Music_Name3;
+lv_obj_t *ui_Music_Item_Line3;
+lv_obj_t *ui_Music_Item_Icon3;
 
 
 // SCREEN: ui_Nature_Sound_Window
 void ui_Nature_Sound_Window_screen_init(void);
+void ui_event_Nature_Sound_Window( lv_event_t * e);
 lv_obj_t *ui_Nature_Sound_Window;
 lv_obj_t *ui_Header_Nature_Sound;
 lv_obj_t *ui_Header_Nature_Sound_Text;
 lv_obj_t *ui_Header_Nature_Sound_Time;
-lv_obj_t *ui_Header_Nature_Sound_Volume_Img;
+lv_obj_t *ui_Header_Nature_Sound_Volume_Icon;
 lv_obj_t *ui_Header_Nature_Sound_Volume_Value;
-lv_obj_t *ui_Container1;
+lv_obj_t *ui_Nature_Sound_Menu;
 lv_obj_t *ui_Bird_Sound;
 lv_obj_t *ui_Bird_Sound_Btn;
-lv_obj_t *ui_Bird_Sound_Img;
+lv_obj_t *ui_Bird_Sound_Icon;
 lv_obj_t *ui_Bird_Sound_Text;
 lv_obj_t *ui_Bug_Sound;
 lv_obj_t *ui_Bug_Sound_Btn;
-lv_obj_t *ui_Bug_Sound_Img;
+lv_obj_t *ui_Bug_Sound_Icon;
 lv_obj_t *ui_Bug_Sound_Text;
 lv_obj_t *ui_Forest_Sound;
 lv_obj_t *ui_Forest_Sound_Btn;
-lv_obj_t *ui_Forest_Sound_Img;
+lv_obj_t *ui_Forest_Sound_Icon;
 lv_obj_t *ui_Forest_Sound_Text;
 lv_obj_t *ui_Sea_Sound;
 lv_obj_t *ui_Sea_Sound_Btn;
-lv_obj_t *ui_Sea_Sound_Img;
+lv_obj_t *ui_Sea_Sound_Icon;
 lv_obj_t *ui_Sea_Sound_Text;
 void ui_event_BackToMainWindow2( lv_event_t * e);
 lv_obj_t *ui_BackToMainWindow2;
@@ -97,11 +115,12 @@ lv_obj_t *ui_BackToMainWindow2;
 
 // SCREEN: ui_Bluetooth_WIndow
 void ui_Bluetooth_WIndow_screen_init(void);
+void ui_event_Bluetooth_WIndow( lv_event_t * e);
 lv_obj_t *ui_Bluetooth_WIndow;
 lv_obj_t *ui_Header_Bluetooth;
 lv_obj_t *ui_Header_Bluetooth_Text;
 lv_obj_t *ui_Header_Bluetooth_Time;
-lv_obj_t *ui_Header_Bluetooth_Volume_Img;
+lv_obj_t *ui_Header_Bluetooth_Volume_Icon;
 lv_obj_t *ui_Header_Bluetooth_Volume_Value;
 lv_obj_t *ui_Bluetooth_Name;
 lv_obj_t *ui_Bluetooth_Name_Text;
@@ -118,87 +137,90 @@ lv_obj_t *ui_BackToMainWindow3;
 
 // SCREEN: ui_Mode_WIndow
 void ui_Mode_WIndow_screen_init(void);
+void ui_event_Mode_WIndow( lv_event_t * e);
 lv_obj_t *ui_Mode_WIndow;
-lv_obj_t *ui_Header_Bluetooth2;
-lv_obj_t *ui_Header_Bluetooth_Text2;
-lv_obj_t *ui_Header_Bluetooth_Time2;
-lv_obj_t *ui_Header_Bluetooth_Volume_Img2;
-lv_obj_t *ui_Header_Bluetooth_Volume_Value2;
-lv_obj_t *ui_Menu_Items2;
-lv_obj_t *ui_Music2;
-lv_obj_t *ui_Music_Image2;
-void ui_event_Music_Btn2( lv_event_t * e);
-lv_obj_t *ui_Music_Btn2;
-lv_obj_t *ui_Music_Text2;
-lv_obj_t *ui_Music1;
-lv_obj_t *ui_Music_Image3;
-void ui_event_Music_Btn1( lv_event_t * e);
-lv_obj_t *ui_Music_Btn1;
-lv_obj_t *ui_Music_Text1;
-lv_obj_t *ui_Music3;
-lv_obj_t *ui_Music_Image4;
-void ui_event_Music_Btn3( lv_event_t * e);
-lv_obj_t *ui_Music_Btn3;
-lv_obj_t *ui_Music_Text3;
-lv_obj_t *ui_Music4;
-lv_obj_t *ui_Music_Image5;
-void ui_event_Music_Btn4( lv_event_t * e);
-lv_obj_t *ui_Music_Btn4;
-lv_obj_t *ui_Music_Text4;
-lv_obj_t *ui_Music5;
-lv_obj_t *ui_Music_Image6;
-void ui_event_Music_Btn5( lv_event_t * e);
-lv_obj_t *ui_Music_Btn5;
-lv_obj_t *ui_Music_Text5;
-lv_obj_t *ui_Music6;
-lv_obj_t *ui_Music_Image7;
-void ui_event_Music_Btn6( lv_event_t * e);
-lv_obj_t *ui_Music_Btn6;
-lv_obj_t *ui_Music_Text6;
+lv_obj_t *ui_Header_Mode;
+lv_obj_t *ui_Header_Mode_Text;
+lv_obj_t *ui_Header_Mode_Time;
+lv_obj_t *ui_Header_Mode_Volume_Icon;
+lv_obj_t *ui_Header_Mode_Volume_Value;
+lv_obj_t *ui_Mode_Items;
+lv_obj_t *ui_Mode_Nature;
+lv_obj_t *ui_Mode_Nature_Icon;
+void ui_event_Mode_Nature_Btn( lv_event_t * e);
+lv_obj_t *ui_Mode_Nature_Btn;
+lv_obj_t *ui_Mode_Nature_text;
+lv_obj_t *ui_Mode_Jazz;
+lv_obj_t *ui_Mode_Jazz_Icon;
+void ui_event_Mode_Jazz_Btn( lv_event_t * e);
+lv_obj_t *ui_Mode_Jazz_Btn;
+lv_obj_t *ui_Mode_Jazz_Text;
+lv_obj_t *ui_Mode_Rock;
+lv_obj_t *ui_Mode_Rock_Icon;
+void ui_event_Mode_Rock_Btn( lv_event_t * e);
+lv_obj_t *ui_Mode_Rock_Btn;
+lv_obj_t *ui_Mode_Rock_Text;
+lv_obj_t *ui_Mode_Pop;
+lv_obj_t *ui_Mode_Pop_Icon;
+void ui_event_Mode_Pop_Btn( lv_event_t * e);
+lv_obj_t *ui_Mode_Pop_Btn;
+lv_obj_t *ui_Mode_Pop_Text;
+lv_obj_t *ui_Mode_Classical;
+lv_obj_t *ui_Mode_Classical_Icon;
+void ui_event_Mode_Classical_Btn( lv_event_t * e);
+lv_obj_t *ui_Mode_Classical_Btn;
+lv_obj_t *ui_Mode_Classical_Text;
+lv_obj_t *ui_Mode_Opera;
+lv_obj_t *ui_Mode_Opera_Icon;
+void ui_event_Mode_Opera_Btn( lv_event_t * e);
+lv_obj_t *ui_Mode_Opera_Btn;
+lv_obj_t *ui_Mode_Opera_Text;
 void ui_event_BackToMainWindow4( lv_event_t * e);
 lv_obj_t *ui_BackToMainWindow4;
 
 
 // SCREEN: ui_Wake_up_Window
 void ui_Wake_up_Window_screen_init(void);
+void ui_event_Wake_up_Window( lv_event_t * e);
 lv_obj_t *ui_Wake_up_Window;
-lv_obj_t *ui_Header_Bluetooth3;
-lv_obj_t *ui_Header_Bluetooth_Text3;
-lv_obj_t *ui_Header_Bluetooth_Time3;
-lv_obj_t *ui_Header_Bluetooth_Volume_Img3;
-lv_obj_t *ui_Header_Bluetooth_Volume_Value3;
-lv_obj_t *ui_Bluetooth_Name2;
-lv_obj_t *ui_Bluetooth_Name_Text2;
-lv_obj_t *ui_Bluetooth_Name_Line4;
-lv_obj_t *ui_Bluetooth_Name1;
-lv_obj_t *ui_Bluetooth_Name_Text1;
-lv_obj_t *ui_Bluetooth_Name_Line1;
+lv_obj_t *ui_Header_Wake_up;
+lv_obj_t *ui_Header_Wake_up_Text;
+lv_obj_t *ui_Header_Wake_up_Time;
+lv_obj_t *ui_Header_Wake_up_Volume_Icon;
+lv_obj_t *ui_Header_Wake_up_Volume_Value;
+lv_obj_t *ui_Custom_Ringtone;
+lv_obj_t *ui_Custom_Ringtone_Text;
+lv_obj_t *ui_Custom_Ringtone_Line;
+lv_obj_t *ui_Custom_Ringtone_Decora_Icon;
+lv_obj_t *ui_Wake_up_Time;
+lv_obj_t *ui_Wake_up_Time_Text;
+lv_obj_t *ui_Wake_up_Time_Line;
+lv_obj_t *ui_Wake_up_Time_Decora_Icon;
 void ui_event_BackToMainWindow5( lv_event_t * e);
 lv_obj_t *ui_BackToMainWindow5;
-lv_obj_t *ui_Image2;
-lv_obj_t *ui_Image3;
 
 
 // SCREEN: ui_Guide_Window
 void ui_Guide_Window_screen_init(void);
 void ui_event_Guide_Window( lv_event_t * e);
 lv_obj_t *ui_Guide_Window;
-lv_obj_t *ui_Header_Bluetooth4;
-lv_obj_t *ui_Header_Bluetooth_Text4;
-lv_obj_t *ui_Header_Bluetooth_Time4;
-lv_obj_t *ui_Header_Bluetooth_Volume_Img4;
-lv_obj_t *ui_Header_Bluetooth_Volume_Value4;
-lv_obj_t *ui_Label3;
-lv_obj_t *ui_Label4;
+lv_obj_t *ui_Header_Guide;
+lv_obj_t *ui_Header_Guide_Text;
+lv_obj_t *ui_Header_Guide_Time;
+lv_obj_t *ui_Header_Guide_Volume_Icon;
+lv_obj_t *ui_Header_Guide_Volume_Value;
+lv_obj_t *ui_Guide_Title;
+lv_obj_t *ui_Guide_Content;
 lv_obj_t *ui_Popup_WIndow;
-void ui_event_Close_More_Info_Btn( lv_event_t * e);
-lv_obj_t *ui_Close_More_Info_Btn;
-lv_obj_t *ui_Label5;
-lv_obj_t *ui_Image1;
+void ui_event_More_Info_Close_Btn( lv_event_t * e);
+lv_obj_t *ui_More_Info_Close_Btn;
+lv_obj_t *ui_More_Info_Text;
+lv_obj_t *ui_QR_Code;
 void ui_event_BackToMainWindow6( lv_event_t * e);
 lv_obj_t *ui_BackToMainWindow6;
 void ui_event____initial_actions0( lv_event_t * e);
 lv_obj_t *ui____initial_actions0;
+const lv_img_dsc_t *ui_imgset_back[1] = {&ui_img_1830113796};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -252,7 +274,7 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Nature_Sound_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Nature_Sound_Window_screen_init);
 }
 }
-void ui_event_Music_Button2( lv_event_t * e) {
+void ui_event_Bluetooth_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Bluetooth_WIndow, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Bluetooth_WIndow_screen_init);
@@ -288,10 +310,22 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
 }
 }
+void ui_event_Nature_Sound_Window( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SCREEN_LOADED) {
+      setTimeNatureSound( e );
+}
+}
 void ui_event_BackToMainWindow2( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
+}
+}
+void ui_event_Bluetooth_WIndow( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SCREEN_LOADED) {
+      setTimeBluetooth( e );
 }
 }
 void ui_event_BackToMainWindow3( lv_event_t * e) {
@@ -300,37 +334,43 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
 }
 }
-void ui_event_Music_Btn2( lv_event_t * e) {
+void ui_event_Mode_WIndow( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SCREEN_LOADED) {
+      setTimeMode( e );
+}
+}
+void ui_event_Mode_Nature_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_RELEASED) {
       _ui_screen_change( &ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
 }
 }
-void ui_event_Music_Btn1( lv_event_t * e) {
+void ui_event_Mode_Jazz_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_RELEASED) {
       _ui_screen_change( &ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
 }
 }
-void ui_event_Music_Btn3( lv_event_t * e) {
+void ui_event_Mode_Rock_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_RELEASED) {
       _ui_screen_change( &ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
 }
 }
-void ui_event_Music_Btn4( lv_event_t * e) {
+void ui_event_Mode_Pop_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_RELEASED) {
       _ui_screen_change( &ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
 }
 }
-void ui_event_Music_Btn5( lv_event_t * e) {
+void ui_event_Mode_Classical_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_RELEASED) {
       _ui_screen_change( &ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
 }
 }
-void ui_event_Music_Btn6( lv_event_t * e) {
+void ui_event_Mode_Opera_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_RELEASED) {
       _ui_screen_change( &ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
@@ -342,6 +382,12 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
 }
 }
+void ui_event_Wake_up_Window( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SCREEN_LOADED) {
+      setTimeWakeup( e );
+}
+}
 void ui_event_BackToMainWindow5( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
@@ -351,13 +397,13 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
 void ui_event_Guide_Window( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SCREEN_LOAD_START) {
-      _ui_basic_set_property(ui_Popup_WIndow, _UI_BASIC_PROPERTY_POSITION_X,  0);
+      _ui_flag_modify( ui_Popup_WIndow, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
 }
 }
-void ui_event_Close_More_Info_Btn( lv_event_t * e) {
+void ui_event_More_Info_Close_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
-      _ui_basic_set_property(ui_Popup_WIndow, _UI_BASIC_PROPERTY_POSITION_X,  1000);
+      _ui_flag_modify( ui_Popup_WIndow, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
 }
 }
 void ui_event_BackToMainWindow6( lv_event_t * e) {

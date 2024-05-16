@@ -19,6 +19,7 @@ images/ui_img_967182345.c
 images/ui_img_72497716.c
 images/ui_img_411136687.c
 images/ui_img_348826415.c
+images/ui_img_35201459.c
 images/ui_img_12669592.c
 images/ui_img_2034599484.c
 images/ui_img_304460963.c
@@ -29,6 +30,7 @@ images/ui_img_720023698.c
 images/ui_img_720017300.c
 images/ui_img_720032643.c
 images/ui_img_720045703.c
+images/ui_img_1830113796.c
 images/ui_img_1526512104.c
 fonts/ui_font_LanTIng20.c
 fonts/ui_font_LanTing18.c

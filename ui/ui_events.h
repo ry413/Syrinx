@@ -13,6 +13,10 @@ extern "C" {
 void initTime(lv_event_t * e);
 void setTimeMain(lv_event_t * e);
 void setTimeMusic(lv_event_t * e);
+void setTimeNatureSound(lv_event_t * e);
+void setTimeBluetooth(lv_event_t * e);
+void setTimeMode(lv_event_t * e);
+void setTimeWakeup(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

@@ -11,7 +11,20 @@
         "sdkconfig.h": "c",
         "esp_wifi.h": "c",
         "wifi.h": "c",
-        "event_groups.h": "c"
+        "event_groups.h": "c",
+        "*.tcc": "c",
+        "cstdio": "c",
+        "semphr.h": "c",
+        "nvs_flash.h": "c",
+        "esp_lcd_panel_ops.h": "c",
+        "backlight.h": "c",
+        "ledc.h": "c",
+        "spi_master.h": "c",
+        "gpio.h": "c",
+        "esp_err.h": "c",
+        "esp_intr_alloc.h": "c",
+        "esp_log.h": "c",
+        "ui_comp_hook.h": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",
