@@ -11,17 +11,35 @@
 
 // SCREEN: ui_Settings
 void ui_Settings_screen_init(void);
+void ui_event_Settings( lv_event_t * e);
 lv_obj_t *ui_Settings;
 lv_obj_t *ui_Header_Main2;
 lv_obj_t *ui_Header_Main_Text2;
 lv_obj_t *ui_Header_Main_Time2;
 lv_obj_t *ui_Header_Main_Volume_Icon2;
 lv_obj_t *ui_Header_Main_Volume_Value2;
-lv_obj_t *ui_MusicList2;
-lv_obj_t *ui_Music_Item2;
-void ui_event_Music_Item2_Button3( lv_event_t * e);
-lv_obj_t *ui_Music_Item1;
-lv_obj_t *ui_Music_Item3;
+lv_obj_t *ui_Settings_List;
+lv_obj_t *ui_Settings_Backlight;
+lv_obj_t *ui_Settings_Backlight_Text;
+lv_obj_t *ui_Settings_Backlight_Line;
+lv_obj_t *ui_Settings_Backlight_Icon;
+lv_obj_t *ui_Settings_Backlight_Decora_Icon;
+void ui_event_Settings_Backlight_Btn( lv_event_t * e);
+lv_obj_t *ui_Settings_Backlight_Btn;
+lv_obj_t *ui_Settings_Bluetooth;
+lv_obj_t *ui_Settings_Bluetooth_Text;
+lv_obj_t *ui_Settings_Bluetooth_Line;
+lv_obj_t *ui_Settings_Bluetooth_Icon;
+lv_obj_t *ui_Settings_Bluetooth_Decora_Icon;
+void ui_event_Settings_Bluetooth_Btn( lv_event_t * e);
+lv_obj_t *ui_Settings_Bluetooth_Btn;
+lv_obj_t *ui_Settings_Time;
+lv_obj_t *ui_Settings_Time_Text;
+lv_obj_t *ui_Settings_Time_Line;
+lv_obj_t *ui_Settings_Time_Icon;
+lv_obj_t *ui_Settings_Time_Decora_Icon;
+void ui_event_Settings_Time_Btn( lv_event_t * e);
+lv_obj_t *ui_Settings_Time_Btn;
 lv_obj_t *ui_Music_Item4;
 lv_obj_t *ui_Music_Item5;
 lv_obj_t *ui_Music_Item6;
@@ -37,37 +55,119 @@ lv_obj_t *ui_Header_Main_Text3;
 lv_obj_t *ui_Header_Main_Time3;
 lv_obj_t *ui_Header_Main_Volume_Icon3;
 lv_obj_t *ui_Header_Main_Volume_Value3;
+void ui_event_BackToMainWindow3( lv_event_t * e);
 lv_obj_t *ui_BackToMainWindow3;
 lv_obj_t *ui_Backlight_Settings_items;
-lv_obj_t *ui_Music_Item9;
-lv_obj_t *ui_Music_Name2;
-lv_obj_t *ui_Music_Item_Line2;
-void ui_event_Button1( lv_event_t * e);
-lv_obj_t *ui_Button1;
-lv_obj_t *ui_Music_Item10;
-lv_obj_t *ui_Music_Name3;
-lv_obj_t *ui_Music_Item_Line3;
-lv_obj_t *ui_Button2;
-lv_obj_t *ui_Backlight_Brightness_Panel;
+lv_obj_t *ui_Backlight_Brightness;
 lv_obj_t *ui_Backlight_Brightness_Text;
-void ui_event_Backlight_Verify_Btn( lv_event_t * e);
-lv_obj_t *ui_Backlight_Verify_Btn;
-lv_obj_t *ui_Label4;
-void ui_event_Backlight_Cancel_Btn( lv_event_t * e);
-lv_obj_t *ui_Backlight_Cancel_Btn;
-lv_obj_t *ui_Label1;
+lv_obj_t *ui_Backlight_Brightness_Line;
+void ui_event_Backlight_Brightness_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Brightness_Btn;
+lv_obj_t *ui_Backlight_Time;
+lv_obj_t *ui_Backlight_Time_Text;
+lv_obj_t *ui_Backlight_Time_Line;
+void ui_event_Backlight_Time_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Time_Btn;
+lv_obj_t *ui_Backlight_Brightness_Panel;
+lv_obj_t *ui_Backlight_Brightness_Panel_Text;
+void ui_event_Backlight_Brightness_Verify_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Brightness_Verify_Btn;
+lv_obj_t *ui_Backlight_Brightness_Verify_Btn_Text;
+void ui_event_Backlight_Brightness_Cancel_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Brightness_Cancel_Btn;
+lv_obj_t *ui_Backlight_Brightness_Cancel_Text;
 lv_obj_t *ui_Backlight_Brightness_Value_Panel;
 lv_obj_t *ui_Backlight_Brightness_Value;
-void ui_event_Backlight_Dec_Btn( lv_event_t * e);
-lv_obj_t *ui_Backlight_Dec_Btn;
-lv_obj_t *ui_Backlight_Dec_Icon;
-void ui_event_Backlight_Add_Btn( lv_event_t * e);
-lv_obj_t *ui_Backlight_Add_Btn;
-lv_obj_t *ui_Backlight_Add_Icon;
+void ui_event_Backlight_Brightness_Dec_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Brightness_Dec_Btn;
+lv_obj_t *ui_Backlight_Brightness_Dec_Icon;
+void ui_event_Backlight_Brightness_Add_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Brightness_Add_Btn;
+lv_obj_t *ui_Backlight_Brightness_Add_Icon;
+lv_obj_t *ui_Backlight_Time_Panel;
+lv_obj_t *ui_Backlight_Time_Panel_Text;
+void ui_event_Backlight_Time_Verify_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Time_Verify_Btn;
+lv_obj_t *ui_Backlight_Time_Verify_Btn_Text;
+void ui_event_Backlight_Time_Cancel_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Time_Cancel_Btn;
+lv_obj_t *ui_Backlight_Time_Cancel_Text;
+lv_obj_t *ui_Backlight_Time_Value_Panel;
+lv_obj_t *ui_Backlight_Time_Value;
+void ui_event_Backlight_Time_Dec_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Time_Dec_Btn;
+lv_obj_t *ui_Backlight_Time_Dec_Icon;
+void ui_event_Backlight_Time_Add_Btn( lv_event_t * e);
+lv_obj_t *ui_Backlight_Time_Add_Btn;
+lv_obj_t *ui_Backlight_Time_Add_Icon;
+
+
+// SCREEN: ui_Bluetooth_Settings
+void ui_Bluetooth_Settings_screen_init(void);
+lv_obj_t *ui_Bluetooth_Settings;
+lv_obj_t *ui_Header_Main4;
+lv_obj_t *ui_Header_Main_Text4;
+lv_obj_t *ui_Header_Main_Time4;
+lv_obj_t *ui_Header_Main_Volume_Icon4;
+lv_obj_t *ui_Header_Main_Volume_Value4;
+lv_obj_t *ui_Bluetooth_Name;
+lv_obj_t *ui_Bluetooth_Name_Text;
+lv_obj_t *ui_Bluetooth_Name_Line;
+void ui_event_Bluetooth_Name_Input( lv_event_t * e);
+lv_obj_t *ui_Bluetooth_Name_Input;
+void ui_event_Bluetooth_Name_Enter_Btn( lv_event_t * e);
+lv_obj_t *ui_Bluetooth_Name_Enter_Btn;
+lv_obj_t *ui_Bluetooth_Name_Enter_Icon;
+lv_obj_t *ui_Bluetooth_Password;
+lv_obj_t *ui_Bluetooth_Password_Text;
+lv_obj_t *ui_Bluetooth_Password_Line;
+void ui_event_Bluetooth_Password_Input( lv_event_t * e);
+lv_obj_t *ui_Bluetooth_Password_Input;
+void ui_event_Bluetooth_Password_Enter_Btn( lv_event_t * e);
+lv_obj_t *ui_Bluetooth_Password_Enter_Btn;
+lv_obj_t *ui_Bluetooth_Password_Enter_Icon;
+lv_obj_t *ui_Bluetooth_Keyboard;
+void ui_event_BackToMainWindow4( lv_event_t * e);
+lv_obj_t *ui_BackToMainWindow4;
+
+
+// SCREEN: ui_Time_Settings
+void ui_Time_Settings_screen_init(void);
+lv_obj_t *ui_Time_Settings;
+lv_obj_t *ui_Header_Main5;
+lv_obj_t *ui_Header_Main_Text5;
+lv_obj_t *ui_Header_Main_Time5;
+lv_obj_t *ui_Header_Main_Volume_Icon5;
+lv_obj_t *ui_Header_Main_Volume_Value5;
+lv_obj_t *ui_Time_Setting_Panel;
+lv_obj_t *ui_Time_Setting_Text;
+lv_obj_t *ui_Time_Setting_Line;
+void ui_event_Time_Setting_Hour( lv_event_t * e);
+lv_obj_t *ui_Time_Setting_Hour;
+void ui_event_Time_Setting_Min( lv_event_t * e);
+lv_obj_t *ui_Time_Setting_Min;
+void ui_event_Time_Setting_Enter_Btn( lv_event_t * e);
+lv_obj_t *ui_Time_Setting_Enter_Btn;
+lv_obj_t *ui_Time_Setting_Enter_Icon;
+lv_obj_t *ui_Date_Setting_Panel;
+lv_obj_t *ui_Date_Settings_Text;
+lv_obj_t *ui_Date_Setting_Line;
+void ui_event_Date_Setting_Year( lv_event_t * e);
+lv_obj_t *ui_Date_Setting_Year;
+void ui_event_Date_Setting_Month( lv_event_t * e);
+lv_obj_t *ui_Date_Setting_Month;
+void ui_event_Date_Setting_Day( lv_event_t * e);
+lv_obj_t *ui_Date_Setting_Day;
+void ui_event_Date_Setting_Enter_Btn( lv_event_t * e);
+lv_obj_t *ui_Date_Setting_Enter_Btn;
+lv_obj_t *ui_Date_Setting_Enter_Icon;
+lv_obj_t *ui_Date_Time_Keyboard;
+void ui_event_BackToMainWindow5( lv_event_t * e);
+lv_obj_t *ui_BackToMainWindow5;
 lv_obj_t *ui____initial_actions0;
-const lv_img_dsc_t *ui_imgset_back[1] = {&ui_img_1830113796};
-const lv_img_dsc_t *ui_imgset_right_triangle[1] = {&ui_img_239308628};
 const lv_img_dsc_t *ui_imgset_left_triangle[1] = {&ui_img_404002205};
+const lv_img_dsc_t *ui_imgset_right_triangle[1] = {&ui_img_239308628};
+const lv_img_dsc_t *ui_imgset_back[1] = {&ui_img_1830113796};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -80,42 +180,178 @@ const lv_img_dsc_t *ui_imgset_left_triangle[1] = {&ui_img_404002205};
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
-void ui_event_Music_Item2_Button3( lv_event_t * e) {
+void ui_event_Settings( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
-if ( event_code == LV_EVENT_CLICKED) {
+if ( event_code == LV_EVENT_SCREEN_LOADED) {
+      initBacklightSettings( e );
+      initDateTimeSettings( e );
+      initBluetoothSettings( e );
+}
+}
+void ui_event_Settings_Backlight_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Backlight_Settings, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Backlight_Settings_screen_init);
 }
 }
-void ui_event_Button1( lv_event_t * e) {
+void ui_event_Settings_Bluetooth_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_screen_change( &ui_Bluetooth_Settings, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Bluetooth_Settings_screen_init);
+}
+}
+void ui_event_Settings_Time_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_screen_change( &ui_Time_Settings, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Time_Settings_screen_init);
+}
+}
+void ui_event_BackToMainWindow3( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_screen_change( &ui_Settings, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_screen_init);
+}
+}
+void ui_event_Backlight_Brightness_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_flag_modify( ui_Backlight_Brightness_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
 }
 }
-void ui_event_Backlight_Verify_Btn( lv_event_t * e) {
+void ui_event_Backlight_Time_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_flag_modify( ui_Backlight_Time_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+}
+}
+void ui_event_Backlight_Brightness_Verify_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       saveBacklightBrightness( e );
       _ui_flag_modify( ui_Backlight_Brightness_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
 }
 }
-void ui_event_Backlight_Cancel_Btn( lv_event_t * e) {
+void ui_event_Backlight_Brightness_Cancel_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       cancelSaveBacklightBrightness( e );
       _ui_flag_modify( ui_Backlight_Brightness_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
 }
 }
-void ui_event_Backlight_Dec_Btn( lv_event_t * e) {
+void ui_event_Backlight_Brightness_Dec_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       decBrightness( e );
 }
 }
-void ui_event_Backlight_Add_Btn( lv_event_t * e) {
+void ui_event_Backlight_Brightness_Add_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       addBrightness( e );
+}
+}
+void ui_event_Backlight_Time_Verify_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      saveBacklightTime( e );
+      _ui_flag_modify( ui_Backlight_Time_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+}
+}
+void ui_event_Backlight_Time_Cancel_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      cancelSaveBacklightTime( e );
+      _ui_flag_modify( ui_Backlight_Time_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+}
+}
+void ui_event_Backlight_Time_Dec_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      decBacklightTime( e );
+}
+}
+void ui_event_Backlight_Time_Add_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      addBacklightTime( e );
+}
+}
+void ui_event_Bluetooth_Name_Input( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_keyboard_set_target(ui_Bluetooth_Keyboard,  ui_Bluetooth_Name_Input);
+}
+}
+void ui_event_Bluetooth_Name_Enter_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      saveBluetoothNameSetting( e );
+}
+}
+void ui_event_Bluetooth_Password_Input( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_keyboard_set_target(ui_Bluetooth_Keyboard,  ui_Bluetooth_Password_Input);
+}
+}
+void ui_event_Bluetooth_Password_Enter_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      saveBluetoothPasswordSetting( e );
+}
+}
+void ui_event_BackToMainWindow4( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_screen_change( &ui_Settings, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_screen_init);
+}
+}
+void ui_event_Time_Setting_Hour( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_keyboard_set_target(ui_Date_Time_Keyboard,  ui_Time_Setting_Hour);
+}
+}
+void ui_event_Time_Setting_Min( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_keyboard_set_target(ui_Date_Time_Keyboard,  ui_Time_Setting_Min);
+}
+}
+void ui_event_Time_Setting_Enter_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      saveTimeSetting( e );
+}
+}
+void ui_event_Date_Setting_Year( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_keyboard_set_target(ui_Date_Time_Keyboard,  ui_Date_Setting_Year);
+}
+}
+void ui_event_Date_Setting_Month( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_keyboard_set_target(ui_Date_Time_Keyboard,  ui_Date_Setting_Month);
+}
+}
+void ui_event_Date_Setting_Day( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_keyboard_set_target(ui_Date_Time_Keyboard,  ui_Date_Setting_Day);
+}
+}
+void ui_event_Date_Setting_Enter_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      saveDateSetting( e );
+}
+}
+void ui_event_BackToMainWindow5( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_screen_change( &ui_Settings, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_screen_init);
 }
 }
 
@@ -129,6 +365,8 @@ lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE
 lv_disp_set_theme(dispp, theme);
 ui_Settings_screen_init();
 ui_Backlight_Settings_screen_init();
+ui_Bluetooth_Settings_screen_init();
+ui_Time_Settings_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
 lv_disp_load_scr( ui_Settings);
 }

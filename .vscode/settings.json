@@ -24,7 +24,12 @@
         "esp_err.h": "c",
         "esp_intr_alloc.h": "c",
         "esp_log.h": "c",
-        "ui_comp_hook.h": "c"
+        "ui_comp_hook.h": "c",
+        "nvs.h": "c",
+        "stdio.h": "c",
+        "chrono": "c",
+        "random": "c",
+        "limits": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

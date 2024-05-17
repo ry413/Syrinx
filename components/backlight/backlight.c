@@ -8,15 +8,15 @@ static uint32_t backlightLevelToDuty(uint32_t level);
 void initBacklight(void) {
     // 从nvs获取背光等级
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("backlightLevel", NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open("BLSettings", NVS_READONLY, &nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("backlightLevel", "Failed to open NVS");
+        ESP_LOGE("initBacklight", "Failed to open NVS");
         return;
     }
     uint32_t backlightLevel;
     err = nvs_get_u32(nvs_handle, "level", &backlightLevel);
     if (err != ESP_OK) {
-        ESP_LOGE("backlightLevel", "Failed to get backlightLevel from NVS");
+        ESP_LOGE("initBacklight", "Failed to get backlightLevel from NVS");
         nvs_close(nvs_handle);
         return;
     }
@@ -54,7 +54,7 @@ static uint32_t backlightLevelToDuty(uint32_t level) {
         case 5:
             return 255;
         default:
-            ESP_LOGE("backlight", "这不应该发生, 错误的亮度级别: %ld", level);
+            ESP_LOGE("backlightLevelToDuty", "这不应该发生, 错误的亮度级别: %ld", level);
             return 1;
     }
 }

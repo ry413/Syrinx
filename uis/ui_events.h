@@ -10,10 +10,21 @@
 extern "C" {
 #endif
 
+void initBacklightSettings(lv_event_t * e);
+void initDateTimeSettings(lv_event_t * e);
+void initBluetoothSettings(lv_event_t * e);
 void saveBacklightBrightness(lv_event_t * e);
 void cancelSaveBacklightBrightness(lv_event_t * e);
 void decBrightness(lv_event_t * e);
 void addBrightness(lv_event_t * e);
+void saveBacklightTime(lv_event_t * e);
+void cancelSaveBacklightTime(lv_event_t * e);
+void decBacklightTime(lv_event_t * e);
+void addBacklightTime(lv_event_t * e);
+void saveBluetoothNameSetting(lv_event_t * e);
+void saveBluetoothPasswordSetting(lv_event_t * e);
+void saveTimeSetting(lv_event_t * e);
+void saveDateSetting(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

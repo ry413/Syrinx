@@ -8,7 +8,53 @@
 #include "backlight.h"
 #include "nvs.h"
 #include <esp_log.h>
+#include "ui_events.h"
 
+uint32_t prevBacklightLevel;
+int backlightTimes[7] = {0, 5, 10, 20, 30, 60, 300};
+uint32_t prevBacklightTimeLevel;
+
+uint32_t prevTimeHour;
+uint32_t prevTimeMin;
+uint32_t prevDateYear;
+uint32_t prevDateMonth;
+uint32_t prevDateDay;
+
+char prevBluetoothName[30];
+char prevBluetoothPassword[30];
+
+static void updateBacklightTime(int backlightTimeLevel);
+static uint32_t getBacklightTimeLevel();
+
+
+// 初始化背光设置
+void initBacklightSettings(lv_event_t * e)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("BLSettings", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("backlightSettings", "Failed to open NVS");
+        return;
+    }
+
+    err = nvs_get_u32(nvs_handle, "level", &prevBacklightLevel);
+    lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%ld", prevBacklightLevel);
+    if (err != ESP_OK) {
+        ESP_LOGE("backlightSettings", "Failed to get backlightLevel from NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    err = nvs_get_u32(nvs_handle, "time", &prevBacklightTimeLevel);
+    updateBacklightTime(prevBacklightTimeLevel);
+    if (err != ESP_OK) {
+        ESP_LOGE("backlightSettings", "Failed to get backlightTimeLevel from NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    nvs_close(nvs_handle);
+}
+// 减少亮度
 void decBrightness(lv_event_t * e) {
     const char *text = lv_label_get_text(ui_Backlight_Brightness_Value);
     int brightnessLevel = atoi(text);
@@ -16,7 +62,7 @@ void decBrightness(lv_event_t * e) {
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%d", brightnessLevel);
     setBacklight(brightnessLevel);
 }
-
+// 增加亮度
 void addBrightness(lv_event_t * e) {
     const char *text = lv_label_get_text(ui_Backlight_Brightness_Value);
     int brightnessLevel = atoi(text);
@@ -24,12 +70,11 @@ void addBrightness(lv_event_t * e) {
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%d", brightnessLevel);
     setBacklight(brightnessLevel);
 }
-
-uint32_t prevBacklightLevel;
+// 确认保存亮度
 void saveBacklightBrightness(lv_event_t * e) {
     // 保存亮度等级至nvs
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("backlightLevel", NVS_READWRITE, &nvs_handle);
+    esp_err_t err = nvs_open("BLSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
         ESP_LOGE("saveBacklightLevel", "Failed to open NVS");
         return;
@@ -49,8 +94,368 @@ void saveBacklightBrightness(lv_event_t * e) {
     }
     nvs_close(nvs_handle);
 }
-
+// 取消保存亮度
 void cancelSaveBacklightBrightness(lv_event_t * e) {
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%d", (int)prevBacklightLevel);
     setBacklight(prevBacklightLevel);
+}
+// 返回当前背光时间label上秒数对应的等级
+static uint32_t getBacklightTimeLevel() {
+    const char *text = lv_label_get_text(ui_Backlight_Time_Value);
+    if (strcmp(text, "off") != 0) {
+        int backlightTime = atoi(text);
+        for (int i = 0; i < 7; i++) {
+            if (backlightTimes[i] == backlightTime) {
+                return i;
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+// 确认保存背光时间
+void saveBacklightTime(lv_event_t * e)
+{
+    // 保存背光时间等级至nvs
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("BLSettings", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBacklightTime", "Failed to open NVS");
+        return;
+    }
+    prevBacklightTimeLevel = getBacklightTimeLevel();
+    err = nvs_set_u32(nvs_handle, "time", prevBacklightTimeLevel);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBacklightTime", "Failed to set backlightTime in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBacklightTime", "Failed to commit NVS changes");
+    }
+    nvs_close(nvs_handle);
+}
+// 取消保存背光时间
+void cancelSaveBacklightTime(lv_event_t * e)
+{
+    updateBacklightTime(prevBacklightTimeLevel);
+}
+
+// 更新背光时间到label上
+static void updateBacklightTime(int backlightTimeLevel) {
+    int backlightTime = backlightTimes[backlightTimeLevel];
+    if (backlightTime == 0) {
+        lv_label_set_text(ui_Backlight_Time_Value, "off");
+    } else {
+        lv_label_set_text_fmt(ui_Backlight_Time_Value, "%ds", backlightTime);
+    }
+}
+
+// 减少背光时间
+void decBacklightTime(lv_event_t * e)
+{
+    int backlightTimeLevel = getBacklightTimeLevel();
+    if (backlightTimeLevel > 0) {
+        backlightTimeLevel--;
+    }
+    updateBacklightTime(backlightTimeLevel);
+}
+
+// 增加背光时间
+void addBacklightTime(lv_event_t * e)
+{
+    int backlightTimeLevel = getBacklightTimeLevel();
+    if (backlightTimeLevel < 6) {
+        backlightTimeLevel++;
+    }
+    updateBacklightTime(backlightTimeLevel);
+}
+
+// 保存时间设置
+void saveTimeSetting(lv_event_t * e)
+{
+	// Your code here
+    const char *hour_text = lv_textarea_get_text(ui_Time_Setting_Hour);
+    const char *min_text = lv_textarea_get_text(ui_Time_Setting_Min);
+
+    // Check if the input is a valid number
+    int hour = atoi(hour_text);
+    int min = atoi(min_text);
+    if (hour < 0 || hour > 23 || min < 0 || min > 59) {
+        char hour_text[3];
+        snprintf(hour_text, sizeof(hour_text), "%ld", prevTimeHour);
+        lv_textarea_set_text(ui_Time_Setting_Hour, hour_text);
+        char min_text[3];
+        snprintf(min_text, sizeof(min_text), "%ld", prevTimeMin);
+        lv_textarea_set_text(ui_Time_Setting_Min, min_text);
+        ESP_LOGE("saveTimeSetting", "Invalid input: hour=%s, minute=%s", hour_text, min_text);
+        return;
+    }
+    prevTimeHour = hour;
+    prevTimeMin = min;
+    // Save the time settings to NVS
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("TimeSettings", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveTimeSetting", "Failed to open NVS");
+        return;
+    }
+
+    err = nvs_set_u32(nvs_handle, "hour", prevTimeHour);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveTimeSetting", "Failed to set hour in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    err = nvs_set_u32(nvs_handle, "minute", prevTimeMin);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveTimeSetting", "Failed to set minute in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveTimeSetting", "Failed to commit NVS changes");
+    }
+
+    nvs_close(nvs_handle);
+}
+// 保存日期设置
+void saveDateSetting(lv_event_t * e)
+{
+	// Your code here
+    const char *year_text = lv_textarea_get_text(ui_Date_Setting_Year);
+    const char *month_text = lv_textarea_get_text(ui_Date_Setting_Month);
+    const char *day_text = lv_textarea_get_text(ui_Date_Setting_Day);
+    // Check if the input is a valid number
+    uint32_t year = (uint32_t)atoi(year_text);
+    uint32_t month = (uint32_t)atoi(month_text);
+    uint32_t day = (uint32_t)atoi(day_text);
+    if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+        char year_text[5];
+        snprintf(year_text, sizeof(year_text), "%ld", prevDateYear);
+        lv_textarea_set_text(ui_Date_Setting_Year, year_text);
+        char month_text[3];
+        snprintf(month_text, sizeof(month_text), "%ld", prevDateMonth);
+        lv_textarea_set_text(ui_Date_Setting_Month, month_text);
+        char day_text[3];
+        snprintf(day_text, sizeof(day_text), "%ld", prevDateDay);
+        lv_textarea_set_text(ui_Date_Setting_Day, day_text);
+
+        // Print error message
+        ESP_LOGE("saveDateSetting", "Invalid input: year=%s, month=%s, day=%s", year_text, month_text, day_text);
+        return;
+    }
+    // Save the date settings to NVS
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("TimeSettings", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveDateSetting", "Failed to open NVS");
+        return;
+    }
+    err = nvs_set_u32(nvs_handle, "year", year);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveDateSetting", "Failed to set year in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_set_u32(nvs_handle, "month", month);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveDateSetting", "Failed to set month in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_set_u32(nvs_handle, "day", day);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveDateSetting", "Failed to set day in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveDateSetting", "Failed to commit NVS changes");
+    }
+    printf("All is well.");
+    nvs_close(nvs_handle);
+}
+// 初始化时间与日期
+void initDateTimeSettings(lv_event_t * e)
+{
+    // Read date settings from NVS
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("TimeSettings", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("initDateTimeSettings", "Failed to open NVS: %s", esp_err_to_name(err));
+        return;
+    }
+    err = nvs_get_u32(nvs_handle, "year", &prevDateYear);
+    if (err != ESP_OK) {
+        ESP_LOGE("initDateTimeSettings", "Failed to get year from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_get_u32(nvs_handle, "month", &prevDateMonth);
+    if (err != ESP_OK) {
+        ESP_LOGE("initDateTimeSettings", "Failed to get month from NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_get_u32(nvs_handle, "day", &prevDateDay);
+    if (err != ESP_OK) {
+        ESP_LOGE("initDateTimeSettings", "Failed to get day from NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_get_u32(nvs_handle, "hour", &prevTimeHour);
+    if (err != ESP_OK) {
+        ESP_LOGE("initDateTimeSettings", "Failed to get hour from NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_get_u32(nvs_handle, "minute", &prevTimeMin);
+    if (err != ESP_OK) {
+        ESP_LOGE("initDateTimeSettings", "Failed to get minute from NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    nvs_close(nvs_handle);
+
+    // Set date values in text areas
+    char year_text[5], month_text[3], day_text[3], hour_text[3], min_text[3];
+    snprintf(year_text, sizeof(year_text), "%ld", prevDateYear);
+    snprintf(month_text, sizeof(month_text), "%02ld", prevDateMonth);
+    snprintf(day_text, sizeof(day_text), "%02ld", prevDateDay);
+    snprintf(hour_text, sizeof(hour_text), "%02ld", prevTimeHour);
+    snprintf(min_text, sizeof(min_text), "%02ld", prevTimeMin);
+    lv_textarea_set_text(ui_Date_Setting_Year, year_text);
+    lv_textarea_set_text(ui_Date_Setting_Month, month_text);
+    lv_textarea_set_text(ui_Date_Setting_Day, day_text);
+    lv_textarea_set_text(ui_Time_Setting_Hour, hour_text);
+    lv_textarea_set_text(ui_Time_Setting_Min, min_text);
+}
+// 保存蓝牙名称设置
+void saveBluetoothNameSetting(lv_event_t * e)
+{
+    const char *name = lv_textarea_get_text(ui_Bluetooth_Name_Input);
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("BluetoothCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBluetoothNameSetting", "Failed to open NVS");
+        return;
+    }
+
+    err = nvs_set_str(nvs_handle, "name", name);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBluetoothNameSetting", "Failed to set name in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBluetoothNameSetting", "Failed to commit NVS changes");
+    }
+
+    nvs_close(nvs_handle);
+}
+// 保存蓝牙密码设置
+void saveBluetoothPasswordSetting(lv_event_t * e)
+{
+    const char *password = lv_textarea_get_text(ui_Bluetooth_Password_Input);
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("BluetoothCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBluetoothPasswordSetting", "Failed to open NVS");
+        return;
+    }
+    err = nvs_set_str(nvs_handle, "password", password);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBluetoothPasswordSetting", "Failed to set password in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveBluetoothPasswordSetting", "Failed to commit NVS changes");
+    }
+
+    nvs_close(nvs_handle);
+}
+void initBluetoothSettings(lv_event_t * e)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("BluetoothCfg", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("initBluetoothSettings", "Failed to open NVS: %s", esp_err_to_name(err));
+        return;
+    }
+
+    // 读取蓝牙名称
+    size_t required_size = 0;
+    err = nvs_get_str(nvs_handle, "name", NULL, &required_size);
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGE("initBluetoothSettings", "Failed to get size for name from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    if (required_size > 0) {
+        char *prevBluetoothName = malloc(required_size);
+        if (prevBluetoothName == NULL) {
+            ESP_LOGE("initBluetoothSettings", "Failed to allocate memory for Bluetooth name");
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_get_str(nvs_handle, "name", prevBluetoothName, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE("initBluetoothSettings", "Failed to get name from NVS: %s", esp_err_to_name(err));
+            free(prevBluetoothName);
+            nvs_close(nvs_handle);
+            return;
+        }
+        lv_textarea_set_text(ui_Bluetooth_Name_Input, prevBluetoothName);
+        free(prevBluetoothName);
+    } else {
+        ESP_LOGI("initBluetoothSettings", "Bluetooth name not set in NVS");
+    }
+
+    // 读取蓝牙密码
+    required_size = 0;
+    err = nvs_get_str(nvs_handle, "password", NULL, &required_size);
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGE("initBluetoothSettings", "Failed to get size for password from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    if (required_size > 0) {
+        char *prevBluetoothPassword = malloc(required_size);
+        if (prevBluetoothPassword == NULL) {
+            ESP_LOGE("initBluetoothSettings", "Failed to allocate memory for Bluetooth password");
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_get_str(nvs_handle, "password", prevBluetoothPassword, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE("initBluetoothSettings", "Failed to get password from NVS: %s", esp_err_to_name(err));
+            free(prevBluetoothPassword);
+            nvs_close(nvs_handle);
+            return;
+        }
+        lv_textarea_set_text(ui_Bluetooth_Password_Input, prevBluetoothPassword);
+        free(prevBluetoothPassword);
+    } else {
+        ESP_LOGI("initBluetoothSettings", "Bluetooth password not set in NVS");
+    }
+
+    // 关闭 NVS 命名空间
+    nvs_close(nvs_handle);
 }
