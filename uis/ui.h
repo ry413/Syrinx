@@ -13,8 +13,6 @@ extern "C" {
     #include "lvgl/lvgl.h"
 
 #include "ui_helpers.h"
-#include "components/ui_comp.h"
-#include "components/ui_comp_hook.h"
 #include "ui_events.h"
 
 // SCREEN: ui_Settings
@@ -48,11 +46,60 @@ extern lv_obj_t *ui_Settings_Time_Icon;
 extern lv_obj_t *ui_Settings_Time_Decora_Icon;
 void ui_event_Settings_Time_Btn( lv_event_t * e);
 extern lv_obj_t *ui_Settings_Time_Btn;
-extern lv_obj_t *ui_Music_Item4;
-extern lv_obj_t *ui_Music_Item5;
-extern lv_obj_t *ui_Music_Item6;
-extern lv_obj_t *ui_Music_Item7;
+extern lv_obj_t *ui_Settings_ID;
+extern lv_obj_t *ui_Settings_ID_Text;
+extern lv_obj_t *ui_Settings_ID_Line;
+extern lv_obj_t *ui_Settings_ID_Icon;
+extern lv_obj_t *ui_Settings_ID_Decora_Icon;
+void ui_event_Settings_ID_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Settings_ID_Btn;
+extern lv_obj_t *ui_Settings_Default_Volume;
+extern lv_obj_t *ui_Settings_Default_Volume_Text;
+extern lv_obj_t *ui_Settings_Default_Volume_Line;
+extern lv_obj_t *ui_Settings_Default_Volume_Icon;
+extern lv_obj_t *ui_Settings_Default_Volume_Decora_Icon;
+void ui_event_Settings_Default_Volume_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Default_Volume_Btn;
+extern lv_obj_t *ui_Settings_Max_Volume;
+extern lv_obj_t *ui_Settings_Max_Volume_Text;
+extern lv_obj_t *ui_Settings_Max_Volume_Line;
+extern lv_obj_t *ui_Settings_Max_Volume_Icon;
+extern lv_obj_t *ui_Settings_Max_Volume_Decora_Icon;
+void ui_event_Settings_Max_Volume_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Max_Volume_Btn;
 extern lv_obj_t *ui_BackToMainWindow2;
+extern lv_obj_t *ui_Default_Volume_Panel;
+extern lv_obj_t *ui_Default_Volume_Text;
+void ui_event_Default_Volume_Verify_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Verify_Btn;
+extern lv_obj_t *ui_Default_Volume_Verify_Btn_Text;
+void ui_event_Default_Volume_Cancel_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Cancel_Btn;
+extern lv_obj_t *ui_Default_Volume_Cancel_Text;
+extern lv_obj_t *ui_Default_Volume_Value_Panel;
+extern lv_obj_t *ui_Default_Volume_Value;
+void ui_event_Default_Volume_Dec_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Dec_Btn;
+extern lv_obj_t *ui_Default_Volume_Dec_Icon;
+void ui_event_Default_Volume_Add_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Add_Btn;
+extern lv_obj_t *ui_Default_Volume_Add_Icon;
+extern lv_obj_t *ui_Max_Volume_Panel;
+extern lv_obj_t *ui_Max_Volume_Text;
+void ui_event_Max_Volume_Verify_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Max_Volume_Verify_Btn;
+extern lv_obj_t *ui_Max_Volume_Verify_Icon;
+void ui_event_Max_Volume_Cancel_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Max_Volume_Cancel_Btn;
+extern lv_obj_t *ui_Max_Volume_Cancel_Text;
+extern lv_obj_t *ui_Max_Volume_Value_Panel;
+extern lv_obj_t *ui_Max_Volume_Value;
+void ui_event_Max_Volume_Dec_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Max_Volume_Dec_Btn;
+extern lv_obj_t *ui_Max_Volume_Dec_Icon;
+void ui_event_Max_Volume_Add_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Max_Volume_Add_Btn;
+extern lv_obj_t *ui_Max_Volume_Add_Icon;
 // SCREEN: ui_Backlight_Settings
 void ui_Backlight_Settings_screen_init(void);
 extern lv_obj_t *ui_Backlight_Settings;
@@ -166,6 +213,22 @@ extern lv_obj_t *ui_Date_Setting_Enter_Icon;
 extern lv_obj_t *ui_Date_Time_Keyboard;
 void ui_event_BackToMainWindow5( lv_event_t * e);
 extern lv_obj_t *ui_BackToMainWindow5;
+// SCREEN: ui_ID_Settings
+void ui_ID_Settings_screen_init(void);
+extern lv_obj_t *ui_ID_Settings;
+extern lv_obj_t *ui_Header_Main6;
+extern lv_obj_t *ui_Header_Main_Text6;
+extern lv_obj_t *ui_Header_Main_Time6;
+extern lv_obj_t *ui_Header_Main_Volume_Icon6;
+extern lv_obj_t *ui_Header_Main_Volume_Value6;
+extern lv_obj_t *ui_ID_Keyboard;
+void ui_event_ID_Setting_Input( lv_event_t * e);
+extern lv_obj_t *ui_ID_Setting_Input;
+void ui_event_ID_Setting_Enter_Btn( lv_event_t * e);
+extern lv_obj_t *ui_ID_Setting_Enter_Btn;
+extern lv_obj_t *ui_ID_Setting_Enter_Icon;
+void ui_event_BackToMainWindow6( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindow6;
 extern lv_obj_t *ui____initial_actions0;
 
 LV_IMG_DECLARE( ui_img_861711258);   // assets/丽枫UI/background.png
@@ -174,10 +237,15 @@ LV_IMG_DECLARE( ui_img_149594991);   // assets/丽枫UI/背光设置.png
 LV_IMG_DECLARE( ui_img_1830113796);   // assets/丽枫UI/back32.png
 LV_IMG_DECLARE( ui_img_1711952528);   // assets/丽枫UI/蓝牙设置.png
 LV_IMG_DECLARE( ui_img_1422805608);   // assets/丽枫UI/时间设置.png
+LV_IMG_DECLARE( ui_img_728059867);   // assets/丽枫UI/ID设置.png
 LV_IMG_DECLARE( ui_img_348826415);   // assets/丽枫UI/back.png
 LV_IMG_DECLARE( ui_img_404002205);   // assets/丽枫UI/Left triangle40.png
 LV_IMG_DECLARE( ui_img_239308628);   // assets/丽枫UI/Right triangle40.png
+LV_IMG_DECLARE( ui_img_404002205);   // assets/丽枫UI/Left triangle40.png
+LV_IMG_DECLARE( ui_img_239308628);   // assets/丽枫UI/Right triangle40.png
+LV_IMG_DECLARE( ui_img_861711258);   // assets/丽枫UI/background.png
 LV_IMG_DECLARE( ui_img_1260392355);   // assets/丽枫UI/yes.png
+LV_IMG_DECLARE( ui_img_1830113796);   // assets/丽枫UI/back32.png
 
 
 LV_FONT_DECLARE( ui_font_LanTIng20);
@@ -185,6 +253,7 @@ LV_FONT_DECLARE( ui_font_LanTing18);
 LV_FONT_DECLARE( ui_font_LanTingFine18);
 LV_FONT_DECLARE( ui_font_LanTingFine22);
 LV_FONT_DECLARE( ui_font_LanTingFine24);
+LV_FONT_DECLARE( ui_font_LanTing40);
 
 
 void ui_init(void);

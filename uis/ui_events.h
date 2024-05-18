@@ -13,6 +13,16 @@ extern "C" {
 void initBacklightSettings(lv_event_t * e);
 void initDateTimeSettings(lv_event_t * e);
 void initBluetoothSettings(lv_event_t * e);
+void initIDSettings(lv_event_t * e);
+void initVolumeSettings(lv_event_t * e);
+void saveDefaultVolume(lv_event_t * e);
+void cancelSaveDefaultVolume(lv_event_t * e);
+void decDefaultVolume(lv_event_t * e);
+void addDefaultVolume(lv_event_t * e);
+void saveMaxVolume(lv_event_t * e);
+void cancelSaveMaxVolume(lv_event_t * e);
+void decMaxVolume(lv_event_t * e);
+void addMaxVolume(lv_event_t * e);
 void saveBacklightBrightness(lv_event_t * e);
 void cancelSaveBacklightBrightness(lv_event_t * e);
 void decBrightness(lv_event_t * e);
@@ -25,6 +35,7 @@ void saveBluetoothNameSetting(lv_event_t * e);
 void saveBluetoothPasswordSetting(lv_event_t * e);
 void saveTimeSetting(lv_event_t * e);
 void saveDateSetting(lv_event_t * e);
+void saveIDSetting(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

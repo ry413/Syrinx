@@ -1,9 +1,8 @@
-SET(SOURCES components/ui_comp_music_item1.c
-    components/ui_comp.c
-    screens/ui_Settings.c
+SET(SOURCES screens/ui_Settings.c
     screens/ui_Backlight_Settings.c
     screens/ui_Bluetooth_Settings.c
     screens/ui_Time_Settings.c
+    screens/ui_ID_Settings.c
     ui.c
     components/ui_comp_hook.c
     ui_helpers.c
@@ -14,6 +13,7 @@ SET(SOURCES components/ui_comp_music_item1.c
     images/ui_img_1830113796.c
     images/ui_img_1711952528.c
     images/ui_img_1422805608.c
+    images/ui_img_728059867.c
     images/ui_img_348826415.c
     images/ui_img_404002205.c
     images/ui_img_239308628.c
@@ -22,6 +22,7 @@ SET(SOURCES components/ui_comp_music_item1.c
     fonts/ui_font_LanTing18.c
     fonts/ui_font_LanTingFine18.c
     fonts/ui_font_LanTingFine22.c
-    fonts/ui_font_LanTingFine24.c)
+    fonts/ui_font_LanTingFine24.c
+    fonts/ui_font_LanTing40.c)
 
 add_library(ui ${SOURCES})

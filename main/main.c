@@ -23,6 +23,7 @@
 #include "wifi.h"
 #include "backlight.h"
 #include "nvs_flash.h"
+#include "driver/uart.h"
 
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
@@ -531,6 +532,64 @@ static void monitor_task(void *pvParameter)
 	}
 }
 
+#define UART_PORT_NUM      UART_NUM_0
+#define UART_BAUD_RATE     115200
+#define UART_TX_PIN        GPIO_NUM_43
+#define UART_RX_PIN        GPIO_NUM_44
+#define BUF_SIZE           1024
+void uart_init() {
+    uart_config_t uart_config = {
+        .baud_rate = UART_BAUD_RATE,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+    };
+    ESP_ERROR_CHECK(uart_param_config(UART_PORT_NUM, &uart_config));
+    ESP_ERROR_CHECK(uart_set_pin(UART_PORT_NUM, UART_TX_PIN, UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+    ESP_ERROR_CHECK(uart_driver_install(UART_PORT_NUM, BUF_SIZE * 2, 0, 0, NULL, 0));
+    ESP_LOGI(TAG, "UART initialized successfully");
+}
+void send_at_command(const char* command) {
+    char command_with_newline[128];
+    snprintf(command_with_newline, sizeof(command_with_newline), "%s\r\n", command);
+
+    int len = uart_write_bytes(UART_PORT_NUM, command_with_newline, strlen(command_with_newline));
+    if (len < 0) {
+        ESP_LOGE(TAG, "UART write error");
+    } else {
+        ESP_LOGI(TAG, "Sent AT command: %s", command);
+    }
+}
+void receive_at_response() {
+    uint8_t data[BUF_SIZE];
+    while (1) {
+        int len = uart_read_bytes(UART_PORT_NUM, data, BUF_SIZE, 100 / portTICK_PERIOD_MS);
+        if (len > 0) {
+            data[len] = '\0'; // Null-terminate the response
+            ESP_LOGI(TAG, "Received response: %s", data);
+
+            // 解析响应
+            if (strstr((char*)data, "ERR") != NULL) {
+                ESP_LOGE(TAG, "Error response received: %s", data);
+            } else if (strstr((char*)data, "OK") != NULL) {
+                ESP_LOGI(TAG, "Success response received: %s", data);
+            } else {
+                ESP_LOGW(TAG, "Unhandled response: %s", data);
+            }
+
+            // 检查响应是否完整
+            if (strstr((char*)data, "\r\n") != NULL) {
+                ESP_LOGI(TAG, "Complete response received");
+            }
+        } else if (len < 0) {
+            ESP_LOGE(TAG, "UART read error");
+        } else {
+            ESP_LOGW(TAG, "No response received");
+        }
+        vTaskDelay(1000 / portTICK_PERIOD_MS); // Delay to avoid busy loop
+    }
+}
 /**********************
  *   APPLICATION MAIN
  **********************/
@@ -553,5 +612,14 @@ void app_main() {
     xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
     xTaskCreate(wifi_task, "wifi_task", 4096, NULL, 5, NULL);
 
+    uart_init();
 
+    // 创建任务接收 AT 响应
+    xTaskCreate(receive_at_response, "receive_at_response", 4096, NULL, 5, NULL);
+
+    // 发送 AT 指令
+    send_at_command("AT"); // 发送获取固件版本的 AT 指令
+
+    // 为了确保有足够时间接收响应，可以在这里添加延迟
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 }

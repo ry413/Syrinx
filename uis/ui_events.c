@@ -23,6 +23,11 @@ uint32_t prevDateDay;
 char prevBluetoothName[30];
 char prevBluetoothPassword[30];
 
+uint32_t prevDefaultVolume;
+uint32_t prevMaxVolume;
+
+// uint32_t ID;
+
 static void updateBacklightTime(int backlightTimeLevel);
 static uint32_t getBacklightTimeLevel();
 
@@ -96,7 +101,7 @@ void saveBacklightBrightness(lv_event_t * e) {
 }
 // 取消保存亮度
 void cancelSaveBacklightBrightness(lv_event_t * e) {
-    lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%d", (int)prevBacklightLevel);
+    lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%ld", prevBacklightLevel);
     setBacklight(prevBacklightLevel);
 }
 // 返回当前背光时间label上秒数对应的等级
@@ -458,4 +463,165 @@ void initBluetoothSettings(lv_event_t * e)
 
     // 关闭 NVS 命名空间
     nvs_close(nvs_handle);
+}
+
+void initIDSettings(lv_event_t * e)
+{
+    uint32_t id;
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("IDSettings", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("initIDSettings", "Failed to open NVS");
+        return;
+    }
+    err = nvs_get_u32(nvs_handle, "ID", &id);
+    if (err != ESP_OK) {
+        ESP_LOGE("initIDSettings", "Failed to get ID in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("initIDSettings", "Failed to commit NVS changes");
+    }
+    // 将 uint32_t 转换为字符串
+    char id_str[12]; // uint32_t 最大值为 4294967295，需要 11 个字符的空间加上 null 终止符
+    snprintf(id_str, sizeof(id_str), "%lu", id);
+    lv_textarea_set_text(ui_ID_Setting_Input, id_str);
+    nvs_close(nvs_handle);
+}
+
+void saveIDSetting(lv_event_t * e)
+{
+    const char *ID = lv_textarea_get_text(ui_ID_Setting_Input);
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("IDSettings", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveIDSetting", "Failed to open NVS");
+        return;
+    }
+    err = nvs_set_u32(nvs_handle, "ID", (uint32_t)atoi(ID));
+    if (err != ESP_OK) {
+        ESP_LOGE("saveIDSetting", "Failed to set ID in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveIDSetting", "Failed to commit NVS changes");
+    }
+    nvs_close(nvs_handle);
+}
+
+void saveDefaultVolume(lv_event_t * e)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("VolumeCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveDefaultVolume", "Failed to open NVS");
+        return;
+    }
+    const char *text = lv_label_get_text(ui_Default_Volume_Value);
+    prevDefaultVolume = atoi(text);
+    err = nvs_set_u32(nvs_handle, "defaultVolume", prevDefaultVolume);
+
+    if (err != ESP_OK) {
+        ESP_LOGE("saveDefaultVolume", "Failed to set prevDefaultVolume in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveDefaultVolume", "Failed to commit NVS changes");
+    }
+    nvs_close(nvs_handle);
+}
+
+void cancelSaveDefaultVolume(lv_event_t * e)
+{
+    lv_label_set_text_fmt(ui_Default_Volume_Value, "%ld", prevDefaultVolume);
+}
+
+void decDefaultVolume(lv_event_t * e)
+{
+    const char *text = lv_label_get_text(ui_Default_Volume_Value);
+    int defaultVolume = atoi(text);
+    defaultVolume = (defaultVolume > 1) ? defaultVolume - 1 : 1;
+    lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", defaultVolume);
+}
+
+void addDefaultVolume(lv_event_t * e)
+{
+    const char *text = lv_label_get_text(ui_Default_Volume_Value);
+    int defaultVolume = atoi(text);
+    defaultVolume = (defaultVolume < 15) ? defaultVolume + 1 : 15;
+    lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", defaultVolume);
+}
+
+void initVolumeSettings(lv_event_t * e)
+{
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("VolumeCfg", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("initVolumeSettings", "Failed to open NVS");
+        return;
+    }
+
+    err = nvs_get_u32(nvs_handle, "defaultVolume", &prevDefaultVolume);
+    lv_label_set_text_fmt(ui_Default_Volume_Value, "%ld", prevDefaultVolume);
+    if (err != ESP_OK) {
+        ESP_LOGE("backlightSettings", "Failed to get defaultVolume from NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    err = nvs_get_u32(nvs_handle, "maxVolume", &prevMaxVolume);
+    lv_label_set_text_fmt(ui_Max_Volume_Value, "%ld", prevMaxVolume);
+    if (err != ESP_OK) {
+        ESP_LOGE("backlightSettings", "Failed to get prevMaxVolume from NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    nvs_close(nvs_handle);
+}
+void saveMaxVolume(lv_event_t * e) {
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("VolumeCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveMaxVolume", "Failed to open NVS");
+        return;
+    }
+    const char *text = lv_label_get_text(ui_Max_Volume_Value);
+    prevMaxVolume = atoi(text);
+    err = nvs_set_u32(nvs_handle, "maxVolume", prevMaxVolume);
+
+    if (err != ESP_OK) {
+        ESP_LOGE("saveMaxVolume", "Failed to set maxVolume in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveMaxVolume", "Failed to commit NVS changes");
+    }
+    nvs_close(nvs_handle);
+}
+void cancelSaveMaxVolume(lv_event_t * e) {
+    lv_label_set_text_fmt(ui_Max_Volume_Value, "%ld", prevMaxVolume);
+}
+
+void decMaxVolume(lv_event_t * e) {
+    const char *text = lv_label_get_text(ui_Max_Volume_Value);
+    int maxVolume = atoi(text);
+    maxVolume = (maxVolume > 1) ? maxVolume - 1 : 1;
+    lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", maxVolume);
+}
+
+void addMaxVolume(lv_event_t * e) {
+    const char *text = lv_label_get_text(ui_Max_Volume_Value);
+    int maxVolume = atoi(text);
+    maxVolume = (maxVolume < 15) ? maxVolume + 1 : 15;
+    lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", maxVolume);
 }
