@@ -29,7 +29,9 @@
         "stdio.h": "c",
         "chrono": "c",
         "random": "c",
-        "limits": "c"
+        "limits": "c",
+        "uart.h": "c",
+        "lvgl.h": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

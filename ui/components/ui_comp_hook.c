@@ -5,10 +5,6 @@
 
 #include "../ui.h"
 
-void ui_comp_Image1_create_hook( lv_obj_t * comp)
-{
-}
-
-void ui_comp_Button1_create_hook( lv_obj_t * comp)
+void ui_comp_BackToMainWindowBtn7_create_hook( lv_obj_t * comp)
 {
 }

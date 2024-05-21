@@ -13,6 +13,8 @@ extern "C" {
     #include "lvgl/lvgl.h"
 
 #include "ui_helpers.h"
+#include "components/ui_comp.h"
+#include "components/ui_comp_hook.h"
 #include "ui_events.h"
 
 void anima_Animation( lv_obj_t *TargetObject, int delay);
@@ -21,10 +23,10 @@ void ui_Main_Window_screen_init(void);
 void ui_event_Main_Window( lv_event_t * e);
 extern lv_obj_t *ui_Main_Window;
 extern lv_obj_t *ui_Header_Main;
-extern lv_obj_t *ui_Header_Main_Text;
 extern lv_obj_t *ui_Header_Main_Time;
 extern lv_obj_t *ui_Header_Main_Volume_Icon;
 extern lv_obj_t *ui_Header_Main_Volume_Value;
+extern lv_obj_t *ui_Header_Main_Text;
 extern lv_obj_t *ui_Menu_Items;
 extern lv_obj_t *ui_Music;
 void ui_event_Music_Btn( lv_event_t * e);
@@ -56,6 +58,7 @@ void ui_event_Guide_Btn( lv_event_t * e);
 extern lv_obj_t *ui_Guide_Btn;
 extern lv_obj_t *ui_Guide_Icon;
 extern lv_obj_t *ui_Guide_Text;
+void ui_event_Main_Logo( lv_event_t * e);
 extern lv_obj_t *ui_Main_Logo;
 // SCREEN: ui_Music_Window
 void ui_Music_Window_screen_init(void);
@@ -66,25 +69,13 @@ extern lv_obj_t *ui_Header_Music_Text;
 extern lv_obj_t *ui_Header_Music_Time;
 extern lv_obj_t *ui_Header_Music_Volume_Icon;
 extern lv_obj_t *ui_Header_Music_Volume_Value;
-void ui_event_BackToMainWindow( lv_event_t * e);
-extern lv_obj_t *ui_BackToMainWindow;
 extern lv_obj_t *ui_MusicList;
-extern lv_obj_t *ui_Music_Item;
-extern lv_obj_t *ui_Music_Name;
-extern lv_obj_t *ui_Music_Item_Line;
-extern lv_obj_t *ui_Music_Item_Icon;
 extern lv_obj_t *ui_Music_Item1;
 extern lv_obj_t *ui_Music_Name1;
 extern lv_obj_t *ui_Music_Item_Line1;
 extern lv_obj_t *ui_Music_Item_Icon1;
-extern lv_obj_t *ui_Music_Item2;
-extern lv_obj_t *ui_Music_Name2;
-extern lv_obj_t *ui_Music_Item_Line2;
-extern lv_obj_t *ui_Music_Item_Icon2;
-extern lv_obj_t *ui_Music_Item3;
-extern lv_obj_t *ui_Music_Name3;
-extern lv_obj_t *ui_Music_Item_Line3;
-extern lv_obj_t *ui_Music_Item_Icon3;
+void ui_event_BackToMainWindowBtn1( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindowBtn1;
 // SCREEN: ui_Nature_Sound_Window
 void ui_Nature_Sound_Window_screen_init(void);
 void ui_event_Nature_Sound_Window( lv_event_t * e);
@@ -111,8 +102,8 @@ extern lv_obj_t *ui_Sea_Sound;
 extern lv_obj_t *ui_Sea_Sound_Btn;
 extern lv_obj_t *ui_Sea_Sound_Icon;
 extern lv_obj_t *ui_Sea_Sound_Text;
-void ui_event_BackToMainWindow2( lv_event_t * e);
-extern lv_obj_t *ui_BackToMainWindow2;
+void ui_event_BackToMainWindowBtn7( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindowBtn7;
 // SCREEN: ui_Bluetooth_WIndow
 void ui_Bluetooth_WIndow_screen_init(void);
 void ui_event_Bluetooth_WIndow( lv_event_t * e);
@@ -131,8 +122,8 @@ extern lv_obj_t *ui_Bluetooth_Password_Text;
 extern lv_obj_t *ui_Bluetooth_Password_Line;
 extern lv_obj_t *ui_Bluetooth_Password_Value;
 extern lv_obj_t *ui_Bluetooth_Guide_Text;
-void ui_event_BackToMainWindow3( lv_event_t * e);
-extern lv_obj_t *ui_BackToMainWindow3;
+void ui_event_BackToMainWindowBtn3( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindowBtn3;
 // SCREEN: ui_Mode_WIndow
 void ui_Mode_WIndow_screen_init(void);
 void ui_event_Mode_WIndow( lv_event_t * e);
@@ -173,8 +164,8 @@ extern lv_obj_t *ui_Mode_Opera_Icon;
 void ui_event_Mode_Opera_Btn( lv_event_t * e);
 extern lv_obj_t *ui_Mode_Opera_Btn;
 extern lv_obj_t *ui_Mode_Opera_Text;
-void ui_event_BackToMainWindow4( lv_event_t * e);
-extern lv_obj_t *ui_BackToMainWindow4;
+void ui_event_BackToMainWindowBtn4( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindowBtn4;
 // SCREEN: ui_Wake_up_Window
 void ui_Wake_up_Window_screen_init(void);
 void ui_event_Wake_up_Window( lv_event_t * e);
@@ -192,8 +183,8 @@ extern lv_obj_t *ui_Wake_up_Time;
 extern lv_obj_t *ui_Wake_up_Time_Text;
 extern lv_obj_t *ui_Wake_up_Time_Line;
 extern lv_obj_t *ui_Wake_up_Time_Decora_Icon;
-void ui_event_BackToMainWindow5( lv_event_t * e);
-extern lv_obj_t *ui_BackToMainWindow5;
+void ui_event_BackToMainWindowBtn5( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindowBtn5;
 // SCREEN: ui_Guide_Window
 void ui_Guide_Window_screen_init(void);
 void ui_event_Guide_Window( lv_event_t * e);
@@ -210,10 +201,221 @@ void ui_event_More_Info_Close_Btn( lv_event_t * e);
 extern lv_obj_t *ui_More_Info_Close_Btn;
 extern lv_obj_t *ui_More_Info_Text;
 extern lv_obj_t *ui_QR_Code;
-void ui_event_BackToMainWindow6( lv_event_t * e);
-extern lv_obj_t *ui_BackToMainWindow6;
+void ui_event_BackToMainWindowBtn6( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindowBtn6;
+// SCREEN: ui_Settings_Window
+void ui_Settings_Window_screen_init(void);
+void ui_event_Settings_Window( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Window;
+extern lv_obj_t *ui_Header_Main2;
+extern lv_obj_t *ui_Header_Main_Text2;
+extern lv_obj_t *ui_Header_Main_Volume_Icon2;
+extern lv_obj_t *ui_Header_Main_Volume_Value2;
+extern lv_obj_t *ui_Settings_List2;
+extern lv_obj_t *ui_Settings_Backlight2;
+extern lv_obj_t *ui_Settings_Backlight_Text2;
+extern lv_obj_t *ui_Settings_Backlight_Line2;
+extern lv_obj_t *ui_Settings_Backlight_Icon2;
+extern lv_obj_t *ui_Settings_Backlight_Decora_Icon2;
+void ui_event_Settings_Backlight_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Backlight_Btn2;
+extern lv_obj_t *ui_Settings_Bluetooth2;
+extern lv_obj_t *ui_Settings_Bluetooth_Text2;
+extern lv_obj_t *ui_Settings_Bluetooth_Line2;
+extern lv_obj_t *ui_Settings_Bluetooth_Icon2;
+extern lv_obj_t *ui_Settings_Bluetooth_Decora_Icon2;
+void ui_event_Settings_Bluetooth_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Bluetooth_Btn2;
+extern lv_obj_t *ui_Settings_Time2;
+extern lv_obj_t *ui_Settings_Time_Text2;
+extern lv_obj_t *ui_Settings_Time_Line2;
+extern lv_obj_t *ui_Settings_Time_Icon2;
+extern lv_obj_t *ui_Settings_Time_Decora_Icon2;
+void ui_event_Settings_Time_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Time_Btn2;
+extern lv_obj_t *ui_Settings_ID2;
+extern lv_obj_t *ui_Settings_ID_Text2;
+extern lv_obj_t *ui_Settings_ID_Line2;
+extern lv_obj_t *ui_Settings_ID_Icon2;
+extern lv_obj_t *ui_Settings_ID_Decora_Icon2;
+void ui_event_Settings_ID_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Settings_ID_Btn2;
+extern lv_obj_t *ui_Settings_Default_Volume;
+extern lv_obj_t *ui_Settings_Default_Volume_Text;
+extern lv_obj_t *ui_Settings_Default_Volume_Line;
+extern lv_obj_t *ui_Settings_Default_Volume_Icon;
+extern lv_obj_t *ui_Settings_Default_Volume_Decora_Icon;
+void ui_event_Settings_Default_Volume_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Default_Volume_Btn;
+extern lv_obj_t *ui_Settings_Max_Volume;
+extern lv_obj_t *ui_Settings_Max_Volume_Text2;
+extern lv_obj_t *ui_Settings_Max_Volume_Line2;
+extern lv_obj_t *ui_Settings_Max_Volume_Icon2;
+extern lv_obj_t *ui_Settings_Max_Volume_Decora_Icon2;
+void ui_event_Settings_Max_Volume_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Max_Volume_Btn2;
+extern lv_obj_t *ui_Default_Volume_Panel;
+extern lv_obj_t *ui_Default_Volume_Text;
+void ui_event_Default_Volume_Verify_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Verify_Btn;
+extern lv_obj_t *ui_Default_Volume_Verify_Btn_Text;
+void ui_event_Default_Volume_Cancel_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Cancel_Btn;
+extern lv_obj_t *ui_Default_Volume_Cancel_Text;
+extern lv_obj_t *ui_Default_Volume_Value_Panel;
+extern lv_obj_t *ui_Default_Volume_Value;
+void ui_event_Default_Volume_Dec_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Dec_Btn;
+extern lv_obj_t *ui_Default_Volume_Dec_Icon;
+void ui_event_Default_Volume_Add_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Add_Btn;
+extern lv_obj_t *ui_Default_Volume_Add_Icon;
+extern lv_obj_t *ui_Max_Volume_Panel;
+extern lv_obj_t *ui_Max_Volume_Text;
+void ui_event_Max_Volume_Verify_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Max_Volume_Verify_Btn;
+extern lv_obj_t *ui_Max_Volume_Verify_Btn_Text;
+void ui_event_Max_Volume_Cancel_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Max_Volume_Cancel_Btn;
+extern lv_obj_t *ui_Max_Volume_Cancel_Text;
+extern lv_obj_t *ui_Max_Volume_Value_Panel;
+extern lv_obj_t *ui_Max_Volume_Value;
+void ui_event_Max_Volume_Dec_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Max_Volume_Dec_Btn;
+extern lv_obj_t *ui_Max_Volume_Dec_Icon;
+void ui_event_Max_Volume_Add_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Max_Volume_Add_Btn;
+extern lv_obj_t *ui_Max_Volume_Add_Icon;
+void ui_event_BackToMainWindowBtn8( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindowBtn8;
+// SCREEN: ui_Settings_Backlight_Window
+void ui_Settings_Backlight_Window_screen_init(void);
+extern lv_obj_t *ui_Settings_Backlight_Window;
+extern lv_obj_t *ui_Header_Main3;
+extern lv_obj_t *ui_Header_Main_Text3;
+extern lv_obj_t *ui_Header_Main_Volume_Icon3;
+extern lv_obj_t *ui_Header_Main_Volume_Value3;
+void ui_event_BackToSettingsWindow( lv_event_t * e);
+extern lv_obj_t *ui_BackToSettingsWindow;
+extern lv_obj_t *ui_Backlight_Settings_items2;
+extern lv_obj_t *ui_Backlight_Brightness2;
+extern lv_obj_t *ui_Backlight_Brightness_Text2;
+extern lv_obj_t *ui_Backlight_Brightness_Line2;
+void ui_event_Backlight_Brightness_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Brightness_Btn2;
+extern lv_obj_t *ui_Backlight_Time2;
+extern lv_obj_t *ui_Backlight_Time_Text2;
+extern lv_obj_t *ui_Backlight_Time_Line2;
+void ui_event_Backlight_Time_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Time_Btn2;
+extern lv_obj_t *ui_Backlight_Brightness_Panel2;
+extern lv_obj_t *ui_Backlight_Brightness_Panel_Text2;
+void ui_event_Backlight_Brightness_Verify_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Brightness_Verify_Btn2;
+extern lv_obj_t *ui_Backlight_Brightness_Verify_Btn_Text2;
+void ui_event_Backlight_Brightness_Cancel_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Brightness_Cancel_Btn2;
+extern lv_obj_t *ui_Backlight_Brightness_Cancel_Text2;
+extern lv_obj_t *ui_Backlight_Brightness_Value_Panel2;
+extern lv_obj_t *ui_Backlight_Brightness_Value2;
+void ui_event_Backlight_Brightness_Dec_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Brightness_Dec_Btn2;
+extern lv_obj_t *ui_Backlight_Brightness_Dec_Icon2;
+void ui_event_Backlight_Brightness_Add_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Brightness_Add_Btn2;
+extern lv_obj_t *ui_Backlight_Brightness_Add_Icon2;
+extern lv_obj_t *ui_Backlight_Time_Panel2;
+extern lv_obj_t *ui_Backlight_Time_Panel_Text2;
+void ui_event_Backlight_Time_Verify_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Time_Verify_Btn2;
+extern lv_obj_t *ui_Backlight_Time_Verify_Btn_Text2;
+void ui_event_Backlight_Time_Cancel_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Time_Cancel_Btn2;
+extern lv_obj_t *ui_Backlight_Time_Cancel_Text2;
+extern lv_obj_t *ui_Backlight_Time_Value_Panel2;
+extern lv_obj_t *ui_Backlight_Time_Value2;
+void ui_event_Backlight_Time_Dec_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Time_Dec_Btn2;
+extern lv_obj_t *ui_Backlight_Time_Dec_Icon2;
+void ui_event_Backlight_Time_Add_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Backlight_Time_Add_Btn2;
+extern lv_obj_t *ui_Backlight_Time_Add_Icon2;
+// SCREEN: ui_Settings_Bluetooth_Window
+void ui_Settings_Bluetooth_Window_screen_init(void);
+extern lv_obj_t *ui_Settings_Bluetooth_Window;
+extern lv_obj_t *ui_Header_Main4;
+extern lv_obj_t *ui_Header_Main_Text4;
+extern lv_obj_t *ui_Header_Main_Volume_Icon4;
+extern lv_obj_t *ui_Header_Main_Volume_Value4;
+extern lv_obj_t *ui_Bluetooth_Name2;
+extern lv_obj_t *ui_Bluetooth_Name_Text2;
+extern lv_obj_t *ui_Bluetooth_Name_Line2;
+void ui_event_Bluetooth_Name_Input2( lv_event_t * e);
+extern lv_obj_t *ui_Bluetooth_Name_Input2;
+void ui_event_Bluetooth_Name_Enter_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Bluetooth_Name_Enter_Btn2;
+extern lv_obj_t *ui_Bluetooth_Name_Enter_Icon2;
+extern lv_obj_t *ui_Bluetooth_Password2;
+extern lv_obj_t *ui_Bluetooth_Password_Text2;
+extern lv_obj_t *ui_Bluetooth_Password_Line2;
+void ui_event_Bluetooth_Password_Input2( lv_event_t * e);
+extern lv_obj_t *ui_Bluetooth_Password_Input2;
+void ui_event_Bluetooth_Password_Enter_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Bluetooth_Password_Enter_Btn2;
+extern lv_obj_t *ui_Bluetooth_Password_Enter_Icon2;
+extern lv_obj_t *ui_Bluetooth_Keyboard2;
+void ui_event_BackToSettingsWindow1( lv_event_t * e);
+extern lv_obj_t *ui_BackToSettingsWindow1;
+// SCREEN: ui_Settings_Time_Window
+void ui_Settings_Time_Window_screen_init(void);
+extern lv_obj_t *ui_Settings_Time_Window;
+extern lv_obj_t *ui_Header_Main5;
+extern lv_obj_t *ui_Header_Main_Text5;
+extern lv_obj_t *ui_Header_Main_Volume_Icon5;
+extern lv_obj_t *ui_Header_Main_Volume_Value5;
+extern lv_obj_t *ui_Time_Setting_Panel2;
+extern lv_obj_t *ui_Time_Setting_Text2;
+extern lv_obj_t *ui_Time_Setting_Line2;
+void ui_event_Time_Setting_Hour2( lv_event_t * e);
+extern lv_obj_t *ui_Time_Setting_Hour2;
+void ui_event_Time_Setting_Min2( lv_event_t * e);
+extern lv_obj_t *ui_Time_Setting_Min2;
+void ui_event_Time_Setting_Enter_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Time_Setting_Enter_Btn2;
+extern lv_obj_t *ui_Time_Setting_Enter_Icon2;
+extern lv_obj_t *ui_Date_Setting_Panel2;
+extern lv_obj_t *ui_Date_Settings_Text2;
+extern lv_obj_t *ui_Date_Setting_Line2;
+void ui_event_Date_Setting_Year2( lv_event_t * e);
+extern lv_obj_t *ui_Date_Setting_Year2;
+void ui_event_Date_Setting_Month2( lv_event_t * e);
+extern lv_obj_t *ui_Date_Setting_Month2;
+void ui_event_Date_Setting_Day2( lv_event_t * e);
+extern lv_obj_t *ui_Date_Setting_Day2;
+void ui_event_Date_Setting_Enter_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_Date_Setting_Enter_Btn2;
+extern lv_obj_t *ui_Date_Setting_Enter_Icon2;
+extern lv_obj_t *ui_Date_Time_Keyboard2;
+void ui_event_BackToMainWindow10( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindow10;
+// SCREEN: ui_Settings_ID_Window
+void ui_Settings_ID_Window_screen_init(void);
+extern lv_obj_t *ui_Settings_ID_Window;
+extern lv_obj_t *ui_Header_Main6;
+extern lv_obj_t *ui_Header_Main_Text6;
+extern lv_obj_t *ui_Header_Main_Volume_Icon6;
+extern lv_obj_t *ui_Header_Main_Volume_Value6;
+extern lv_obj_t *ui_ID_Keyboard2;
+void ui_event_ID_Setting_Input2( lv_event_t * e);
+extern lv_obj_t *ui_ID_Setting_Input2;
+void ui_event_ID_Setting_Enter_Btn2( lv_event_t * e);
+extern lv_obj_t *ui_ID_Setting_Enter_Btn2;
+extern lv_obj_t *ui_ID_Setting_Enter_Icon2;
+void ui_event_BackToMainWindow11( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindow11;
 void ui_event____initial_actions0( lv_event_t * e);
 extern lv_obj_t *ui____initial_actions0;
+
 
 LV_IMG_DECLARE( ui_img_861711258);   // assets/丽枫UI/background.png
 LV_IMG_DECLARE( ui_img_490182776);   // assets/丽枫UI/音量.png
@@ -224,8 +426,8 @@ LV_IMG_DECLARE( ui_img_501316714);   // assets/丽枫UI/模式.png
 LV_IMG_DECLARE( ui_img_967182345);   // assets/丽枫UI/叫醒服务.png
 LV_IMG_DECLARE( ui_img_72497716);   // assets/丽枫UI/指南.png
 LV_IMG_DECLARE( ui_img_411136687);   // assets/丽枫UI/lifeng.png
-LV_IMG_DECLARE( ui_img_348826415);   // assets/丽枫UI/back.png
 LV_IMG_DECLARE( ui_img_35201459);   // assets/丽枫UI/musicNote.png
+LV_IMG_DECLARE( ui_img_348826415);   // assets/丽枫UI/back.png
 LV_IMG_DECLARE( ui_img_12669592);   // assets/丽枫UI/鸟叫.png
 LV_IMG_DECLARE( ui_img_2034599484);   // assets/丽枫UI/虫鸣.png
 LV_IMG_DECLARE( ui_img_304460963);   // assets/丽枫UI/森林.png
@@ -238,10 +440,20 @@ LV_IMG_DECLARE( ui_img_720032643);   // assets/丽枫UI/C.png
 LV_IMG_DECLARE( ui_img_720045703);   // assets/丽枫UI/O.png
 LV_IMG_DECLARE( ui_img_1830113796);   // assets/丽枫UI/back32.png
 LV_IMG_DECLARE( ui_img_1526512104);   // assets/丽枫UI/close.png
+LV_IMG_DECLARE( ui_img_149594991);   // assets/丽枫UI/背光设置.png
+LV_IMG_DECLARE( ui_img_1711952528);   // assets/丽枫UI/蓝牙设置.png
+LV_IMG_DECLARE( ui_img_1422805608);   // assets/丽枫UI/时间设置.png
+LV_IMG_DECLARE( ui_img_728059867);   // assets/丽枫UI/ID设置.png
+LV_IMG_DECLARE( ui_img_404002205);   // assets/丽枫UI/Left triangle40.png
+LV_IMG_DECLARE( ui_img_239308628);   // assets/丽枫UI/Right triangle40.png
+LV_IMG_DECLARE( ui_img_1260392355);   // assets/丽枫UI/yes.png
 
 
-LV_FONT_DECLARE( ui_font_LanTIng20);
 LV_FONT_DECLARE( ui_font_LanTing18);
+LV_FONT_DECLARE( ui_font_LanTIng20);
+LV_FONT_DECLARE( ui_font_LanTing40);
+LV_FONT_DECLARE( ui_font_LanTingFine18);
+LV_FONT_DECLARE( ui_font_LanTingFine22);
 LV_FONT_DECLARE( ui_font_LanTingFine24);
 
 

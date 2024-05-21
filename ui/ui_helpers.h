@@ -66,7 +66,7 @@ void _ui_state_modify( lv_obj_t *target, int32_t state, int value);
 #define UI_MOVE_CURSOR_RIGHT 1
 #define UI_MOVE_CURSOR_DOWN 2
 #define UI_MOVE_CURSOR_LEFT 3
-void _ui_textarea_move_cursor(lv_obj_t * target, int val);
+void _ui_textarea_move_cursor(lv_obj_t * target, int val);
 
 void scr_unloaded_delete_cb(lv_event_t * e);
 
@@ -87,31 +87,31 @@ void _ui_anim_callback_set_y(lv_anim_t* a, int32_t v);
 
 void _ui_anim_callback_set_width(lv_anim_t* a, int32_t v);
 
-void _ui_anim_callback_set_height(lv_anim_t* a, int32_t v);
+void _ui_anim_callback_set_height(lv_anim_t* a, int32_t v);
 
-void _ui_anim_callback_set_opacity(lv_anim_t* a, int32_t v);
+void _ui_anim_callback_set_opacity(lv_anim_t* a, int32_t v);
 
-void _ui_anim_callback_set_image_zoom(lv_anim_t* a, int32_t v);
+void _ui_anim_callback_set_image_zoom(lv_anim_t* a, int32_t v);
 
-void _ui_anim_callback_set_image_angle(lv_anim_t* a, int32_t v);
+void _ui_anim_callback_set_image_angle(lv_anim_t* a, int32_t v);
 
-void _ui_anim_callback_set_image_frame(lv_anim_t* a, int32_t v);
+void _ui_anim_callback_set_image_frame(lv_anim_t* a, int32_t v);
 
 int32_t _ui_anim_callback_get_x(lv_anim_t* a);
 
 int32_t _ui_anim_callback_get_y(lv_anim_t* a);
 
-int32_t _ui_anim_callback_get_width(lv_anim_t* a);
+int32_t _ui_anim_callback_get_width(lv_anim_t* a);
 
-int32_t _ui_anim_callback_get_height(lv_anim_t* a);
+int32_t _ui_anim_callback_get_height(lv_anim_t* a);
 
-int32_t _ui_anim_callback_get_opacity(lv_anim_t* a);
+int32_t _ui_anim_callback_get_opacity(lv_anim_t* a);
 
-int32_t _ui_anim_callback_get_image_zoom(lv_anim_t* a);
+int32_t _ui_anim_callback_get_image_zoom(lv_anim_t* a);
 
-int32_t _ui_anim_callback_get_image_angle(lv_anim_t* a);
+int32_t _ui_anim_callback_get_image_angle(lv_anim_t* a);
 
-int32_t _ui_anim_callback_get_image_frame(lv_anim_t* a);
+int32_t _ui_anim_callback_get_image_frame(lv_anim_t* a);
 
 void _ui_arc_set_text_value( lv_obj_t *trg, lv_obj_t *src, const char *prefix, const char *postfix);
 
@@ -119,9 +119,10 @@ void _ui_slider_set_text_value( lv_obj_t *trg, lv_obj_t *src, const char *prefix
 
 void _ui_checked_set_text_value( lv_obj_t *trg, lv_obj_t *src, const char *txt_on, const char *txt_off);
 
-void _ui_spinbox_step(lv_obj_t * target, int val);
+void _ui_spinbox_step(lv_obj_t * target, int val);
 
-void _ui_switch_theme(int val);
+void _ui_switch_theme(int val);
+
 
 #ifdef __cplusplus
 } /*extern "C"*/

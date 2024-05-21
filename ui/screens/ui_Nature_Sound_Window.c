@@ -238,18 +238,18 @@ lv_obj_set_style_text_color(ui_Sea_Sound_Text, lv_color_hex(0xFFFFFF), LV_PART_M
 lv_obj_set_style_text_opa(ui_Sea_Sound_Text, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Sea_Sound_Text, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_BackToMainWindow2 = lv_imgbtn_create(ui_Nature_Sound_Window);
-lv_imgbtn_set_src(ui_BackToMainWindow2, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
-lv_imgbtn_set_src(ui_BackToMainWindow2, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
-lv_obj_set_height( ui_BackToMainWindow2, 50);
-lv_obj_set_width( ui_BackToMainWindow2, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_x( ui_BackToMainWindow2, -212 );
-lv_obj_set_y( ui_BackToMainWindow2, -212 );
-lv_obj_set_align( ui_BackToMainWindow2, LV_ALIGN_CENTER );
-lv_obj_set_style_img_recolor(ui_BackToMainWindow2, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
-lv_obj_set_style_img_recolor_opa(ui_BackToMainWindow2, 100, LV_PART_MAIN| LV_STATE_PRESSED);
+ui_BackToMainWindowBtn7 = lv_imgbtn_create(ui_Nature_Sound_Window);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn7, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn7, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
+lv_obj_set_height( ui_BackToMainWindowBtn7, 50);
+lv_obj_set_width( ui_BackToMainWindowBtn7, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_x( ui_BackToMainWindowBtn7, -212 );
+lv_obj_set_y( ui_BackToMainWindowBtn7, -212 );
+lv_obj_set_align( ui_BackToMainWindowBtn7, LV_ALIGN_CENTER );
+lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn7, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
+lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn7, 100, LV_PART_MAIN| LV_STATE_PRESSED);
 
-lv_obj_add_event_cb(ui_BackToMainWindow2, ui_event_BackToMainWindow2, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_BackToMainWindowBtn7, ui_event_BackToMainWindowBtn7, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Nature_Sound_Window, ui_event_Nature_Sound_Window, LV_EVENT_ALL, NULL);
 
 }

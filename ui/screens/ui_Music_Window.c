@@ -61,16 +61,6 @@ lv_obj_set_style_text_color(ui_Header_Music_Volume_Value, lv_color_hex(0xFFFFFF)
 lv_obj_set_style_text_opa(ui_Header_Music_Volume_Value, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Header_Music_Volume_Value, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_BackToMainWindow = lv_imgbtn_create(ui_Music_Window);
-lv_imgbtn_set_src(ui_BackToMainWindow, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
-lv_obj_set_height( ui_BackToMainWindow, 50);
-lv_obj_set_width( ui_BackToMainWindow, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_x( ui_BackToMainWindow, -212 );
-lv_obj_set_y( ui_BackToMainWindow, -212 );
-lv_obj_set_align( ui_BackToMainWindow, LV_ALIGN_CENTER );
-lv_obj_set_style_img_recolor(ui_BackToMainWindow, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
-lv_obj_set_style_img_recolor_opa(ui_BackToMainWindow, 100, LV_PART_MAIN| LV_STATE_PRESSED);
-
 ui_MusicList = lv_obj_create(ui_Music_Window);
 lv_obj_remove_style_all(ui_MusicList);
 lv_obj_set_width( ui_MusicList, 480);
@@ -79,44 +69,6 @@ lv_obj_set_x( ui_MusicList, 0 );
 lv_obj_set_y( ui_MusicList, 32 );
 lv_obj_set_align( ui_MusicList, LV_ALIGN_CENTER );
 lv_obj_clear_flag( ui_MusicList, LV_OBJ_FLAG_CLICKABLE );    /// Flags
-
-ui_Music_Item = lv_obj_create(ui_MusicList);
-lv_obj_remove_style_all(ui_Music_Item);
-lv_obj_set_width( ui_Music_Item, 480);
-lv_obj_set_height( ui_Music_Item, 66);
-lv_obj_set_x( ui_Music_Item, 0 );
-lv_obj_set_y( ui_Music_Item, -180 );
-lv_obj_set_align( ui_Music_Item, LV_ALIGN_CENTER );
-lv_obj_clear_flag( ui_Music_Item, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-ui_Music_Name = lv_label_create(ui_Music_Item);
-lv_obj_set_width( ui_Music_Name, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Music_Name, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Music_Name, 100 );
-lv_obj_set_y( ui_Music_Name, -10 );
-lv_obj_set_align( ui_Music_Name, LV_ALIGN_LEFT_MID );
-lv_label_set_text(ui_Music_Name,"自定铃声");
-lv_obj_set_style_text_color(ui_Music_Name, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(ui_Music_Name, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(ui_Music_Name, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-ui_Music_Item_Line = lv_obj_create(ui_Music_Item);
-lv_obj_set_width( ui_Music_Item_Line, 450);
-lv_obj_set_height( ui_Music_Item_Line, 3);
-lv_obj_set_x( ui_Music_Item_Line, 0 );
-lv_obj_set_y( ui_Music_Item_Line, 13 );
-lv_obj_set_align( ui_Music_Item_Line, LV_ALIGN_CENTER );
-lv_obj_clear_flag( ui_Music_Item_Line, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-ui_Music_Item_Icon = lv_img_create(ui_Music_Item);
-lv_img_set_src(ui_Music_Item_Icon, &ui_img_35201459);
-lv_obj_set_width( ui_Music_Item_Icon, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Music_Item_Icon, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Music_Item_Icon, -179 );
-lv_obj_set_y( ui_Music_Item_Icon, -10 );
-lv_obj_set_align( ui_Music_Item_Icon, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Music_Item_Icon, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-lv_obj_clear_flag( ui_Music_Item_Icon, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Music_Item1 = lv_obj_create(ui_MusicList);
 lv_obj_remove_style_all(ui_Music_Item1);
@@ -156,83 +108,18 @@ lv_obj_set_align( ui_Music_Item_Icon1, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_Music_Item_Icon1, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
 lv_obj_clear_flag( ui_Music_Item_Icon1, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
-ui_Music_Item2 = lv_obj_create(ui_MusicList);
-lv_obj_remove_style_all(ui_Music_Item2);
-lv_obj_set_width( ui_Music_Item2, 480);
-lv_obj_set_height( ui_Music_Item2, 66);
-lv_obj_set_x( ui_Music_Item2, 0 );
-lv_obj_set_y( ui_Music_Item2, -80 );
-lv_obj_set_align( ui_Music_Item2, LV_ALIGN_CENTER );
-lv_obj_clear_flag( ui_Music_Item2, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+ui_BackToMainWindowBtn1 = lv_imgbtn_create(ui_Music_Window);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn1, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn1, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
+lv_obj_set_height( ui_BackToMainWindowBtn1, 50);
+lv_obj_set_width( ui_BackToMainWindowBtn1, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_x( ui_BackToMainWindowBtn1, -212 );
+lv_obj_set_y( ui_BackToMainWindowBtn1, -212 );
+lv_obj_set_align( ui_BackToMainWindowBtn1, LV_ALIGN_CENTER );
+lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn1, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
+lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn1, 100, LV_PART_MAIN| LV_STATE_PRESSED);
 
-ui_Music_Name2 = lv_label_create(ui_Music_Item2);
-lv_obj_set_width( ui_Music_Name2, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Music_Name2, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Music_Name2, 100 );
-lv_obj_set_y( ui_Music_Name2, -10 );
-lv_obj_set_align( ui_Music_Name2, LV_ALIGN_LEFT_MID );
-lv_label_set_text(ui_Music_Name2,"自定铃声");
-lv_obj_set_style_text_color(ui_Music_Name2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(ui_Music_Name2, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(ui_Music_Name2, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-ui_Music_Item_Line2 = lv_obj_create(ui_Music_Item2);
-lv_obj_set_width( ui_Music_Item_Line2, 450);
-lv_obj_set_height( ui_Music_Item_Line2, 3);
-lv_obj_set_x( ui_Music_Item_Line2, 0 );
-lv_obj_set_y( ui_Music_Item_Line2, 13 );
-lv_obj_set_align( ui_Music_Item_Line2, LV_ALIGN_CENTER );
-lv_obj_clear_flag( ui_Music_Item_Line2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-ui_Music_Item_Icon2 = lv_img_create(ui_Music_Item2);
-lv_img_set_src(ui_Music_Item_Icon2, &ui_img_35201459);
-lv_obj_set_width( ui_Music_Item_Icon2, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Music_Item_Icon2, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Music_Item_Icon2, -179 );
-lv_obj_set_y( ui_Music_Item_Icon2, -10 );
-lv_obj_set_align( ui_Music_Item_Icon2, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Music_Item_Icon2, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-lv_obj_clear_flag( ui_Music_Item_Icon2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-ui_Music_Item3 = lv_obj_create(ui_MusicList);
-lv_obj_remove_style_all(ui_Music_Item3);
-lv_obj_set_width( ui_Music_Item3, 480);
-lv_obj_set_height( ui_Music_Item3, 66);
-lv_obj_set_x( ui_Music_Item3, 0 );
-lv_obj_set_y( ui_Music_Item3, -30 );
-lv_obj_set_align( ui_Music_Item3, LV_ALIGN_CENTER );
-lv_obj_clear_flag( ui_Music_Item3, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-ui_Music_Name3 = lv_label_create(ui_Music_Item3);
-lv_obj_set_width( ui_Music_Name3, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Music_Name3, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Music_Name3, 100 );
-lv_obj_set_y( ui_Music_Name3, -10 );
-lv_obj_set_align( ui_Music_Name3, LV_ALIGN_LEFT_MID );
-lv_label_set_text(ui_Music_Name3,"自定铃声");
-lv_obj_set_style_text_color(ui_Music_Name3, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(ui_Music_Name3, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(ui_Music_Name3, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-ui_Music_Item_Line3 = lv_obj_create(ui_Music_Item3);
-lv_obj_set_width( ui_Music_Item_Line3, 450);
-lv_obj_set_height( ui_Music_Item_Line3, 3);
-lv_obj_set_x( ui_Music_Item_Line3, 0 );
-lv_obj_set_y( ui_Music_Item_Line3, 13 );
-lv_obj_set_align( ui_Music_Item_Line3, LV_ALIGN_CENTER );
-lv_obj_clear_flag( ui_Music_Item_Line3, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-ui_Music_Item_Icon3 = lv_img_create(ui_Music_Item3);
-lv_img_set_src(ui_Music_Item_Icon3, &ui_img_35201459);
-lv_obj_set_width( ui_Music_Item_Icon3, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Music_Item_Icon3, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Music_Item_Icon3, -179 );
-lv_obj_set_y( ui_Music_Item_Icon3, -10 );
-lv_obj_set_align( ui_Music_Item_Icon3, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Music_Item_Icon3, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-lv_obj_clear_flag( ui_Music_Item_Icon3, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-lv_obj_add_event_cb(ui_BackToMainWindow, ui_event_BackToMainWindow, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_BackToMainWindowBtn1, ui_event_BackToMainWindowBtn1, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Music_Window, ui_event_Music_Window, LV_EVENT_ALL, NULL);
 
 }

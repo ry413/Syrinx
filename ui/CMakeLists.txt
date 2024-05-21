@@ -1,10 +1,17 @@
-SET(SOURCES screens/ui_Main_Window.c
+SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
+    components/ui_comp.c
+    screens/ui_Main_Window.c
     screens/ui_Music_Window.c
     screens/ui_Nature_Sound_Window.c
     screens/ui_Bluetooth_WIndow.c
     screens/ui_Mode_WIndow.c
     screens/ui_Wake_up_Window.c
     screens/ui_Guide_Window.c
+    screens/ui_Settings_Window.c
+    screens/ui_Settings_Backlight_Window.c
+    screens/ui_Settings_Bluetooth_Window.c
+    screens/ui_Settings_Time_Window.c
+    screens/ui_Settings_ID_Window.c
     ui.c
     components/ui_comp_hook.c
     ui_helpers.c
@@ -18,8 +25,8 @@ SET(SOURCES screens/ui_Main_Window.c
     images/ui_img_967182345.c
     images/ui_img_72497716.c
     images/ui_img_411136687.c
-    images/ui_img_348826415.c
     images/ui_img_35201459.c
+    images/ui_img_348826415.c
     images/ui_img_12669592.c
     images/ui_img_2034599484.c
     images/ui_img_304460963.c
@@ -32,8 +39,18 @@ SET(SOURCES screens/ui_Main_Window.c
     images/ui_img_720045703.c
     images/ui_img_1830113796.c
     images/ui_img_1526512104.c
-    fonts/ui_font_LanTIng20.c
+    images/ui_img_149594991.c
+    images/ui_img_1711952528.c
+    images/ui_img_1422805608.c
+    images/ui_img_728059867.c
+    images/ui_img_404002205.c
+    images/ui_img_239308628.c
+    images/ui_img_1260392355.c
     fonts/ui_font_LanTing18.c
+    fonts/ui_font_LanTIng20.c
+    fonts/ui_font_LanTing40.c
+    fonts/ui_font_LanTingFine18.c
+    fonts/ui_font_LanTingFine22.c
     fonts/ui_font_LanTingFine24.c)
 
 add_library(ui ${SOURCES})

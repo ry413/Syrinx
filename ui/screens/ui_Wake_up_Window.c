@@ -139,18 +139,18 @@ lv_obj_add_flag( ui_Wake_up_Time_Decora_Icon, LV_OBJ_FLAG_ADV_HITTEST );   /// F
 lv_obj_clear_flag( ui_Wake_up_Time_Decora_Icon, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_img_set_angle(ui_Wake_up_Time_Decora_Icon,1800);
 
-ui_BackToMainWindow5 = lv_imgbtn_create(ui_Wake_up_Window);
-lv_imgbtn_set_src(ui_BackToMainWindow5, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
-lv_imgbtn_set_src(ui_BackToMainWindow5, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
-lv_obj_set_height( ui_BackToMainWindow5, 50);
-lv_obj_set_width( ui_BackToMainWindow5, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_x( ui_BackToMainWindow5, -212 );
-lv_obj_set_y( ui_BackToMainWindow5, -212 );
-lv_obj_set_align( ui_BackToMainWindow5, LV_ALIGN_CENTER );
-lv_obj_set_style_img_recolor(ui_BackToMainWindow5, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
-lv_obj_set_style_img_recolor_opa(ui_BackToMainWindow5, 100, LV_PART_MAIN| LV_STATE_PRESSED);
+ui_BackToMainWindowBtn5 = lv_imgbtn_create(ui_Wake_up_Window);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn5, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn5, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
+lv_obj_set_height( ui_BackToMainWindowBtn5, 50);
+lv_obj_set_width( ui_BackToMainWindowBtn5, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_x( ui_BackToMainWindowBtn5, -212 );
+lv_obj_set_y( ui_BackToMainWindowBtn5, -212 );
+lv_obj_set_align( ui_BackToMainWindowBtn5, LV_ALIGN_CENTER );
+lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn5, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
+lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn5, 100, LV_PART_MAIN| LV_STATE_PRESSED);
 
-lv_obj_add_event_cb(ui_BackToMainWindow5, ui_event_BackToMainWindow5, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_BackToMainWindowBtn5, ui_event_BackToMainWindowBtn5, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Wake_up_Window, ui_event_Wake_up_Window, LV_EVENT_ALL, NULL);
 
 }

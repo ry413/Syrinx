@@ -152,18 +152,18 @@ lv_obj_set_style_text_letter_space(ui_Bluetooth_Guide_Text, 0, LV_PART_MAIN| LV_
 lv_obj_set_style_text_line_space(ui_Bluetooth_Guide_Text, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Bluetooth_Guide_Text, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_BackToMainWindow3 = lv_imgbtn_create(ui_Bluetooth_WIndow);
-lv_imgbtn_set_src(ui_BackToMainWindow3, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
-lv_imgbtn_set_src(ui_BackToMainWindow3, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
-lv_obj_set_height( ui_BackToMainWindow3, 50);
-lv_obj_set_width( ui_BackToMainWindow3, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_x( ui_BackToMainWindow3, -212 );
-lv_obj_set_y( ui_BackToMainWindow3, -212 );
-lv_obj_set_align( ui_BackToMainWindow3, LV_ALIGN_CENTER );
-lv_obj_set_style_img_recolor(ui_BackToMainWindow3, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
-lv_obj_set_style_img_recolor_opa(ui_BackToMainWindow3, 100, LV_PART_MAIN| LV_STATE_PRESSED);
+ui_BackToMainWindowBtn3 = lv_imgbtn_create(ui_Bluetooth_WIndow);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn3, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn3, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
+lv_obj_set_height( ui_BackToMainWindowBtn3, 50);
+lv_obj_set_width( ui_BackToMainWindowBtn3, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_x( ui_BackToMainWindowBtn3, -212 );
+lv_obj_set_y( ui_BackToMainWindowBtn3, -212 );
+lv_obj_set_align( ui_BackToMainWindowBtn3, LV_ALIGN_CENTER );
+lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn3, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
+lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn3, 100, LV_PART_MAIN| LV_STATE_PRESSED);
 
-lv_obj_add_event_cb(ui_BackToMainWindow3, ui_event_BackToMainWindow3, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_BackToMainWindowBtn3, ui_event_BackToMainWindowBtn3, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Bluetooth_WIndow, ui_event_Bluetooth_WIndow, LV_EVENT_ALL, NULL);
 
 }

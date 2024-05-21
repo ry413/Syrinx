@@ -350,16 +350,16 @@ lv_obj_set_style_text_color(ui_Mode_Opera_Text, lv_color_hex(0xFFFFFF), LV_PART_
 lv_obj_set_style_text_opa(ui_Mode_Opera_Text, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Mode_Opera_Text, &ui_font_LanTIng20, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_BackToMainWindow4 = lv_imgbtn_create(ui_Mode_WIndow);
-lv_imgbtn_set_src(ui_BackToMainWindow4, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
-lv_imgbtn_set_src(ui_BackToMainWindow4, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
-lv_obj_set_height( ui_BackToMainWindow4, 50);
-lv_obj_set_width( ui_BackToMainWindow4, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_x( ui_BackToMainWindow4, -212 );
-lv_obj_set_y( ui_BackToMainWindow4, -212 );
-lv_obj_set_align( ui_BackToMainWindow4, LV_ALIGN_CENTER );
-lv_obj_set_style_img_recolor(ui_BackToMainWindow4, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
-lv_obj_set_style_img_recolor_opa(ui_BackToMainWindow4, 100, LV_PART_MAIN| LV_STATE_PRESSED);
+ui_BackToMainWindowBtn4 = lv_imgbtn_create(ui_Mode_WIndow);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn4, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
+lv_imgbtn_set_src(ui_BackToMainWindowBtn4, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
+lv_obj_set_height( ui_BackToMainWindowBtn4, 50);
+lv_obj_set_width( ui_BackToMainWindowBtn4, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_x( ui_BackToMainWindowBtn4, -212 );
+lv_obj_set_y( ui_BackToMainWindowBtn4, -212 );
+lv_obj_set_align( ui_BackToMainWindowBtn4, LV_ALIGN_CENTER );
+lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn4, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
+lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn4, 100, LV_PART_MAIN| LV_STATE_PRESSED);
 
 lv_obj_add_event_cb(ui_Mode_Nature_Btn, ui_event_Mode_Nature_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Mode_Jazz_Btn, ui_event_Mode_Jazz_Btn, LV_EVENT_ALL, NULL);
@@ -367,7 +367,7 @@ lv_obj_add_event_cb(ui_Mode_Rock_Btn, ui_event_Mode_Rock_Btn, LV_EVENT_ALL, NULL
 lv_obj_add_event_cb(ui_Mode_Pop_Btn, ui_event_Mode_Pop_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Mode_Classical_Btn, ui_event_Mode_Classical_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Mode_Opera_Btn, ui_event_Mode_Opera_Btn, LV_EVENT_ALL, NULL);
-lv_obj_add_event_cb(ui_BackToMainWindow4, ui_event_BackToMainWindow4, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_BackToMainWindowBtn4, ui_event_BackToMainWindowBtn4, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Mode_WIndow, ui_event_Mode_WIndow, LV_EVENT_ALL, NULL);
 
 }
