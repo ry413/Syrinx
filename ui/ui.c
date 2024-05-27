@@ -82,7 +82,6 @@ lv_obj_t *ui_Prev_Music_List_Btn_Text;
 void ui_event_Next_Music_List_Btn( lv_event_t * e);
 lv_obj_t *ui_Next_Music_List_Btn;
 lv_obj_t *ui_Next_Music_List_Btn_Text;
-lv_obj_t *ui_Music_Item1;
 
 
 // SCREEN: ui_Nature_Sound_Window

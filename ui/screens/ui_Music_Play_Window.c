@@ -66,7 +66,7 @@ lv_bar_set_value(ui_Progress_Bar,25,LV_ANIM_OFF);
 lv_bar_set_start_value(ui_Progress_Bar, 0, LV_ANIM_OFF);
 lv_obj_set_width( ui_Progress_Bar, 350);
 lv_obj_set_height( ui_Progress_Bar, 6);
-lv_obj_set_x( ui_Progress_Bar, 1 );
+lv_obj_set_x( ui_Progress_Bar, 0 );
 lv_obj_set_y( ui_Progress_Bar, 80 );
 lv_obj_set_align( ui_Progress_Bar, LV_ALIGN_CENTER );
 lv_obj_set_style_bg_color(ui_Progress_Bar, lv_color_hex(0xE2AFAF), LV_PART_MAIN | LV_STATE_DEFAULT );
@@ -236,8 +236,8 @@ lv_img_set_zoom(ui_Play_Pause_Icon,384);
 ui_Progress_dot = lv_obj_create(ui_Music_Play_Window);
 lv_obj_set_width( ui_Progress_dot, 15);
 lv_obj_set_height( ui_Progress_dot, 15);
-lv_obj_set_x( ui_Progress_dot, -86 );
-lv_obj_set_y( ui_Progress_dot, 79 );
+lv_obj_set_x( ui_Progress_dot, -173 );
+lv_obj_set_y( ui_Progress_dot, 80 );
 lv_obj_set_align( ui_Progress_dot, LV_ALIGN_CENTER );
 lv_obj_clear_flag( ui_Progress_dot, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 

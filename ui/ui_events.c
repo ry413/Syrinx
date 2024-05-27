@@ -29,9 +29,15 @@
 // 全局变量用于存储日月时分的时间戳
 time_t globalTime = 0;
 lv_obj_t * currentTimeLabel;
-static lv_obj_t *music_lists[MAX_LISTS]; // 存储 MusicList 的指针数组
-static int current_list_index = 0; // 当前 MusicList 的索引
-static int num_music_lists = 0; // MusicList 的总数
+static lv_obj_t *musicLists[MAX_LISTS]; // 存储 MusicList 的指针数组
+static int currentListIndex = 0; // 当前 MusicList 的索引
+static int numMusicLists = 0; // MusicList 的总数
+
+static lv_timer_t *musicTimer; // 音频进度条定时器
+static int currentPlayTime = 0; // 音频进度条的当前值
+static int updateInterval = 0; // 进度条每次更新的间隔, 因为进度条上限固定为100
+static int progressDotStartX = -173; // 进度条上面那个圆点的x值, 分别是进度条的起始与结束坐标
+static int progressDotEndX = 173;
 
 
 // prev开头的都是为了在修改值后没有点击[确认]而是[取消]的情况下, 将原来的值放回去
@@ -60,6 +66,9 @@ static void updateTimeTask(void *pvParameter);
 static void initTimeTask(void *param);
 static void updateBacklightTime(int backlightTimeLevel);
 static uint32_t getBacklightTimeLevel();
+static void createMusicItemTask(void *pvParameter);
+static void getDurationTask(void *pvParameter);
+
 
 //////////////////// 不给lvgl事件直接调用的静态函数 ////////////////////
 
@@ -170,43 +179,114 @@ static uint32_t getBacklightTimeLevel() {
     }
     return 0;
 }
-// 创建音乐列表的任务, 由这里发起get_all_file_names
-static void create_music_item_task(void *pvParameters)
+// 创建Music List及item的任务, 由这里发起get_all_file_names
+static void createMusicItemTask(void *pvParameters)
 {
     // 等待获取完文件名
     get_all_file_names();
-    music_lists[current_list_index] = ui_Music_List_create(ui_Music_List_Container);
-    num_music_lists++;
+    musicLists[currentListIndex] = ui_Music_List_create(ui_Music_List_Container);
+    numMusicLists++;
     int items_added = 0;
     for (int i = 0; i < total_files_count; i++) {
         // 如果当前列表的 Music_item 数量达到最大值，切换到下一个列表
         if (items_added >= MAX_ITEMS_PER_LIST) {
-            current_list_index++;
-            if (current_list_index >= MAX_LISTS) {
+            currentListIndex++;
+            if (currentListIndex >= MAX_LISTS) {
                 ESP_LOGE("create_music_item_task", "Exceeded maximum number of lists");
                 break;
             }
             // 创建新的 MusicList
-            music_lists[current_list_index] = ui_Music_List_create(ui_Music_List_Container);
-            num_music_lists++;
-            lv_obj_add_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+            musicLists[currentListIndex] = ui_Music_List_create(ui_Music_List_Container);
+            numMusicLists++;
+            lv_obj_add_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
             items_added = 0; // 重置计数器
         }
-        lv_obj_t *obj = ui_Music_Item_create(music_lists[current_list_index]);
+        lv_obj_t *obj = ui_Music_Item_create(musicLists[currentListIndex]);
 
         lv_obj_t *icon = lv_obj_get_child(obj, 2);
         lv_img_set_src(icon, &ui_img_35201459);
 
         lv_obj_t *name_label = lv_obj_get_child(obj, 0);
-        // 跳过前三个字符"MF+"
-        lv_label_set_text(name_label, &utf8_file_names[i][3]);
+        lv_label_set_text(name_label, utf8_file_names[i]);
 
         items_added++;
     }
     // 将当前显示的设置为第一个列表
-    current_list_index = 0;
+    currentListIndex = 0;
     vTaskDelete(NULL);
 }
+
+// 将秒转为hh:mm:ss的函数
+static void format_time(int seconds, char * buffer, size_t buffer_size) {
+    int hours = seconds / 3600;
+    int minutes = (seconds % 3600) / 60;
+    int sec = seconds % 60;
+    int ret = snprintf(buffer, buffer_size, "%02d:%02d:%02d", hours, minutes, sec);
+
+    // 检查 snprintf 是否成功
+    if (ret < 0 || ret >= buffer_size) {
+        // 错误处理：确保缓冲区以 null 结尾
+        if (buffer_size > 0) {
+            buffer[0] = '\0';
+        }
+        fprintf(stderr, "Error formatting time string\n");
+    }
+}
+
+// 更新进度条和时间标签的回调函数
+static void update_progress(lv_timer_t * timer) {
+    static int interval_counter = 0;
+    if (currentPlayTime < current_music_duration) {
+        currentPlayTime++;
+
+        // 更新当前时间标签
+        char time_str[9]; // hh:mm:ss
+        format_time(currentPlayTime, time_str, sizeof(time_str));
+        lv_label_set_text(ui_Current_Time, time_str);
+
+        interval_counter++;
+        if (interval_counter >= updateInterval) {
+            interval_counter = 0;
+            // 更新进度条
+            int percentage = (currentPlayTime * 100) / current_music_duration;
+            lv_bar_set_value(ui_Progress_Bar, percentage, LV_ANIM_OFF);
+
+            int dotX = progressDotStartX + ((progressDotEndX - progressDotStartX) * percentage) / 100;
+            lv_obj_set_x(ui_Progress_dot, dotX);
+        }
+    } else {
+        lv_timer_pause(timer); // 停止定时器
+    }
+}
+// 初始化音频进度条定时器
+void init_progress_bar(void) {
+    // 创建定时器，每秒更新一次
+    musicTimer = lv_timer_create(update_progress, 1000, NULL);
+
+    lv_timer_pause(musicTimer); // 初始化时暂停定时器
+}
+// 获取音乐总时长, 并启动进度条定时器的任务, 因为要先有总时长, 才能使用进度条
+static void getDurationTask(void *pvParameter)
+{
+    EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_PLAY_MUSIC | EVENT_NEXT_TRACK | EVENT_PREV_TRACK, pdTRUE, pdFALSE, 3000);
+
+    if (bits & (EVENT_PLAY_MUSIC | EVENT_NEXT_TRACK | EVENT_PREV_TRACK)) {
+        bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
+        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_DURATION, pdTRUE, pdFALSE, 3000);
+        if (bits & EVENT_DURATION) {
+            char time_str[12];
+            format_time(current_music_duration, time_str, sizeof(time_str));
+            lv_label_set_text_static(ui_Total_Time, time_str);
+
+            updateInterval = (current_music_duration / 100); // 进度条更新间隔
+            currentPlayTime = 0;
+            lv_timer_resume(musicTimer); // 启动定时器
+            
+        }
+    }
+    vTaskDelete(NULL);
+}
+
 
 //////////////////// 给lvgl的事件用的回调 ////////////////////
 
@@ -219,7 +299,7 @@ void initTime(lv_event_t * e)
     currentTimeLabel = ui_Header_Main_Time;
     // 因为要等待WiFi连接才能开始获取事件, 所以创建异步任务, 否则会阻塞界面加载
     xTaskCreate(initTimeTask, "initTimeTask", 4096, NULL, 5, NULL);
-    xTaskCreate(create_music_item_task, "create_music_item_task", 8192, NULL, 5, NULL);
+    xTaskCreate(createMusicItemTask, "createMusicItemTask", 8192, NULL, 5, NULL);
 }
 
 
@@ -231,6 +311,7 @@ void setTimeMain(lv_event_t * e)
     // 本来只有主界面要加这个防止时间未初始化就更新值, 但是用户有可能会在时间未初始化时乱点点到别的界面, 所以每个界面都加上了
     if(globalTime > 0)
         updateCurrentTimeLabel();
+    init_progress_bar();
 }
 void setTimeMusic(lv_event_t * e)
 {
@@ -717,14 +798,16 @@ void decDefaultVolume(lv_event_t * e)
     lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", defaultVolume);
 }
 // 增加最大音量
-void addMaxVolume(lv_event_t * e) {
+void addMaxVolume(lv_event_t * e)
+{
     const char *text = lv_label_get_text(ui_Max_Volume_Value);
     int maxVolume = atoi(text);
     maxVolume = (maxVolume < 15) ? maxVolume + 1 : 15;
     lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", maxVolume);
 }
 // 减少最大音量
-void decMaxVolume(lv_event_t * e) {
+void decMaxVolume(lv_event_t * e)
+{
     const char *text = lv_label_get_text(ui_Max_Volume_Value);
     int maxVolume = atoi(text);
     maxVolume = (maxVolume > 1) ? maxVolume - 1 : 1;
@@ -952,36 +1035,38 @@ void disconnectWifi(lv_event_t * e)
     lv_img_set_src(ui_Wifi_Status, &ui_img_236134236);
 }
 
-void prevMusicList(lv_event_t *e) {
-    if (num_music_lists == 0)
+void prevMusicList(lv_event_t *e)
+{
+    if (numMusicLists == 0)
         return;
     // 隐藏当前列表
-    lv_obj_add_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
     
     // 切换到上一个列表
-    current_list_index--;
-    if (current_list_index < 0) {
-        current_list_index = num_music_lists - 1; // 循环到最后一个列表
+    currentListIndex--;
+    if (currentListIndex < 0) {
+        currentListIndex = numMusicLists - 1; // 循环到最后一个列表
     }
     
     // 显示上一个列表
-    lv_obj_clear_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
 }
 
-void nextMusicList(lv_event_t *e) {
-    if (num_music_lists == 0)
+void nextMusicList(lv_event_t *e)
+{
+    if (numMusicLists == 0)
         return;
     // 隐藏当前列表
-    lv_obj_add_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
     
     // 切换到下一个列表
-    current_list_index++;
-    if (current_list_index >= num_music_lists) {
-        current_list_index = 0; // 循环到第一个列表
+    currentListIndex++;
+    if (currentListIndex >= numMusicLists) {
+        currentListIndex = 0; // 循环到第一个列表
     }
     
     // 显示下一个列表
-    lv_obj_clear_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
 }
 
 void sendATM2(lv_event_t * e)
@@ -989,85 +1074,90 @@ void sendATM2(lv_event_t * e)
 	// Your code here
     bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
 }
-
-int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在utf8_file_names中的索引
-
+// 播放Music List中被点击的音乐
 void playSelectedMusic(lv_event_t * e)
 {
+    // 暂停定时器
+    lv_timer_pause(musicTimer);
+    // 重置进度条
+    lv_bar_set_value(ui_Progress_Bar, 0, LV_ANIM_OFF);
+    lv_label_set_text(ui_Current_Time, "00:00:00");
+    lv_label_set_text(ui_Total_Time, "00:00:00");
+    lv_obj_set_x(ui_Progress_dot, progressDotStartX);
+
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *label = lv_obj_get_child(obj, 0);
 
     char *track_title = lv_label_get_text(label);
-    lv_label_set_text(ui_Track_Title, track_title);
+    lv_label_set_text(ui_Track_Title, track_title + 3);
     lv_label_set_text(ui_Track_Artist, "null");
-    
+    lv_label_set_text(ui_Total_Time, "00:00:00");
+
     lv_scr_load(ui_Music_Play_Window);
 
-    // 播放被点击的音乐
+    // 先直接播放被点击的音乐
     char track_id[4] = {0};
     strncpy(track_id, track_title, 3);
     char command[50];
     snprintf(command, sizeof(command), "AT+AJ/music/%s*.???", track_id);
-    bluetooth_send_at_command(command, CMD_AT_AJ);
+    bluetooth_send_at_command(command, CMD_PLAY_MUSIC);
+
+    // 然后启动获取Duration的任务
+    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 1, NULL);
 
     // 设置当前id
     for (int i = 0; i < total_files_count; i++) {
-        if (strcmp(utf8_file_names[i] + 3, track_title) == 0) {
+        if (strcmp(utf8_file_names[i], track_title) == 0) {
             printf("INDEX: %d\n", i);
             current_playing_index = i;
         }
     }
 }
 
-void nextTrack(lv_event_t * e)
-{
-    printf("CURR Index: %d\n", current_playing_index);
+
+
+void nextTrack(lv_event_t * e) {
+    // 暂停定时器
+    lv_timer_pause(musicTimer);
+    // 重置进度条
+    lv_bar_set_value(ui_Progress_Bar, 0, LV_ANIM_OFF);
+    lv_label_set_text(ui_Current_Time, "00:00:00");
+    lv_label_set_text(ui_Total_Time, "00:00:00");
+    lv_obj_set_x(ui_Progress_dot, progressDotStartX);
     if (current_playing_index < total_files_count - 1) {
         current_playing_index++;
     } else {
         current_playing_index = 0;
     }
-    printf("NEXT Index: %d\n", current_playing_index);
     char *track_title = utf8_file_names[current_playing_index];
-    printf("NEXT TRACK: %s\n", track_title);
+    // 跳过编号
     lv_label_set_text(ui_Track_Title, track_title + 3);
     lv_label_set_text(ui_Track_Artist, "null");
 
     bluetooth_send_at_command("AT+CC", CMD_NEXT_TRACK);
+    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 1, NULL);
 }
 
-void prevTrack(lv_event_t * e)
-{
-    printf("CURR Index: %d\n", current_playing_index);
+void prevTrack(lv_event_t * e) {
+    // 暂停定时器
+    lv_timer_pause(musicTimer);
+    // 重置进度条
+    lv_bar_set_value(ui_Progress_Bar, 0, LV_ANIM_OFF);
+    lv_label_set_text(ui_Current_Time, "00:00:00");
+    lv_label_set_text(ui_Total_Time, "00:00:00");
+    lv_obj_set_x(ui_Progress_dot, progressDotStartX);
     if (current_playing_index > 0) {
         current_playing_index--;
     } else {
         current_playing_index = total_files_count - 1;
     }
     char *track_title = utf8_file_names[current_playing_index];
-    printf("PREV TRACK: %s, index: %d\n", track_title, current_playing_index);
+    // 跳过编号
     lv_label_set_text(ui_Track_Title, track_title + 3);
     lv_label_set_text(ui_Track_Artist, "null");
 
     bluetooth_send_at_command("AT+CD", CMD_PREV_TRACK);
-}
-
-// void _playSelectedMusic(int index) {
-//     const char *full_name = utf8_file_names[index];
-//     if (strncmp(full_name, "MF+", 3) != 0) {
-//         ESP_LOGE("playSelectedMusic", "Not a music file: %s", full_name);
-//     }
-//     char result[3];
-//     strncpy(result, full_name + 3, 3);
-//     result[3] = '\0';
-
-
-// }
-
-void sendATAJ(lv_event_t * e)
-{
-	// Your code here
-    bluetooth_send_at_command("AT+AJ/music/002*.???", CMD_AT_AJ);
+    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 1, NULL);
 }
 
 void drivingDot(lv_event_t * e)
@@ -1077,8 +1167,12 @@ void drivingDot(lv_event_t * e)
 
 
 
-void PlayPause(lv_event_t * e)
+void PlayPause(lv_event_t * e) {
+    bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE);
+}
+
+
+void sendATAJ(lv_event_t * e)
 {
 	// Your code here
-    bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE);
 }

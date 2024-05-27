@@ -14,26 +14,33 @@ typedef enum {
     CMD_NEXT_TRACK,
     CMD_PREV_TRACK,
     CMD_PLAY_PAUSE,
-    CMD_AT_AJ
+    CMD_PLAY_MUSIC,
+    CMD_GET_DURATION
 } command_type_t;
+
+#define EVENT_TOTAL_FILES (1 << 0)
+#define EVENT_FILE_INDEX (1 << 1)
+#define EVENT_FILE_NAME (1 << 2)
+#define EVENT_NEXT_TRACK (1 << 3)
+#define EVENT_PREV_TRACK (1 << 4)
+#define EVENT_PLAY_PAUSE (1 << 5)
+#define EVENT_PLAY_MUSIC (1 << 6)
+#define EVENT_DURATION (1 << 7)
+
 
 extern char **utf8_file_names;
 extern int total_files_count;
 extern int current_file_index;
+extern int current_playing_index;
+extern int current_music_duration;
 
+EventGroupHandle_t get_bluetooth_event_group(void);
 void get_all_file_names(void);
 
-// 初始化蓝牙模块
 esp_err_t bluetooth_init(void);
-
-// 发送 AT 指令到蓝牙模块
 esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type);
 
-// 等待并接收蓝牙模块的响应
 esp_err_t bluetooth_wait_for_response(char *response, size_t max_len);
-
-// 蓝牙通信任务
 void bluetooth_task(void *pvParameters);
 
-void at_task(void *pvParameters);
 #endif // BLUETOOTH_H

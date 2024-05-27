@@ -26,24 +26,18 @@ static QueueHandle_t uart_queue;
 
 static EventGroupHandle_t event_group;
 
-#define EVENT_TOTAL_FILES (1 << 0)
-#define EVENT_FILE_INDEX (1 << 1)
-#define EVENT_FILE_NAME (1 << 2)
-#define EVENT_NEXT_TRACK (1 << 3)
-#define EVENT_PREV_TRACK (1 << 4)
-#define EVENT_PLAY_PAUSE (1 << 5)
-#define EVENT_AT_AJ (1 << 6)
-
-
-char **utf8_file_names = NULL;         // 储存文件名的数组
+char **utf8_file_names = NULL;  // 储存文件名的数组
 int total_files_count = 0;      // 这两个都是在初始化时获取全部文件名用的
 int current_file_index = 0; 
-
-static char response_buffer[BUF_SIZE];
-
+int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在utf8_file_names中的索引
+int current_music_duration = 0;
 
 
 static command_type_t current_command = CMD_NONE;
+
+EventGroupHandle_t get_bluetooth_event_group(void) {
+    return event_group;
+}
 
 int utf16_to_utf8(const unsigned short* utf16_str, char** utf8_str) {
     if (utf16_str == NULL || utf8_str == NULL) return 0;
@@ -169,16 +163,32 @@ esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type
 // }
 
 // 添加文件名到列表
-int add_file_name(char **utf8_file_names, int index, const char *file_name) {
-    utf8_file_names[index] = strdup(file_name);
-    if (utf8_file_names[index] == NULL) {
-        perror("Failed to duplicate string");
-        return -1;
+void add_file_name(char **utf8_file_names, int index, const char *file_name) {
+    // 确保 file_name 以 "MF+" 开头并以 ".mp3" 结尾, 理想中显然这不应该出错, 谁知道呢
+    if (strncmp(file_name, "MF+", 3) != 0 || strcmp(file_name + strlen(file_name) - 4, ".mp3") != 0) {
+        ESP_LOGE(TAG,"Invalid file name format: %s", file_name);
+        return;
     }
-    return 0;
+
+    // 跳过 "MF+" 前缀
+    const char *name_start = file_name + 3;
+
+    // 计算新的文件名长度（去除 ".mp3" 的长度）
+    size_t name_length = strlen(name_start) - 4;
+
+    // 创建临时缓冲区以存储处理后的文件名
+    char temp_name[name_length + 1];
+    strncpy(temp_name, name_start, name_length);
+    temp_name[name_length] = '\0';
+
+    utf8_file_names[index] = strdup(temp_name);
+    if (utf8_file_names[index] == NULL) {
+        ESP_LOGE(TAG, "Failed to duplicate string");
+        return;
+    };
 }
 void get_all_file_names(void) {
-    // 开机时不知道为什么会收到一个ERR+1, 所以这里延迟一秒等那个ERR+1被读掉
+    // 开机时会收到一个ERR+1, 所以这里延迟一秒等那个ERR+1被读掉
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     // 发送获取总文件数的命令
     bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
@@ -186,7 +196,6 @@ void get_all_file_names(void) {
 
     // 总文件数
     if (bits & EVENT_TOTAL_FILES) {
-        sscanf(response_buffer, "M2+%d", &total_files_count);
         ESP_LOGI(TAG, "Total files: %d", total_files_count);
         
         utf8_file_names = (char **)malloc(total_files_count * sizeof(char *));
@@ -220,7 +229,6 @@ void get_all_file_names(void) {
 
         if (bits & EVENT_FILE_INDEX) {
             // 解析当前文件序号
-            sscanf(response_buffer, "M1+%d", &current_file_index);
             ESP_LOGI(TAG, "Current file index: %d", current_file_index);
 
             // 发送获取当前文件名的命令
@@ -304,13 +312,6 @@ esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
                             utf16_to_utf8(utf16_str, &utf8);
                             printf("UTF8编码的字符串: %s\n", utf8);
                             add_file_name(utf8_file_names, current_file_index - 1, utf8);
-
-                            // // 打印UTF-16编码的字符串
-                            // for (int i = 0; i < len / 2 + 1; i++) {
-                            //     ESP_LOGD(TAG, "Received UTF-16 char: 0x%04X", utf16_str[i]);
-                            // }
-                            // 储存接收好的源字节
-                            // add_file_name(utf16_file_names, current_file_index - 1, utf16_str);
                         } else {
                             int valid_len = 0;
                             for (int i = 0; i < len; i++) {
@@ -373,7 +374,7 @@ void bluetooth_task(void *pvParameters) {
             ESP_LOGI(TAG, "Received response: %s, cmd: %d\n", response, current_command);
             switch (current_command) {
                 case CMD_GET_VOLUME:
-                    if (strstr(response, "QA+") != NULL) {
+                    if (strncmp(response, "QA+", 3) == 0) {
                         ESP_LOGI(TAG, "Volume: %s", response);
                         // strncpy(volume_response, response, BUF_SIZE);
                         // xEventGroupSetBits(event_group, EVENT_VOLUME_RESPONSE);
@@ -381,49 +382,48 @@ void bluetooth_task(void *pvParameters) {
                     }
                     break;
                 case CMD_GET_TOTAL_FILES:
-                    if (strstr(response, "M2+") != NULL) {
-                        memset(response_buffer, 0, sizeof(response_buffer));
-                        strncpy(response_buffer, response, BUF_SIZE);
-                        response_buffer[BUF_SIZE - 1] = '\0';
+                    if (strncmp(response, "M2+", 3) == 0) {
+                        sscanf(response, "M2+%d", &total_files_count);
                         xEventGroupSetBits(event_group, EVENT_TOTAL_FILES);
                     }
                     break;
                 case CMD_GET_FILE_INDEX:
-                    if (strstr(response, "M1+") != NULL) {
-                        memset(response_buffer, 0, sizeof(response_buffer));
-                        strncpy(response_buffer, response, BUF_SIZE);
-                        response_buffer[BUF_SIZE - 1] = '\0';
+                    if (strncmp(response, "M1+", 3) == 0) {
+                        sscanf(response, "M1+%d", &current_file_index);
                         xEventGroupSetBits(event_group, EVENT_FILE_INDEX);
                     }
                     break;
                 case CMD_GET_FILE_NAME:
-                    if (strstr(response, "MF+") != NULL) {
-                        memset(response_buffer, 0, sizeof(response_buffer));
-                        strncpy(response_buffer, response, BUF_SIZE);
-                        response_buffer[BUF_SIZE - 1] = '\0';
+                    if (strncmp(response, "MF+", 3) == 0) {
+                        // 另一个耦合的代价, 那边传来文件名后, 直接在wait_for_response那当场处理完储存了
                         xEventGroupSetBits(event_group, EVENT_FILE_NAME);
                     }
                     break;
                 case CMD_NEXT_TRACK:
-                    if (strstr(response, "OK") != NULL) {
+                    if (strncmp(response, "OK", 2) == 0) {
                         xEventGroupSetBits(event_group, EVENT_NEXT_TRACK);
                     }
                     break;
                 case CMD_PREV_TRACK:
-                    if (strstr(response, "OK") != NULL) {
+                    if (strncmp(response, "OK", 2) == 0) {
                         xEventGroupSetBits(event_group, EVENT_PREV_TRACK);
                     }
                 break;
                 case CMD_PLAY_PAUSE:
-                    if (strstr(response, "OK") != NULL) {
+                    if (strncmp(response, "OK", 2) == 0) {
                         xEventGroupSetBits(event_group, EVENT_PLAY_PAUSE);
                     }
                     break;
-                case CMD_AT_AJ:
-                    if (strstr(response, "OK") != NULL) {
-                        xEventGroupSetBits(event_group, EVENT_AT_AJ);
+                case CMD_PLAY_MUSIC:
+                    if (strncmp(response, "OK", 2) == 0) {
+                        xEventGroupSetBits(event_group, EVENT_PLAY_MUSIC);
                     }
                     break;
+                case CMD_GET_DURATION:
+                    if (strncmp(response, "MT+", 3) == 0) {
+                        sscanf(response, "MT+%d", &current_music_duration);
+                        xEventGroupSetBits(event_group, EVENT_DURATION);
+                    }
                 default:
                     ESP_LOGI(TAG, "Other Response: %s", response);
                     // handle_general_response(response);

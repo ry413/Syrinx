@@ -18,7 +18,6 @@ void sendATAJ(lv_event_t * e);
 void setTimeMusic(lv_event_t * e);
 void prevMusicList(lv_event_t * e);
 void nextMusicList(lv_event_t * e);
-void playSelectedMusic(lv_event_t * e);
 void setTimeNatureSound(lv_event_t * e);
 void setTimeBluetooth(lv_event_t * e);
 void setTimeMode(lv_event_t * e);
@@ -55,6 +54,7 @@ void drivingDot(lv_event_t * e);
 void nextTrack(lv_event_t * e);
 void prevTrack(lv_event_t * e);
 void PlayPause(lv_event_t * e);
+void playSelectedMusic(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/
