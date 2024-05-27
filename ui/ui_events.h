@@ -12,7 +12,13 @@ extern "C" {
 
 void initTime(lv_event_t * e);
 void setTimeMain(lv_event_t * e);
+void disconnectWifi(lv_event_t * e);
+void sendATM2(lv_event_t * e);
+void sendATAJ(lv_event_t * e);
 void setTimeMusic(lv_event_t * e);
+void prevMusicList(lv_event_t * e);
+void nextMusicList(lv_event_t * e);
+void playSelectedMusic(lv_event_t * e);
 void setTimeNatureSound(lv_event_t * e);
 void setTimeBluetooth(lv_event_t * e);
 void setTimeMode(lv_event_t * e);
@@ -23,14 +29,13 @@ void initIDSettings(lv_event_t * e);
 void initDateTimeSettings(lv_event_t * e);
 void initBluetoothSettings(lv_event_t * e);
 void initBacklightSettings(lv_event_t * e);
-void saveDefaultVolume(lv_event_t * e);
-void cancelSaveDefaultVolume(lv_event_t * e);
-void decDefaultVolume(lv_event_t * e);
-void addDefaultVolume(lv_event_t * e);
-void saveMaxVolume(lv_event_t * e);
-void cancelSaveMaxVolume(lv_event_t * e);
+void initWifiSettings(lv_event_t * e);
 void decMaxVolume(lv_event_t * e);
 void addMaxVolume(lv_event_t * e);
+void decDefaultVolume(lv_event_t * e);
+void addDefaultVolume(lv_event_t * e);
+void saveVolumeSettings(lv_event_t * e);
+void cancelSaveVolumeSettings(lv_event_t * e);
 void saveBacklightBrightness(lv_event_t * e);
 void cancelSaveBacklightBrightness(lv_event_t * e);
 void decBrightness(lv_event_t * e);
@@ -44,6 +49,12 @@ void saveBluetoothPasswordSetting(lv_event_t * e);
 void saveTimeSetting(lv_event_t * e);
 void saveDateSetting(lv_event_t * e);
 void saveIDSetting(lv_event_t * e);
+void saveWifiNameSetting(lv_event_t * e);
+void saveWifiPasswordSetting(lv_event_t * e);
+void drivingDot(lv_event_t * e);
+void nextTrack(lv_event_t * e);
+void prevTrack(lv_event_t * e);
+void PlayPause(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

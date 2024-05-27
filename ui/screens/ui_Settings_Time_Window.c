@@ -117,7 +117,7 @@ lv_obj_set_align( ui_Time_Setting_Enter_Btn2, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Time_Setting_Enter_Btn2,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_Time_Setting_Enter_Btn2, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 lv_obj_add_flag( ui_Time_Setting_Enter_Btn2, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
-lv_obj_clear_flag( ui_Time_Setting_Enter_Btn2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_clear_flag( ui_Time_Setting_Enter_Btn2, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_shadow_color(ui_Time_Setting_Enter_Btn2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_shadow_opa(ui_Time_Setting_Enter_Btn2, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_bg_color(ui_Time_Setting_Enter_Btn2, lv_color_hex(0x4893EF), LV_PART_MAIN | LV_STATE_PRESSED );
@@ -213,7 +213,7 @@ lv_obj_set_align( ui_Date_Setting_Enter_Btn2, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Date_Setting_Enter_Btn2,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_Date_Setting_Enter_Btn2, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 lv_obj_add_flag( ui_Date_Setting_Enter_Btn2, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
-lv_obj_clear_flag( ui_Date_Setting_Enter_Btn2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_clear_flag( ui_Date_Setting_Enter_Btn2, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Date_Setting_Enter_Icon2 = lv_img_create(ui_Date_Setting_Enter_Btn2);
 lv_img_set_src(ui_Date_Setting_Enter_Icon2, &ui_img_1260392355);
@@ -239,6 +239,7 @@ lv_obj_set_width( ui_BackToMainWindow10, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_x( ui_BackToMainWindow10, -212 );
 lv_obj_set_y( ui_BackToMainWindow10, -212 );
 lv_obj_set_align( ui_BackToMainWindow10, LV_ALIGN_CENTER );
+lv_obj_clear_flag( ui_BackToMainWindow10, LV_OBJ_FLAG_PRESS_LOCK );    /// Flags
 lv_obj_set_style_img_recolor(ui_BackToMainWindow10, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
 lv_obj_set_style_img_recolor_opa(ui_BackToMainWindow10, 100, LV_PART_MAIN| LV_STATE_PRESSED);
 

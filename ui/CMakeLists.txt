@@ -1,4 +1,6 @@
 SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
+    components/ui_comp_music_item.c
+    components/ui_comp_music_list.c
     components/ui_comp.c
     screens/ui_Main_Window.c
     screens/ui_Music_Window.c
@@ -12,11 +14,13 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     screens/ui_Settings_Bluetooth_Window.c
     screens/ui_Settings_Time_Window.c
     screens/ui_Settings_ID_Window.c
+    screens/ui_Settings_Wifi_Window.c
+    screens/ui_Music_Play_Window.c
     ui.c
     components/ui_comp_hook.c
     ui_helpers.c
     ui_events.c
-    images/ui_img_861711258.c
+    images/ui_img_1621519077.c
     images/ui_img_490182776.c
     images/ui_img_2087007852.c
     images/ui_img_227802216.c
@@ -24,8 +28,10 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     images/ui_img_501316714.c
     images/ui_img_967182345.c
     images/ui_img_72497716.c
-    images/ui_img_411136687.c
+    images/ui_img_236134236.c
+    images/ui_img_1742736079.c
     images/ui_img_35201459.c
+    images/ui_img_861711258.c
     images/ui_img_348826415.c
     images/ui_img_12669592.c
     images/ui_img_2034599484.c
@@ -46,6 +52,11 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     images/ui_img_404002205.c
     images/ui_img_239308628.c
     images/ui_img_1260392355.c
+    images/ui_img_469799613.c
+    images/ui_img_1311962515.c
+    images/ui_img_542960551.c
+    images/ui_img_542920328.c
+    images/ui_img_2101671624.c
     fonts/ui_font_LanTing18.c
     fonts/ui_font_LanTIng20.c
     fonts/ui_font_LanTing40.c

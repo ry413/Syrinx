@@ -147,6 +147,7 @@ lv_obj_set_width( ui_BackToMainWindowBtn5, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_x( ui_BackToMainWindowBtn5, -212 );
 lv_obj_set_y( ui_BackToMainWindowBtn5, -212 );
 lv_obj_set_align( ui_BackToMainWindowBtn5, LV_ALIGN_CENTER );
+lv_obj_clear_flag( ui_BackToMainWindowBtn5, LV_OBJ_FLAG_PRESS_LOCK );    /// Flags
 lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn5, lv_color_hex(0x000000), LV_PART_MAIN| LV_STATE_PRESSED);
 lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn5, 100, LV_PART_MAIN| LV_STATE_PRESSED);
 

@@ -58,8 +58,18 @@ void ui_event_Guide_Btn( lv_event_t * e);
 extern lv_obj_t *ui_Guide_Btn;
 extern lv_obj_t *ui_Guide_Icon;
 extern lv_obj_t *ui_Guide_Text;
-void ui_event_Main_Logo( lv_event_t * e);
-extern lv_obj_t *ui_Main_Logo;
+extern lv_obj_t *ui_Wifi_Status;
+extern lv_obj_t *ui_Wifi_Img_Placeholder;
+extern lv_obj_t *ui_Music_Note_Img_Placeholder1;
+void ui_event_Disconnect_Wifi( lv_event_t * e);
+extern lv_obj_t *ui_Disconnect_Wifi;
+extern lv_obj_t *ui_Label1;
+void ui_event_Button5( lv_event_t * e);
+extern lv_obj_t *ui_Button5;
+void ui_event_Button2( lv_event_t * e);
+extern lv_obj_t *ui_Button2;
+void ui_event_Button3( lv_event_t * e);
+extern lv_obj_t *ui_Button3;
 // SCREEN: ui_Music_Window
 void ui_Music_Window_screen_init(void);
 void ui_event_Music_Window( lv_event_t * e);
@@ -69,13 +79,16 @@ extern lv_obj_t *ui_Header_Music_Text;
 extern lv_obj_t *ui_Header_Music_Time;
 extern lv_obj_t *ui_Header_Music_Volume_Icon;
 extern lv_obj_t *ui_Header_Music_Volume_Value;
-extern lv_obj_t *ui_MusicList;
-extern lv_obj_t *ui_Music_Item1;
-extern lv_obj_t *ui_Music_Name1;
-extern lv_obj_t *ui_Music_Item_Line1;
-extern lv_obj_t *ui_Music_Item_Icon1;
 void ui_event_BackToMainWindowBtn1( lv_event_t * e);
 extern lv_obj_t *ui_BackToMainWindowBtn1;
+extern lv_obj_t *ui_Music_List_Container;
+void ui_event_Prev_Music_List_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Prev_Music_List_Btn;
+extern lv_obj_t *ui_Prev_Music_List_Btn_Text;
+void ui_event_Next_Music_List_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Next_Music_List_Btn;
+extern lv_obj_t *ui_Next_Music_List_Btn_Text;
+extern lv_obj_t *ui_Music_Item1;
 // SCREEN: ui_Nature_Sound_Window
 void ui_Nature_Sound_Window_screen_init(void);
 void ui_event_Nature_Sound_Window( lv_event_t * e);
@@ -240,44 +253,23 @@ extern lv_obj_t *ui_Settings_ID_Icon2;
 extern lv_obj_t *ui_Settings_ID_Decora_Icon2;
 void ui_event_Settings_ID_Btn2( lv_event_t * e);
 extern lv_obj_t *ui_Settings_ID_Btn2;
-extern lv_obj_t *ui_Settings_Default_Volume;
-extern lv_obj_t *ui_Settings_Default_Volume_Text;
-extern lv_obj_t *ui_Settings_Default_Volume_Line;
-extern lv_obj_t *ui_Settings_Default_Volume_Icon;
-extern lv_obj_t *ui_Settings_Default_Volume_Decora_Icon;
-void ui_event_Settings_Default_Volume_Btn( lv_event_t * e);
-extern lv_obj_t *ui_Settings_Default_Volume_Btn;
-extern lv_obj_t *ui_Settings_Max_Volume;
-extern lv_obj_t *ui_Settings_Max_Volume_Text2;
-extern lv_obj_t *ui_Settings_Max_Volume_Line2;
-extern lv_obj_t *ui_Settings_Max_Volume_Icon2;
-extern lv_obj_t *ui_Settings_Max_Volume_Decora_Icon2;
-void ui_event_Settings_Max_Volume_Btn2( lv_event_t * e);
-extern lv_obj_t *ui_Settings_Max_Volume_Btn2;
-extern lv_obj_t *ui_Default_Volume_Panel;
-extern lv_obj_t *ui_Default_Volume_Text;
-void ui_event_Default_Volume_Verify_Btn( lv_event_t * e);
-extern lv_obj_t *ui_Default_Volume_Verify_Btn;
-extern lv_obj_t *ui_Default_Volume_Verify_Btn_Text;
-void ui_event_Default_Volume_Cancel_Btn( lv_event_t * e);
-extern lv_obj_t *ui_Default_Volume_Cancel_Btn;
-extern lv_obj_t *ui_Default_Volume_Cancel_Text;
-extern lv_obj_t *ui_Default_Volume_Value_Panel;
-extern lv_obj_t *ui_Default_Volume_Value;
-void ui_event_Default_Volume_Dec_Btn( lv_event_t * e);
-extern lv_obj_t *ui_Default_Volume_Dec_Btn;
-extern lv_obj_t *ui_Default_Volume_Dec_Icon;
-void ui_event_Default_Volume_Add_Btn( lv_event_t * e);
-extern lv_obj_t *ui_Default_Volume_Add_Btn;
-extern lv_obj_t *ui_Default_Volume_Add_Icon;
-extern lv_obj_t *ui_Max_Volume_Panel;
+extern lv_obj_t *ui_Settings_Volume;
+extern lv_obj_t *ui_Settings_Volume_Text;
+extern lv_obj_t *ui_Settings_Volume_Line;
+extern lv_obj_t *ui_Settings_Volume_Icon;
+extern lv_obj_t *ui_Settings_Volume_Decora_Icon;
+void ui_event_Settings_Volume_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Volume_Btn;
+extern lv_obj_t *ui_Settings_Wifi;
+extern lv_obj_t *ui_Settings_Wifi_Text;
+extern lv_obj_t *ui_Settings_Wifi_Line;
+extern lv_obj_t *ui_Settings_Wifi_Icon;
+extern lv_obj_t *ui_Settings_Wifi_Decora_Icon;
+void ui_event_Settings_Wifi_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Settings_Wifi_Btn;
+extern lv_obj_t *ui_Volume_Settings_Panel;
+extern lv_obj_t *ui_Max_Volume_Settings;
 extern lv_obj_t *ui_Max_Volume_Text;
-void ui_event_Max_Volume_Verify_Btn( lv_event_t * e);
-extern lv_obj_t *ui_Max_Volume_Verify_Btn;
-extern lv_obj_t *ui_Max_Volume_Verify_Btn_Text;
-void ui_event_Max_Volume_Cancel_Btn( lv_event_t * e);
-extern lv_obj_t *ui_Max_Volume_Cancel_Btn;
-extern lv_obj_t *ui_Max_Volume_Cancel_Text;
 extern lv_obj_t *ui_Max_Volume_Value_Panel;
 extern lv_obj_t *ui_Max_Volume_Value;
 void ui_event_Max_Volume_Dec_Btn( lv_event_t * e);
@@ -286,6 +278,22 @@ extern lv_obj_t *ui_Max_Volume_Dec_Icon;
 void ui_event_Max_Volume_Add_Btn( lv_event_t * e);
 extern lv_obj_t *ui_Max_Volume_Add_Btn;
 extern lv_obj_t *ui_Max_Volume_Add_Icon;
+extern lv_obj_t *ui_Default_Volume_Settings;
+extern lv_obj_t *ui_Default_Volume_Text;
+extern lv_obj_t *ui_Default_Volume_Value_Panel;
+extern lv_obj_t *ui_Default_Volume_Value;
+void ui_event_Default_Volume_Dec_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Dec_Btn;
+extern lv_obj_t *ui_Default_Volume_Dec_Icon;
+void ui_event_Default_Volume_Add_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Default_Volume_Add_Btn;
+extern lv_obj_t *ui_Default_Volume_Add_Icon;
+void ui_event_Volume_Settings_Verify_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Volume_Settings_Verify_Btn;
+extern lv_obj_t *ui_Max_Volume_Verify_Btn_Text;
+void ui_event_Volume_Settings_Cancel_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Volume_Settings_Cancel_Btn;
+extern lv_obj_t *ui_Max_Volume_Cancel_Text;
 void ui_event_BackToMainWindowBtn8( lv_event_t * e);
 extern lv_obj_t *ui_BackToMainWindowBtn8;
 // SCREEN: ui_Settings_Backlight_Window
@@ -413,11 +421,65 @@ extern lv_obj_t *ui_ID_Setting_Enter_Btn2;
 extern lv_obj_t *ui_ID_Setting_Enter_Icon2;
 void ui_event_BackToMainWindow11( lv_event_t * e);
 extern lv_obj_t *ui_BackToMainWindow11;
+// SCREEN: ui_Settings_Wifi_Window
+void ui_Settings_Wifi_Window_screen_init(void);
+extern lv_obj_t *ui_Settings_Wifi_Window;
+extern lv_obj_t *ui_Header_Main1;
+extern lv_obj_t *ui_Header_Main_Text1;
+extern lv_obj_t *ui_Header_Main_Volume_Icon1;
+extern lv_obj_t *ui_Header_Main_Volume_Value1;
+extern lv_obj_t *ui_Wifi_Name;
+extern lv_obj_t *ui_Wifi_Name_Text;
+extern lv_obj_t *ui_Wifi_Name_Line;
+void ui_event_Wifi_Name_Input( lv_event_t * e);
+extern lv_obj_t *ui_Wifi_Name_Input;
+void ui_event_Wifi_Name_Enter_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Wifi_Name_Enter_Btn;
+extern lv_obj_t *ui_Wifi_Name_Enter_Btn1;
+extern lv_obj_t *ui_Wifi_Password;
+extern lv_obj_t *ui_Wifi_Password_Text;
+extern lv_obj_t *ui_Wifi_Password_Line;
+void ui_event_Wifi_Password_Input( lv_event_t * e);
+extern lv_obj_t *ui_Wifi_Password_Input;
+void ui_event_Wifi_Password_Enter_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Wifi_Password_Enter_Btn;
+extern lv_obj_t *ui_Wifi_Password_Enter_Icon;
+extern lv_obj_t *ui_Wifi_Keyboard;
+void ui_event_BackToSettingsWindow2( lv_event_t * e);
+extern lv_obj_t *ui_BackToSettingsWindow2;
+// SCREEN: ui_Music_Play_Window
+void ui_Music_Play_Window_screen_init(void);
+extern lv_obj_t *ui_Music_Play_Window;
+extern lv_obj_t *ui_Header_Music2;
+extern lv_obj_t *ui_Header_Music_Text2;
+extern lv_obj_t *ui_Header_Music_Time2;
+extern lv_obj_t *ui_Header_Music_Volume_Icon2;
+extern lv_obj_t *ui_Header_Music_Volume_Value2;
+void ui_event_Progress_Bar( lv_event_t * e);
+extern lv_obj_t *ui_Progress_Bar;
+extern lv_obj_t *ui_Player_Image;
+extern lv_obj_t *ui_Player_Icon;
+void ui_event_BackToMainWindowBtn9( lv_event_t * e);
+extern lv_obj_t *ui_BackToMainWindowBtn9;
+extern lv_obj_t *ui_Track_Title;
+extern lv_obj_t *ui_Track_Artist;
+extern lv_obj_t *ui_Play_Mode_Btn;
+extern lv_obj_t *ui_Play_Style_Text;
+extern lv_obj_t *ui_Current_Time;
+extern lv_obj_t *ui_Total_Time;
+void ui_event_Next_Track_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Next_Track_Btn;
+void ui_event_Prev_Track_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Prev_Track_Btn;
+void ui_event_Play_Pause_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Play_Pause_Btn;
+extern lv_obj_t *ui_Play_Pause_Icon;
+extern lv_obj_t *ui_Progress_dot;
 void ui_event____initial_actions0( lv_event_t * e);
 extern lv_obj_t *ui____initial_actions0;
 
 
-LV_IMG_DECLARE( ui_img_861711258);   // assets/丽枫UI/background.png
+LV_IMG_DECLARE( ui_img_1621519077);   // assets/丽枫UI/backgroundMain.png
 LV_IMG_DECLARE( ui_img_490182776);   // assets/丽枫UI/音量.png
 LV_IMG_DECLARE( ui_img_2087007852);   // assets/丽枫UI/音乐库.png
 LV_IMG_DECLARE( ui_img_227802216);   // assets/丽枫UI/自然之音.png
@@ -425,8 +487,10 @@ LV_IMG_DECLARE( ui_img_907415264);   // assets/丽枫UI/蓝牙.png
 LV_IMG_DECLARE( ui_img_501316714);   // assets/丽枫UI/模式.png
 LV_IMG_DECLARE( ui_img_967182345);   // assets/丽枫UI/叫醒服务.png
 LV_IMG_DECLARE( ui_img_72497716);   // assets/丽枫UI/指南.png
-LV_IMG_DECLARE( ui_img_411136687);   // assets/丽枫UI/lifeng.png
+LV_IMG_DECLARE( ui_img_236134236);   // assets/丽枫UI/wifi_disconnect.png
+LV_IMG_DECLARE( ui_img_1742736079);   // assets/丽枫UI/wifi.png
 LV_IMG_DECLARE( ui_img_35201459);   // assets/丽枫UI/musicNote.png
+LV_IMG_DECLARE( ui_img_861711258);   // assets/丽枫UI/background.png
 LV_IMG_DECLARE( ui_img_348826415);   // assets/丽枫UI/back.png
 LV_IMG_DECLARE( ui_img_12669592);   // assets/丽枫UI/鸟叫.png
 LV_IMG_DECLARE( ui_img_2034599484);   // assets/丽枫UI/虫鸣.png
@@ -447,6 +511,11 @@ LV_IMG_DECLARE( ui_img_728059867);   // assets/丽枫UI/ID设置.png
 LV_IMG_DECLARE( ui_img_404002205);   // assets/丽枫UI/Left triangle40.png
 LV_IMG_DECLARE( ui_img_239308628);   // assets/丽枫UI/Right triangle40.png
 LV_IMG_DECLARE( ui_img_1260392355);   // assets/丽枫UI/yes.png
+LV_IMG_DECLARE( ui_img_469799613);   // assets/丽枫UI/音乐.png
+LV_IMG_DECLARE( ui_img_1311962515);   // assets/丽枫UI/随机.png
+LV_IMG_DECLARE( ui_img_542960551);   // assets/丽枫UI/下一首.png
+LV_IMG_DECLARE( ui_img_542920328);   // assets/丽枫UI/上一首.png
+LV_IMG_DECLARE( ui_img_2101671624);   // assets/丽枫UI/暂停.png
 
 
 LV_FONT_DECLARE( ui_font_LanTing18);

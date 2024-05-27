@@ -495,7 +495,7 @@ static void lvgl_task(void *pvParameter)
 
 static void create_demo_application(void)
 {
-    // 不知道为什么要写在这
+
     ui_init();
     initBacklight();
 
@@ -556,6 +556,6 @@ void app_main() {
     xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
     xTaskCreate(wifi_task, "wifi_task", 4096, NULL, 5, NULL);
     bluetooth_init();
-    xTaskCreate(bluetooth_task, "bluetooth_task", 4096, NULL, 3, NULL); // 创建蓝牙任务
-    // xTaskCreate(at_task, "at_task", 4096, NULL, 10, NULL);
+    xTaskCreate(bluetooth_task, "bluetooth_task", 8192, NULL, 3, NULL); // 创建蓝牙任务
+
 }

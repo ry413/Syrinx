@@ -5,10 +5,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/semphr.h"
+#include "freertos/event_groups.h"
 #include <string.h>
-// #include "iconv.h"
+#include <iconv.h>
 #include <locale.h>
 #include <wchar.h>
+
 
 #define UART_PORT_NUM      UART_NUM_0
 #define UART_BAUD_RATE     115200
@@ -16,66 +19,96 @@
 #define UART_RX_PIN        GPIO_NUM_44
 #define BUF_SIZE           1024
 #define QUEUE_SIZE         10
+#define MAX_FILES          100
 
 static const char *TAG = "Bluetooth";
 static QueueHandle_t uart_queue;
 
-// 将UTF-16小端编码转换为UTF-8
-char* utf16le_to_utf8(const uint16_t *utf16_str, size_t utf16_len) {
-    setlocale(LC_ALL, "en_US.utf8");
+static EventGroupHandle_t event_group;
 
-    // 计算转换后的UTF-8字符串所需的长度
-    size_t utf8_len = wcstombs(NULL, (const wchar_t *)utf16_str, 0) + 1;
-    if (utf8_len == (size_t)-1) {
-        return NULL;
-    }
+#define EVENT_TOTAL_FILES (1 << 0)
+#define EVENT_FILE_INDEX (1 << 1)
+#define EVENT_FILE_NAME (1 << 2)
+#define EVENT_NEXT_TRACK (1 << 3)
+#define EVENT_PREV_TRACK (1 << 4)
+#define EVENT_PLAY_PAUSE (1 << 5)
+#define EVENT_AT_AJ (1 << 6)
 
-    // 分配UTF-8字符串的内存
-    char *utf8_str = (char *)malloc(utf8_len);
-    if (!utf8_str) {
-        return NULL;
-    }
 
-    // 执行转换
-    wcstombs(utf8_str, (const wchar_t *)utf16_str, utf8_len);
-    return utf8_str;
-}
+char **utf8_file_names = NULL;         // 储存文件名的数组
+int total_files_count = 0;      // 这两个都是在初始化时获取全部文件名用的
+int current_file_index = 0; 
 
-void process_mixed_encoding(const uint8_t *bytes, size_t len) {
-    char final_response[1024] = {0}; // 存储最终的UTF-8字符串
-    char *ptr = final_response;
-    size_t remaining_len = sizeof(final_response) - 1;
+static char response_buffer[BUF_SIZE];
 
-    for (size_t i = 0; i < len; ) {
-        if (i + 1 < len && (bytes[i] <= 0x7F) && (bytes[i + 1] & 0x80)) {
-            // 检测到可能的UTF-16 LE编码字符（中文字符）
-            uint16_t utf16_char = bytes[i] | (bytes[i + 1] << 8);
-            i += 2;
 
-            // 将UTF-16 LE字符转换为UTF-8
-            uint16_t utf16_str[2] = {utf16_char, 0}; // 确保空终止
-            char *utf8_char = utf16le_to_utf8(utf16_str, 1);
-            if (utf8_char) {
-                strncat(ptr, utf8_char, remaining_len);
-                remaining_len -= strlen(utf8_char);
-                ptr += strlen(utf8_char);
-                free(utf8_char);
+
+static command_type_t current_command = CMD_NONE;
+
+int utf16_to_utf8(const unsigned short* utf16_str, char** utf8_str) {
+    if (utf16_str == NULL || utf8_str == NULL) return 0;
+
+    int utf8_index = 0;
+    int utf8_size = 1; // 为字符串结束'\0'留出空间
+    int i = 0;
+
+    while (utf16_str[i] != '\0') {
+        unsigned int unicode_code = utf16_str[i++];
+
+        if (unicode_code >= 0xD800 && unicode_code <= 0xDBFF) { // 判断是否为代理对
+            unsigned int surrogate_pair_code = utf16_str[i];
+            if (surrogate_pair_code >= 0xDC00 && surrogate_pair_code <= 0xDFFF) {
+                unicode_code = ((unicode_code - 0xD800) << 10) + (surrogate_pair_code - 0xDC00) + 0x10000;
+                i++; // 跳过低位代理对
             }
+        }
+
+        if (unicode_code < 0x80) utf8_size += 1;
+        else if (unicode_code < 0x800) utf8_size += 2;
+        else if (unicode_code < 0x10000) utf8_size += 3;
+        else utf8_size += 4;
+    }
+
+    *utf8_str = (char*) malloc(utf8_size * sizeof(char));
+    if (*utf8_str == NULL) return 0;
+
+    utf8_index = 0;
+    i = 0;
+
+    while (utf16_str[i] != '\0') {
+        unsigned int unicode_code = utf16_str[i++];
+
+        if (unicode_code >= 0xD800 && unicode_code <= 0xDBFF) {
+            unsigned int surrogate_pair_code = utf16_str[i];
+            if (surrogate_pair_code >= 0xDC00 && surrogate_pair_code <= 0xDFFF) {
+                unicode_code = ((unicode_code - 0xD800) << 10) + (surrogate_pair_code - 0xDC00) + 0x10000;
+                i++;
+            }
+        }
+
+        if (unicode_code < 0x80) {
+            (*utf8_str)[utf8_index++] = unicode_code;
+        } else if (unicode_code < 0x800) {
+            (*utf8_str)[utf8_index++] = ((unicode_code >> 6) & 0x1F) | 0xC0;
+            (*utf8_str)[utf8_index++] = (unicode_code & 0x3F) | 0x80;
+        } else if (unicode_code < 0x10000) {
+            (*utf8_str)[utf8_index++] = ((unicode_code >> 12) & 0x0F) | 0xE0;
+            (*utf8_str)[utf8_index++] = ((unicode_code >> 6) & 0x3F) | 0x80;
+            (*utf8_str)[utf8_index++] = (unicode_code & 0x3F) | 0x80;
         } else {
-            // 处理UTF-8字符
-            if (remaining_len > 0) {
-                *ptr++ = bytes[i++];
-                remaining_len--;
-            } else {
-                break;
-            }
+            (*utf8_str)[utf8_index++] = ((unicode_code >> 18) & 0x07) | 0xF0;
+            (*utf8_str)[utf8_index++] = ((unicode_code >> 12) & 0x3F) | 0x80;
+            (*utf8_str)[utf8_index++] = ((unicode_code >> 6) & 0x3F) | 0x80;
+            (*utf8_str)[utf8_index++] = (unicode_code & 0x3F) | 0x80;
         }
     }
 
-    printf("Final UTF-8 response: %s\n", final_response);
+    (*utf8_str)[utf8_index] = '\0';
+    return 1;
 }
 
 esp_err_t bluetooth_init(void) {
+    // 初始化UART 0
     uart_config_t uart_config = {
         .baud_rate = UART_BAUD_RATE,
         .data_bits = UART_DATA_8_BITS,
@@ -88,14 +121,22 @@ esp_err_t bluetooth_init(void) {
     ESP_ERROR_CHECK(uart_param_config(UART_PORT_NUM, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(UART_PORT_NUM, UART_TX_PIN, UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_driver_install(UART_PORT_NUM, BUF_SIZE * 2, BUF_SIZE * 2, QUEUE_SIZE, &uart_queue, intr_alloc_flags));
+
+    event_group = xEventGroupCreate();
+    
     ESP_LOGI(TAG, "UART 0 初始化成功");
     return ESP_OK;
 }
 
-esp_err_t bluetooth_send_at_command(const char *command) {
+esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type) {
+    // 更新当前命令类型
+    current_command = cmd_type;
+
+    // 创建带有换行符的命令
     char command_with_newline[128];
     snprintf(command_with_newline, sizeof(command_with_newline), "%s\r\n", command);
 
+    // 发送命令
     int len = uart_write_bytes(UART_PORT_NUM, command_with_newline, strlen(command_with_newline));
     if (len < 0) {
         ESP_LOGE(TAG, "UART 0 write error");
@@ -105,66 +146,185 @@ esp_err_t bluetooth_send_at_command(const char *command) {
         return ESP_OK;
     }
 }
-void send_at_command(const char *cmd, char *response, int resp_size) {
-    uart_flush(UART_PORT_NUM);
-    uart_write_bytes(UART_PORT_NUM, cmd, strlen(cmd));
-    uart_wait_tx_done(UART_PORT_NUM, 1000 / portTICK_PERIOD_MS);
-    int len = uart_read_bytes(UART_PORT_NUM, response, resp_size - 1, 1000 / portTICK_PERIOD_MS);
-    printf("read length: %d", len);
-    response[len] = '\0'; // 确保字符串终止
+
+// // 获取音量的处理任务
+// void handle_volume_response_task(void *pvParameters) {
+//     // 等待事件组中的事件
+//     EventBits_t bits = xEventGroupWaitBits(event_group, EVENT_VOLUME_RESPONSE, pdTRUE, pdFALSE, portMAX_DELAY);
+
+//     if (bits & EVENT_VOLUME_RESPONSE) {
+//         // 处理响应
+//         ESP_LOGI(TAG, "Volume info: %s", volume_response);
+//     } else {
+//         ESP_LOGE(TAG, "Failed to get volume info");
+//     }
+
+//     // 删除任务
+//     vTaskDelete(NULL);
+// }
+
+// void send_get_volume_command(void) {
+//     bluetooth_send_at_command("AT+QA");
+//     xTaskCreate(handle_volume_response_task, "Volume Response Task", 4096, NULL, 5, NULL);
+// }
+
+// 添加文件名到列表
+int add_file_name(char **utf8_file_names, int index, const char *file_name) {
+    utf8_file_names[index] = strdup(file_name);
+    if (utf8_file_names[index] == NULL) {
+        perror("Failed to duplicate string");
+        return -1;
+    }
+    return 0;
 }
-void get_all_files() {
-    char response[BUF_SIZE];
-    int total_files = 0;
+void get_all_file_names(void) {
+    // 开机时不知道为什么会收到一个ERR+1, 所以这里延迟一秒等那个ERR+1被读掉
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    // 发送获取总文件数的命令
+    bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
+    EventBits_t bits = xEventGroupWaitBits(event_group, EVENT_TOTAL_FILES, pdTRUE, pdFALSE, portMAX_DELAY);
 
-    // 获取总文件数量
-    send_at_command("AT+M2\r\n", response, BUF_SIZE);
-    // sscanf(response, "M2+%d", &total_files); // 修改解析格式为 "M2+数字"
-    ESP_LOGI(TAG, "Total files: %s", response);
+    // 总文件数
+    if (bits & EVENT_TOTAL_FILES) {
+        sscanf(response_buffer, "M2+%d", &total_files_count);
+        ESP_LOGI(TAG, "Total files: %d", total_files_count);
+        
+        utf8_file_names = (char **)malloc(total_files_count * sizeof(char *));
 
+        if ((utf8_file_names == NULL)) {
+            ESP_LOGE(TAG, "Failed to allocate memory for file_namess");
+            return;
+        }
+        for (int i = 0; i < total_files_count; i++) {
+            utf8_file_names[i] = (char *)malloc(100 * sizeof(char));
+            // 如果有哪个分配失败, 把之前已分配的释放掉
+            if (utf8_file_names[i] == NULL) {
+                ESP_LOGE(TAG, "Failed to allocate memory for utf8_file_names[%d]", i);
+                for (int j = 0; j < i; j++) {
+                    free(utf8_file_names[j]);
+                }
+                free(utf8_file_names);
+                return;
+            }
+        }
+    } else {
+        ESP_LOGE(TAG, "Failed to get total file count");
+        return;
+    }
+    
     // 遍历所有文件
-    for (int i = 0; i < total_files; i++) {
-        // 获取当前文件名
-        send_at_command("AT+MF\r\n", response, BUF_SIZE);
-        ESP_LOGI(TAG, "File %d: %s", i + 1, response);
+    for (int i = 1; i <= total_files_count; ++i) {
+        // 发送获取当前文件序号的命令
+        bluetooth_send_at_command("AT+M1", CMD_GET_FILE_INDEX);
+        bits = xEventGroupWaitBits(event_group, EVENT_FILE_INDEX, pdTRUE, pdFALSE, portMAX_DELAY);
 
-        // 播放下一曲以切换到下一个文件
-        if (i < total_files - 1) {
-            send_at_command("AT+CC\r\n", response, BUF_SIZE);
+        if (bits & EVENT_FILE_INDEX) {
+            // 解析当前文件序号
+            sscanf(response_buffer, "M1+%d", &current_file_index);
+            ESP_LOGI(TAG, "Current file index: %d", current_file_index);
+
+            // 发送获取当前文件名的命令
+            bluetooth_send_at_command("AT+MF", CMD_GET_FILE_NAME);
+            bits = xEventGroupWaitBits(event_group, EVENT_FILE_NAME, pdTRUE, pdFALSE, portMAX_DELAY);
+
+            if (bits & EVENT_FILE_NAME) {
+                // 大耦合了, 读取文件名后储存到file_names的逻辑在bluetooth_wait_for_response里
+
+
+                // char* utf8_str = NULL;
+                // utf16_to_utf8(utf16_file_names[current_file_index], &utf8_str);
+                // printf("UTF8编码的字符串: %s\n", utf8_str);
+                // add_file_name(utf8_file_names, current_file_index - 1, utf8_str);
+                // free(utf8_str);
+
+                // sscanf(response_buffer, "MF+%s", file_names[current_file_index - 1]);
+                // add_file_name()
+                // ESP_LOGI(TAG, "File name: %s", file_names[current_file_index - 1]);
+            } else {
+                ESP_LOGE(TAG, "Failed to get file name for file index %d", current_file_index);
+                return;
+            }
+        } else {
+            ESP_LOGE(TAG, "Failed to get file index %d", i);
+            return;
+        }
+
+        // 如果不是最后一个文件，发送下一曲命令
+        if (i < total_files_count) {
+            bluetooth_send_at_command("AT+CC", CMD_NEXT_TRACK);
+            bits = xEventGroupWaitBits(event_group, EVENT_NEXT_TRACK, pdTRUE, pdFALSE, portMAX_DELAY);
+            if (!(bits & EVENT_NEXT_TRACK)) {
+                ESP_LOGE(TAG, "Failed to move to next track");
+                return;
+            }
+
         }
     }
-}
 
-void at_task(void *pvParameters) {
-    get_all_files();
-    vTaskDelete(NULL);
+    // 打印所有文件名
+    for (int i = 0; i < total_files_count; ++i) {
+        ESP_LOGI(TAG, "File %d: %s", i + 1, utf8_file_names[i]);
+    }
+
+    bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE);
 }
 esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
     uart_event_t event;
+
     while (1) {
         // 等待 UART 事件
         if (xQueueReceive(uart_queue, (void *)&event, portMAX_DELAY)) {
             if (event.type == UART_DATA) {
-                ESP_LOGI(TAG, "event.type == UART_DATA");
                 int total_len = 0;
                 int len;
+
                 while (total_len < max_len - 1) {
                     len = uart_read_bytes(UART_PORT_NUM, (uint8_t *)(response + total_len), max_len - 1 - total_len, 1000 / portTICK_PERIOD_MS);
                     if (len > 0) {
-                        // 过滤掉空字节并记录有效字节
-                        int valid_len = 0;
-                        for (int i = 0; i < len; i++) {
-                            if (response[total_len + i] != '\0') {
-                                response[total_len + valid_len] = response[total_len + i];
-                                valid_len++;
-                            }
-                        }
-                        total_len += valid_len;
-                        response[total_len] = '\0'; // Null-terminate the response
+                        // AT+MF会返回utf16, 需要特殊处理, 希望其他指令不用
+                        if (strstr(response, "MF+") != NULL) {
+                            // 更新总长度
+                            total_len += len;
+                            unsigned short utf16_str[max_len / 2]; // 用于存储UTF-16编码的字符串
+                            // 处理前三个单字节 MF+
+                            utf16_str[0] = response[0];
+                            utf16_str[1] = response[1];
+                            utf16_str[2] = response[2];
 
-                        // Log every received byte for debugging
-                        for (int i = 0; i < valid_len; i++) {
-                            ESP_LOGI(TAG, "Received byte: 0x%02X", response[total_len - valid_len + i]);
+                            // 处理剩余的字节
+                            for (int i = 3, j = 3; i < len / 2 + 1; i++, j+=2) {
+                                // 大端转小端
+                                // printf("response[%d]: %x\n", j, response[j]);
+                                // printf("response[%d]: %x\n", j + 1, response[j + 1]);
+                                utf16_str[i] = response[j] | (response[j + 1] << 8);
+                            }
+                            utf16_str[len / 2 + 1] = '\0'; // 确保数组末尾有终止符
+
+                            char *utf8 = NULL;
+                            utf16_to_utf8(utf16_str, &utf8);
+                            printf("UTF8编码的字符串: %s\n", utf8);
+                            add_file_name(utf8_file_names, current_file_index - 1, utf8);
+
+                            // // 打印UTF-16编码的字符串
+                            // for (int i = 0; i < len / 2 + 1; i++) {
+                            //     ESP_LOGD(TAG, "Received UTF-16 char: 0x%04X", utf16_str[i]);
+                            // }
+                            // 储存接收好的源字节
+                            // add_file_name(utf16_file_names, current_file_index - 1, utf16_str);
+                        } else {
+                            int valid_len = 0;
+                            for (int i = 0; i < len; i++) {
+                                if (response[total_len + i] != '\0') {
+                                    response[total_len + valid_len] = response[total_len + i];
+                                    valid_len++;
+                                }
+                            }
+                            total_len += valid_len;
+                            response[total_len] = '\0';
+
+                            for (int i = 0; i < valid_len; i++) {
+                                ESP_LOGI(TAG, "Received byte: 0x%02X", response[total_len - valid_len + i]);
+                            }
                         }
 
                         // Check for end of response (assuming newline character marks the end)
@@ -177,7 +337,7 @@ esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
                 }
 
                 if (total_len > 0) {
-                    response[total_len] = '\0'; // Null-terminate the response
+                    response[total_len] = '\0';
                     ESP_LOGI(TAG, "Received full response: %s", response);
                     return ESP_OK;
                 } else {
@@ -198,6 +358,8 @@ esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
                 ESP_LOGW(TAG, "UART Parity Error");
             } else if (event.type == UART_FRAME_ERR) {
                 ESP_LOGW(TAG, "UART Frame Error");
+            } else {
+                ESP_LOGW(TAG, "UART Other??");
             }
         }
     }
@@ -208,13 +370,64 @@ void bluetooth_task(void *pvParameters) {
     while (1) {
         // 等待并接收响应
         if (bluetooth_wait_for_response(response, sizeof(response)) == ESP_OK) {
-            ESP_LOGI(TAG, "Final response: %s", response);
-            if (strstr(response, "OK") != NULL) {
-                ESP_LOGI(TAG, "Command executed successfully: %s", response);
-            } else if (strstr(response, "ERR") != NULL) {
-                ESP_LOGE(TAG, "Error response received: %s", response);
-            } else {
-                ESP_LOGI(TAG, "Response: %s", response);
+            ESP_LOGI(TAG, "Received response: %s, cmd: %d\n", response, current_command);
+            switch (current_command) {
+                case CMD_GET_VOLUME:
+                    if (strstr(response, "QA+") != NULL) {
+                        ESP_LOGI(TAG, "Volume: %s", response);
+                        // strncpy(volume_response, response, BUF_SIZE);
+                        // xEventGroupSetBits(event_group, EVENT_VOLUME_RESPONSE);
+                        break;
+                    }
+                    break;
+                case CMD_GET_TOTAL_FILES:
+                    if (strstr(response, "M2+") != NULL) {
+                        memset(response_buffer, 0, sizeof(response_buffer));
+                        strncpy(response_buffer, response, BUF_SIZE);
+                        response_buffer[BUF_SIZE - 1] = '\0';
+                        xEventGroupSetBits(event_group, EVENT_TOTAL_FILES);
+                    }
+                    break;
+                case CMD_GET_FILE_INDEX:
+                    if (strstr(response, "M1+") != NULL) {
+                        memset(response_buffer, 0, sizeof(response_buffer));
+                        strncpy(response_buffer, response, BUF_SIZE);
+                        response_buffer[BUF_SIZE - 1] = '\0';
+                        xEventGroupSetBits(event_group, EVENT_FILE_INDEX);
+                    }
+                    break;
+                case CMD_GET_FILE_NAME:
+                    if (strstr(response, "MF+") != NULL) {
+                        memset(response_buffer, 0, sizeof(response_buffer));
+                        strncpy(response_buffer, response, BUF_SIZE);
+                        response_buffer[BUF_SIZE - 1] = '\0';
+                        xEventGroupSetBits(event_group, EVENT_FILE_NAME);
+                    }
+                    break;
+                case CMD_NEXT_TRACK:
+                    if (strstr(response, "OK") != NULL) {
+                        xEventGroupSetBits(event_group, EVENT_NEXT_TRACK);
+                    }
+                    break;
+                case CMD_PREV_TRACK:
+                    if (strstr(response, "OK") != NULL) {
+                        xEventGroupSetBits(event_group, EVENT_PREV_TRACK);
+                    }
+                break;
+                case CMD_PLAY_PAUSE:
+                    if (strstr(response, "OK") != NULL) {
+                        xEventGroupSetBits(event_group, EVENT_PLAY_PAUSE);
+                    }
+                    break;
+                case CMD_AT_AJ:
+                    if (strstr(response, "OK") != NULL) {
+                        xEventGroupSetBits(event_group, EVENT_AT_AJ);
+                    }
+                    break;
+                default:
+                    ESP_LOGI(TAG, "Other Response: %s", response);
+                    // handle_general_response(response);
+                    break;
             }
         } else {
             ESP_LOGE(TAG, "Failed to get response");

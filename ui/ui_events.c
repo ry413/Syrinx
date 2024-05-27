@@ -15,15 +15,24 @@
 
 #include "wifi.h"
 #include "backlight.h"
+#include "bluetooth.h"
+
+#include "ui_comp_music_item.h"
 
 //////////////////// DEFINITIONS ////////////////////
 #define WIFI_CONNECTION_TIMEOUT pdMS_TO_TICKS(30000)  // 30秒超时时间
+#define MAX_ITEMS_PER_LIST 5
+#define MAX_LISTS 10  // 假设最多有 10 个 MusicList
 
 //////////////////// GLOBAL VARIABLES ////////////////////
 
 // 全局变量用于存储日月时分的时间戳
 time_t globalTime = 0;
 lv_obj_t * currentTimeLabel;
+static lv_obj_t *music_lists[MAX_LISTS]; // 存储 MusicList 的指针数组
+static int current_list_index = 0; // 当前 MusicList 的索引
+static int num_music_lists = 0; // MusicList 的总数
+
 
 // prev开头的都是为了在修改值后没有点击[确认]而是[取消]的情况下, 将原来的值放回去
 // 不过它们实际上也是那些值的真实拥有者
@@ -38,13 +47,9 @@ uint32_t prevTimeMin;
 uint32_t prevDateYear;
 uint32_t prevDateMonth;
 uint32_t prevDateDay;
-// 蓝牙设置
-char prevBluetoothName[30];
-char prevBluetoothPassword[30];
 // 默认音量和最大音量
 uint32_t prevDefaultVolume;
 uint32_t prevMaxVolume;
-
 
 
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
@@ -84,6 +89,10 @@ static void obtainTime(void* pvParameter)
     struct tm timeinfo = { 0 };
     int retry = 0;
     const int retry_count = 20;
+    // 放个IP
+    ip_addr_t *addr = NULL;
+    ipaddr_aton("111.230.50.201", addr);
+    esp_sntp_setserver(0, addr);
 
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
     for (int i = 0; i < num_ntp_servers; ++i) {
@@ -130,6 +139,7 @@ static void initTimeTask(void *param)
     EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdTRUE, WIFI_CONNECTION_TIMEOUT);
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI("initTimeTask", "Wi-Fi 已连接");
+        lv_img_set_src(ui_Wifi_Status, &ui_img_1742736079);
         // 异步, 否则会阻塞UI线程
         xTaskCreate(obtainTime, "obtainTime", 4096, NULL, 5, NULL);
     } else {
@@ -160,7 +170,43 @@ static uint32_t getBacklightTimeLevel() {
     }
     return 0;
 }
+// 创建音乐列表的任务, 由这里发起get_all_file_names
+static void create_music_item_task(void *pvParameters)
+{
+    // 等待获取完文件名
+    get_all_file_names();
+    music_lists[current_list_index] = ui_Music_List_create(ui_Music_List_Container);
+    num_music_lists++;
+    int items_added = 0;
+    for (int i = 0; i < total_files_count; i++) {
+        // 如果当前列表的 Music_item 数量达到最大值，切换到下一个列表
+        if (items_added >= MAX_ITEMS_PER_LIST) {
+            current_list_index++;
+            if (current_list_index >= MAX_LISTS) {
+                ESP_LOGE("create_music_item_task", "Exceeded maximum number of lists");
+                break;
+            }
+            // 创建新的 MusicList
+            music_lists[current_list_index] = ui_Music_List_create(ui_Music_List_Container);
+            num_music_lists++;
+            lv_obj_add_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+            items_added = 0; // 重置计数器
+        }
+        lv_obj_t *obj = ui_Music_Item_create(music_lists[current_list_index]);
 
+        lv_obj_t *icon = lv_obj_get_child(obj, 2);
+        lv_img_set_src(icon, &ui_img_35201459);
+
+        lv_obj_t *name_label = lv_obj_get_child(obj, 0);
+        // 跳过前三个字符"MF+"
+        lv_label_set_text(name_label, &utf8_file_names[i][3]);
+
+        items_added++;
+    }
+    // 将当前显示的设置为第一个列表
+    current_list_index = 0;
+    vTaskDelete(NULL);
+}
 
 //////////////////// 给lvgl的事件用的回调 ////////////////////
 
@@ -173,6 +219,7 @@ void initTime(lv_event_t * e)
     currentTimeLabel = ui_Header_Main_Time;
     // 因为要等待WiFi连接才能开始获取事件, 所以创建异步任务, 否则会阻塞界面加载
     xTaskCreate(initTimeTask, "initTimeTask", 4096, NULL, 5, NULL);
+    xTaskCreate(create_music_item_task, "create_music_item_task", 8192, NULL, 5, NULL);
 }
 
 
@@ -653,35 +700,6 @@ void initVolumeSettings(lv_event_t * e)
     }
     nvs_close(nvs_handle);
 }
-// 确认保存默认音量
-void saveDefaultVolume(lv_event_t * e)
-{
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("VolumeCfg", NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveDefaultVolume", "Failed to open NVS");
-        return;
-    }
-    const char *text = lv_label_get_text(ui_Default_Volume_Value);
-    prevDefaultVolume = atoi(text);
-    err = nvs_set_u32(nvs_handle, "defaultVolume", prevDefaultVolume);
-
-    if (err != ESP_OK) {
-        ESP_LOGE("saveDefaultVolume", "Failed to set prevDefaultVolume in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveDefaultVolume", "Failed to commit NVS changes");
-    }
-    nvs_close(nvs_handle);
-}
-// 取消保存默认音量
-void cancelSaveDefaultVolume(lv_event_t * e)
-{
-    lv_label_set_text_fmt(ui_Default_Volume_Value, "%ld", prevDefaultVolume);
-}
 // 增加默认音量
 void addDefaultVolume(lv_event_t * e)
 {
@@ -698,33 +716,6 @@ void decDefaultVolume(lv_event_t * e)
     defaultVolume = (defaultVolume > 1) ? defaultVolume - 1 : 1;
     lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", defaultVolume);
 }
-// 确认保存最大音量
-void saveMaxVolume(lv_event_t * e) {
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("VolumeCfg", NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveMaxVolume", "Failed to open NVS");
-        return;
-    }
-    const char *text = lv_label_get_text(ui_Max_Volume_Value);
-    prevMaxVolume = atoi(text);
-    err = nvs_set_u32(nvs_handle, "maxVolume", prevMaxVolume);
-
-    if (err != ESP_OK) {
-        ESP_LOGE("saveMaxVolume", "Failed to set maxVolume in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveMaxVolume", "Failed to commit NVS changes");
-    }
-    nvs_close(nvs_handle);
-}
-// 取消保存最大音量
-void cancelSaveMaxVolume(lv_event_t * e) {
-    lv_label_set_text_fmt(ui_Max_Volume_Value, "%ld", prevMaxVolume);
-}
 // 增加最大音量
 void addMaxVolume(lv_event_t * e) {
     const char *text = lv_label_get_text(ui_Max_Volume_Value);
@@ -738,6 +729,46 @@ void decMaxVolume(lv_event_t * e) {
     int maxVolume = atoi(text);
     maxVolume = (maxVolume > 1) ? maxVolume - 1 : 1;
     lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", maxVolume);
+}
+// 确认保存音量设置
+void saveVolumeSettings(lv_event_t * e)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("VolumeCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveVolumeSettings", "Failed to open NVS");
+        return;
+    }
+
+    const char *text = lv_label_get_text(ui_Default_Volume_Value);
+    prevDefaultVolume = atoi(text);
+    err = nvs_set_u32(nvs_handle, "defaultVolume", prevDefaultVolume);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveVolumeSettings", "Failed to set defaultVolume in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    text = lv_label_get_text(ui_Max_Volume_Value);
+    prevMaxVolume = atoi(text);
+    err = nvs_set_u32(nvs_handle, "maxVolume", prevMaxVolume);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveMaxVolume", "Failed to set maxVolume in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveMaxVolume", "Failed to commit NVS changes");
+    }
+    nvs_close(nvs_handle);
+}
+// 取消保存音量设置
+void cancelSaveVolumeSettings(lv_event_t * e)
+{
+    lv_label_set_text_fmt(ui_Default_Volume_Value, "%ld", prevDefaultVolume);
+    lv_label_set_text_fmt(ui_Max_Volume_Value, "%ld", prevMaxVolume);
 }
 
 // ******************** ID设置 ********************
@@ -791,4 +822,263 @@ void saveIDSetting(lv_event_t * e)
     nvs_close(nvs_handle);
 }
 
+// ******************** ID设置 ********************
+// 初始化Wifi名称和密码
+void initWifiSettings(lv_event_t * e)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("WifiCfg", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("initWifiSettings", "Failed to open NVS: %s", esp_err_to_name(err));
+        return;
+    }
 
+    // 读取Wifi名称
+    size_t required_size = 0;
+    err = nvs_get_str(nvs_handle, "name", NULL, &required_size);
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGE("initWifiSettings", "Failed to get size for name from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    if (required_size > 0) {
+        char *wifiName = malloc(required_size);
+        if (wifiName == NULL) {
+            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Bluetooth name");
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_get_str(nvs_handle, "name", wifiName, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE("initWifiSettings", "Failed to get name from NVS: %s", esp_err_to_name(err));
+            free(wifiName);
+            nvs_close(nvs_handle);
+            return;
+        }
+        lv_textarea_set_text(ui_Bluetooth_Name_Input2, wifiName);
+        free(wifiName);
+    } else {
+        ESP_LOGI("initWifiSettings", "Bluetooth name not set in NVS");
+    }
+
+    // 读取Wifi密码
+    required_size = 0;
+    err = nvs_get_str(nvs_handle, "password", NULL, &required_size);
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGE("initWifiSettings", "Failed to get size for password from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    if (required_size > 0) {
+        char *wifiPassword = malloc(required_size);
+        if (wifiPassword == NULL) {
+            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Bluetooth password");
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_get_str(nvs_handle, "password", wifiPassword, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE("initWifiSettings", "Failed to get password from NVS: %s", esp_err_to_name(err));
+            free(wifiPassword);
+            nvs_close(nvs_handle);
+            return;
+        }
+        lv_textarea_set_text(ui_Bluetooth_Password_Input2, wifiPassword);
+        free(wifiPassword);
+    } else {
+        ESP_LOGI("initWifiSettings", "Bluetooth password not set in NVS");
+    }
+
+    nvs_close(nvs_handle);
+}
+// 确认保存WiFi名称
+void saveWifiNameSetting(lv_event_t * e)
+{
+    const char *name = lv_textarea_get_text(ui_Wifi_Name_Input);
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("WifiCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiNameSetting", "Failed to open NVS");
+        return;
+    }
+
+    err = nvs_set_str(nvs_handle, "name", name);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiNameSetting", "Failed to set name in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiNameSetting", "Failed to commit NVS changes");
+    }
+
+    nvs_close(nvs_handle);
+}
+// 确认保存WiFi密码
+void saveWifiPasswordSetting(lv_event_t * e)
+{
+    const char *password = lv_textarea_get_text(ui_Wifi_Password_Input);
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("WifiCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiPasswordSetting", "Failed to open NVS");
+        return;
+    }
+    err = nvs_set_str(nvs_handle, "password", password);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiPasswordSetting", "Failed to set password in NVS");
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiPasswordSetting", "Failed to commit NVS changes");
+    }
+
+    nvs_close(nvs_handle);
+}
+
+
+void disconnectWifi(lv_event_t * e)
+{
+    wifi_disconnect();
+    lv_img_set_src(ui_Wifi_Status, &ui_img_236134236);
+}
+
+void prevMusicList(lv_event_t *e) {
+    if (num_music_lists == 0)
+        return;
+    // 隐藏当前列表
+    lv_obj_add_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+    
+    // 切换到上一个列表
+    current_list_index--;
+    if (current_list_index < 0) {
+        current_list_index = num_music_lists - 1; // 循环到最后一个列表
+    }
+    
+    // 显示上一个列表
+    lv_obj_clear_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+}
+
+void nextMusicList(lv_event_t *e) {
+    if (num_music_lists == 0)
+        return;
+    // 隐藏当前列表
+    lv_obj_add_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+    
+    // 切换到下一个列表
+    current_list_index++;
+    if (current_list_index >= num_music_lists) {
+        current_list_index = 0; // 循环到第一个列表
+    }
+    
+    // 显示下一个列表
+    lv_obj_clear_flag(music_lists[current_list_index], LV_OBJ_FLAG_HIDDEN);
+}
+
+void sendATM2(lv_event_t * e)
+{
+	// Your code here
+    bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
+}
+
+int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在utf8_file_names中的索引
+
+void playSelectedMusic(lv_event_t * e)
+{
+    lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t *label = lv_obj_get_child(obj, 0);
+
+    char *track_title = lv_label_get_text(label);
+    lv_label_set_text(ui_Track_Title, track_title);
+    lv_label_set_text(ui_Track_Artist, "null");
+    
+    lv_scr_load(ui_Music_Play_Window);
+
+    // 播放被点击的音乐
+    char track_id[4] = {0};
+    strncpy(track_id, track_title, 3);
+    char command[50];
+    snprintf(command, sizeof(command), "AT+AJ/music/%s*.???", track_id);
+    bluetooth_send_at_command(command, CMD_AT_AJ);
+
+    // 设置当前id
+    for (int i = 0; i < total_files_count; i++) {
+        if (strcmp(utf8_file_names[i] + 3, track_title) == 0) {
+            printf("INDEX: %d\n", i);
+            current_playing_index = i;
+        }
+    }
+}
+
+void nextTrack(lv_event_t * e)
+{
+    printf("CURR Index: %d\n", current_playing_index);
+    if (current_playing_index < total_files_count - 1) {
+        current_playing_index++;
+    } else {
+        current_playing_index = 0;
+    }
+    printf("NEXT Index: %d\n", current_playing_index);
+    char *track_title = utf8_file_names[current_playing_index];
+    printf("NEXT TRACK: %s\n", track_title);
+    lv_label_set_text(ui_Track_Title, track_title + 3);
+    lv_label_set_text(ui_Track_Artist, "null");
+
+    bluetooth_send_at_command("AT+CC", CMD_NEXT_TRACK);
+}
+
+void prevTrack(lv_event_t * e)
+{
+    printf("CURR Index: %d\n", current_playing_index);
+    if (current_playing_index > 0) {
+        current_playing_index--;
+    } else {
+        current_playing_index = total_files_count - 1;
+    }
+    char *track_title = utf8_file_names[current_playing_index];
+    printf("PREV TRACK: %s, index: %d\n", track_title, current_playing_index);
+    lv_label_set_text(ui_Track_Title, track_title + 3);
+    lv_label_set_text(ui_Track_Artist, "null");
+
+    bluetooth_send_at_command("AT+CD", CMD_PREV_TRACK);
+}
+
+// void _playSelectedMusic(int index) {
+//     const char *full_name = utf8_file_names[index];
+//     if (strncmp(full_name, "MF+", 3) != 0) {
+//         ESP_LOGE("playSelectedMusic", "Not a music file: %s", full_name);
+//     }
+//     char result[3];
+//     strncpy(result, full_name + 3, 3);
+//     result[3] = '\0';
+
+
+// }
+
+void sendATAJ(lv_event_t * e)
+{
+	// Your code here
+    bluetooth_send_at_command("AT+AJ/music/002*.???", CMD_AT_AJ);
+}
+
+void drivingDot(lv_event_t * e)
+{
+	// Your code here
+}
+
+
+
+void PlayPause(lv_event_t * e)
+{
+	// Your code here
+    bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE);
+}

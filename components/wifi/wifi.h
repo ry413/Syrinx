@@ -9,5 +9,6 @@
 
 void wifi_task(void *pvParameter);
 EventGroupHandle_t get_wifi_event_group(void);
+void wifi_disconnect(void);
 
 #endif // WIFI_H

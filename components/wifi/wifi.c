@@ -106,3 +106,12 @@ void wifi_task(void *pvParameter) {
     wifi_init_sta();
     vTaskDelete(NULL);
 }
+
+void wifi_disconnect(void) {
+    esp_err_t err = esp_wifi_disconnect();
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "WiFi disconnected successfully.");
+    } else {
+        ESP_LOGE(TAG, "WiFi disconnection failed: %s", esp_err_to_name(err));
+    }
+}

@@ -31,7 +31,9 @@
         "random": "c",
         "limits": "c",
         "uart.h": "c",
-        "lvgl.h": "c"
+        "lvgl.h": "c",
+        "bluetooth.h": "c",
+        "iconv.h": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",
