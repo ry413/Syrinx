@@ -354,6 +354,16 @@ lv_obj_set_align( ui_Music_Note_Img_Placeholder1, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_Music_Note_Img_Placeholder1, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
 lv_obj_clear_flag( ui_Music_Note_Img_Placeholder1, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
+ui_Paused_Img_Placeholder = lv_img_create(ui_Main_Window);
+lv_img_set_src(ui_Paused_Img_Placeholder, &ui_img_2101671624);
+lv_obj_set_width( ui_Paused_Img_Placeholder, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_Paused_Img_Placeholder, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_Paused_Img_Placeholder, -97 );
+lv_obj_set_y( ui_Paused_Img_Placeholder, -224 );
+lv_obj_set_align( ui_Paused_Img_Placeholder, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Paused_Img_Placeholder, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_clear_flag( ui_Paused_Img_Placeholder, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
 ui_Disconnect_Wifi = lv_btn_create(ui_Main_Window);
 lv_obj_set_width( ui_Disconnect_Wifi, 129);
 lv_obj_set_height( ui_Disconnect_Wifi, 50);

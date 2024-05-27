@@ -50,10 +50,10 @@ void saveDateSetting(lv_event_t * e);
 void saveIDSetting(lv_event_t * e);
 void saveWifiNameSetting(lv_event_t * e);
 void saveWifiPasswordSetting(lv_event_t * e);
-void drivingDot(lv_event_t * e);
 void nextTrack(lv_event_t * e);
 void prevTrack(lv_event_t * e);
 void PlayPause(lv_event_t * e);
+void releasedProgressSlider(lv_event_t * e);
 void playSelectedMusic(lv_event_t * e);
 
 #ifdef __cplusplus

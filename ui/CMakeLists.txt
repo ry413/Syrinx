@@ -31,6 +31,7 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     images/ui_img_236134236.c
     images/ui_img_1742736079.c
     images/ui_img_35201459.c
+    images/ui_img_2101671624.c
     images/ui_img_861711258.c
     images/ui_img_348826415.c
     images/ui_img_12669592.c
@@ -56,7 +57,7 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     images/ui_img_1311962515.c
     images/ui_img_542960551.c
     images/ui_img_542920328.c
-    images/ui_img_2101671624.c
+    images/ui_img_899744137.c
     fonts/ui_font_LanTing18.c
     fonts/ui_font_LanTIng20.c
     fonts/ui_font_LanTing40.c

@@ -53,6 +53,7 @@ lv_obj_t *ui_Guide_Text;
 lv_obj_t *ui_Wifi_Status;
 lv_obj_t *ui_Wifi_Img_Placeholder;
 lv_obj_t *ui_Music_Note_Img_Placeholder1;
+lv_obj_t *ui_Paused_Img_Placeholder;
 void ui_event_Disconnect_Wifi( lv_event_t * e);
 lv_obj_t *ui_Disconnect_Wifi;
 lv_obj_t *ui_Label1;
@@ -472,8 +473,6 @@ lv_obj_t *ui_Header_Music_Text2;
 lv_obj_t *ui_Header_Music_Time2;
 lv_obj_t *ui_Header_Music_Volume_Icon2;
 lv_obj_t *ui_Header_Music_Volume_Value2;
-void ui_event_Progress_Bar( lv_event_t * e);
-lv_obj_t *ui_Progress_Bar;
 lv_obj_t *ui_Player_Image;
 lv_obj_t *ui_Player_Icon;
 void ui_event_BackToMainWindowBtn9( lv_event_t * e);
@@ -491,7 +490,8 @@ lv_obj_t *ui_Prev_Track_Btn;
 void ui_event_Play_Pause_Btn( lv_event_t * e);
 lv_obj_t *ui_Play_Pause_Btn;
 lv_obj_t *ui_Play_Pause_Icon;
-lv_obj_t *ui_Progress_dot;
+void ui_event_Progress_Slider( lv_event_t * e);
+lv_obj_t *ui_Progress_Slider;
 void ui_event____initial_actions0( lv_event_t * e);
 lv_obj_t *ui____initial_actions0;
 const lv_img_dsc_t *ui_imgset_back[1] = {&ui_img_1830113796};
@@ -1014,12 +1014,6 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
 }
 }
-void ui_event_Progress_Bar( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
-if ( event_code == LV_EVENT_VALUE_CHANGED) {
-      drivingDot( e );
-}
-}
 void ui_event_BackToMainWindowBtn9( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
@@ -1042,6 +1036,12 @@ void ui_event_Play_Pause_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       PlayPause( e );
+}
+}
+void ui_event_Progress_Slider( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_RELEASED) {
+      releasedProgressSlider( e );
 }
 }
 void ui_event____initial_actions0( lv_event_t * e) {

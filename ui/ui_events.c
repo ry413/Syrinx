@@ -32,12 +32,12 @@ lv_obj_t * currentTimeLabel;
 static lv_obj_t *musicLists[MAX_LISTS]; // 存储 MusicList 的指针数组
 static int currentListIndex = 0; // 当前 MusicList 的索引
 static int numMusicLists = 0; // MusicList 的总数
+static bool playing = false;
 
 static lv_timer_t *musicTimer; // 音频进度条定时器
 static int currentPlayTime = 0; // 音频进度条的当前值
 static int updateInterval = 0; // 进度条每次更新的间隔, 因为进度条上限固定为100
-static int progressDotStartX = -173; // 进度条上面那个圆点的x值, 分别是进度条的起始与结束坐标
-static int progressDotEndX = 173;
+
 
 
 // prev开头的都是为了在修改值后没有点击[确认]而是[取消]的情况下, 将原来的值放回去
@@ -157,7 +157,8 @@ static void initTimeTask(void *param)
     vTaskDelete(NULL); // 删除任务
 }
 // 更新背光时间到label上
-static void updateBacklightTime(int backlightTimeLevel) {
+static void updateBacklightTime(int backlightTimeLevel)
+{
     int backlightTime = backlightTimes[backlightTimeLevel];
     if (backlightTime == 0) {
         lv_label_set_text(ui_Backlight_Time_Value2, "off");
@@ -166,7 +167,8 @@ static void updateBacklightTime(int backlightTimeLevel) {
     }
 }
 // 返回当前背光时间label上秒数对应的等级
-static uint32_t getBacklightTimeLevel() {
+static uint32_t getBacklightTimeLevel()
+{
     const char *text = lv_label_get_text(ui_Backlight_Time_Value2);
     if (strcmp(text, "off") != 0) {
         int backlightTime = atoi(text);
@@ -201,6 +203,7 @@ static void createMusicItemTask(void *pvParameters)
             lv_obj_add_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
             items_added = 0; // 重置计数器
         }
+        // 创建musicItem
         lv_obj_t *obj = ui_Music_Item_create(musicLists[currentListIndex]);
 
         lv_obj_t *icon = lv_obj_get_child(obj, 2);
@@ -215,9 +218,9 @@ static void createMusicItemTask(void *pvParameters)
     currentListIndex = 0;
     vTaskDelete(NULL);
 }
-
 // 将秒转为hh:mm:ss的函数
-static void format_time(int seconds, char * buffer, size_t buffer_size) {
+static void format_time(int seconds, char * buffer, size_t buffer_size)
+{
     int hours = seconds / 3600;
     int minutes = (seconds % 3600) / 60;
     int sec = seconds % 60;
@@ -232,9 +235,9 @@ static void format_time(int seconds, char * buffer, size_t buffer_size) {
         fprintf(stderr, "Error formatting time string\n");
     }
 }
-
 // 更新进度条和时间标签的回调函数
-static void update_progress(lv_timer_t * timer) {
+static void update_progress(lv_timer_t * timer)
+{
     static int interval_counter = 0;
     if (currentPlayTime < current_music_duration) {
         currentPlayTime++;
@@ -248,18 +251,16 @@ static void update_progress(lv_timer_t * timer) {
         if (interval_counter >= updateInterval) {
             interval_counter = 0;
             // 更新进度条
-            int percentage = (currentPlayTime * 100) / current_music_duration;
-            lv_bar_set_value(ui_Progress_Bar, percentage, LV_ANIM_OFF);
-
-            int dotX = progressDotStartX + ((progressDotEndX - progressDotStartX) * percentage) / 100;
-            lv_obj_set_x(ui_Progress_dot, dotX);
+            lv_slider_set_value(ui_Progress_Slider, lv_slider_get_value(ui_Progress_Slider) + 1, LV_ANIM_OFF);
         }
     } else {
+        lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
         lv_timer_pause(timer); // 停止定时器
     }
 }
 // 初始化音频进度条定时器
-void init_progress_bar(void) {
+static void init_progress_bar(void)
+{
     // 创建定时器，每秒更新一次
     musicTimer = lv_timer_create(update_progress, 1000, NULL);
 
@@ -1080,10 +1081,13 @@ void playSelectedMusic(lv_event_t * e)
     // 暂停定时器
     lv_timer_pause(musicTimer);
     // 重置进度条
-    lv_bar_set_value(ui_Progress_Bar, 0, LV_ANIM_OFF);
+    lv_bar_set_value(ui_Progress_Slider, 0, LV_ANIM_OFF);
     lv_label_set_text(ui_Current_Time, "00:00:00");
     lv_label_set_text(ui_Total_Time, "00:00:00");
-    lv_obj_set_x(ui_Progress_dot, progressDotStartX);
+
+    playing = true;
+    lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
+
 
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *label = lv_obj_get_child(obj, 0);
@@ -1120,10 +1124,13 @@ void nextTrack(lv_event_t * e) {
     // 暂停定时器
     lv_timer_pause(musicTimer);
     // 重置进度条
-    lv_bar_set_value(ui_Progress_Bar, 0, LV_ANIM_OFF);
+    lv_bar_set_value(ui_Progress_Slider, 0, LV_ANIM_OFF);
     lv_label_set_text(ui_Current_Time, "00:00:00");
     lv_label_set_text(ui_Total_Time, "00:00:00");
-    lv_obj_set_x(ui_Progress_dot, progressDotStartX);
+
+    playing = true;
+    lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
+    
     if (current_playing_index < total_files_count - 1) {
         current_playing_index++;
     } else {
@@ -1142,10 +1149,13 @@ void prevTrack(lv_event_t * e) {
     // 暂停定时器
     lv_timer_pause(musicTimer);
     // 重置进度条
-    lv_bar_set_value(ui_Progress_Bar, 0, LV_ANIM_OFF);
+    lv_bar_set_value(ui_Progress_Slider, 0, LV_ANIM_OFF);
     lv_label_set_text(ui_Current_Time, "00:00:00");
     lv_label_set_text(ui_Total_Time, "00:00:00");
-    lv_obj_set_x(ui_Progress_dot, progressDotStartX);
+
+    playing = true;
+    lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
+
     if (current_playing_index > 0) {
         current_playing_index--;
     } else {
@@ -1160,15 +1170,17 @@ void prevTrack(lv_event_t * e) {
     xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 1, NULL);
 }
 
-void drivingDot(lv_event_t * e)
-{
-	// Your code here
-}
-
-
-
 void PlayPause(lv_event_t * e) {
     bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE);
+    if(playing) {
+        lv_timer_pause(musicTimer);
+        lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
+        playing = false;
+    } else {
+        lv_timer_resume(musicTimer);
+        lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
+        playing = true;
+    }
 }
 
 
@@ -1176,3 +1188,16 @@ void sendATAJ(lv_event_t * e)
 {
 	// Your code here
 }
+
+void releasedProgressSlider(lv_event_t * e)
+{
+    int percentage = lv_slider_get_value(ui_Progress_Slider);
+    currentPlayTime = (percentage * current_music_duration) / 100;
+
+    char time_str[9]; // hh:mm:ss
+    format_time(currentPlayTime, time_str, sizeof(time_str));
+    lv_label_set_text(ui_Current_Time, time_str);
+
+    // 跳转
+}
+

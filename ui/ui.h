@@ -61,6 +61,7 @@ extern lv_obj_t *ui_Guide_Text;
 extern lv_obj_t *ui_Wifi_Status;
 extern lv_obj_t *ui_Wifi_Img_Placeholder;
 extern lv_obj_t *ui_Music_Note_Img_Placeholder1;
+extern lv_obj_t *ui_Paused_Img_Placeholder;
 void ui_event_Disconnect_Wifi( lv_event_t * e);
 extern lv_obj_t *ui_Disconnect_Wifi;
 extern lv_obj_t *ui_Label1;
@@ -454,8 +455,6 @@ extern lv_obj_t *ui_Header_Music_Text2;
 extern lv_obj_t *ui_Header_Music_Time2;
 extern lv_obj_t *ui_Header_Music_Volume_Icon2;
 extern lv_obj_t *ui_Header_Music_Volume_Value2;
-void ui_event_Progress_Bar( lv_event_t * e);
-extern lv_obj_t *ui_Progress_Bar;
 extern lv_obj_t *ui_Player_Image;
 extern lv_obj_t *ui_Player_Icon;
 void ui_event_BackToMainWindowBtn9( lv_event_t * e);
@@ -473,7 +472,8 @@ extern lv_obj_t *ui_Prev_Track_Btn;
 void ui_event_Play_Pause_Btn( lv_event_t * e);
 extern lv_obj_t *ui_Play_Pause_Btn;
 extern lv_obj_t *ui_Play_Pause_Icon;
-extern lv_obj_t *ui_Progress_dot;
+void ui_event_Progress_Slider( lv_event_t * e);
+extern lv_obj_t *ui_Progress_Slider;
 void ui_event____initial_actions0( lv_event_t * e);
 extern lv_obj_t *ui____initial_actions0;
 
@@ -489,6 +489,7 @@ LV_IMG_DECLARE( ui_img_72497716);   // assets/丽枫UI/指南.png
 LV_IMG_DECLARE( ui_img_236134236);   // assets/丽枫UI/wifi_disconnect.png
 LV_IMG_DECLARE( ui_img_1742736079);   // assets/丽枫UI/wifi.png
 LV_IMG_DECLARE( ui_img_35201459);   // assets/丽枫UI/musicNote.png
+LV_IMG_DECLARE( ui_img_2101671624);   // assets/丽枫UI/暂停.png
 LV_IMG_DECLARE( ui_img_861711258);   // assets/丽枫UI/background.png
 LV_IMG_DECLARE( ui_img_348826415);   // assets/丽枫UI/back.png
 LV_IMG_DECLARE( ui_img_12669592);   // assets/丽枫UI/鸟叫.png
@@ -514,7 +515,7 @@ LV_IMG_DECLARE( ui_img_469799613);   // assets/丽枫UI/音乐.png
 LV_IMG_DECLARE( ui_img_1311962515);   // assets/丽枫UI/随机.png
 LV_IMG_DECLARE( ui_img_542960551);   // assets/丽枫UI/下一首.png
 LV_IMG_DECLARE( ui_img_542920328);   // assets/丽枫UI/上一首.png
-LV_IMG_DECLARE( ui_img_2101671624);   // assets/丽枫UI/暂停.png
+LV_IMG_DECLARE( ui_img_899744137);   // assets/丽枫UI/播放.png
 
 
 LV_FONT_DECLARE( ui_font_LanTing18);
