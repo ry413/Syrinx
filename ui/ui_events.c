@@ -148,7 +148,7 @@ static void initTimeTask(void *param)
     EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdTRUE, WIFI_CONNECTION_TIMEOUT);
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI("initTimeTask", "Wi-Fi 已连接");
-        lv_img_set_src(ui_Wifi_Status, &ui_img_1742736079);
+        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
         // 异步, 否则会阻塞UI线程
         xTaskCreate(obtainTime, "obtainTime", 4096, NULL, 5, NULL);
     } else {
@@ -300,6 +300,8 @@ void initTime(lv_event_t * e)
     currentTimeLabel = ui_Header_Main_Time;
     // 因为要等待WiFi连接才能开始获取事件, 所以创建异步任务, 否则会阻塞界面加载
     xTaskCreate(initTimeTask, "initTimeTask", 4096, NULL, 5, NULL);
+
+    // 临时放这
     xTaskCreate(createMusicItemTask, "createMusicItemTask", 8192, NULL, 5, NULL);
 }
 
@@ -312,6 +314,10 @@ void setTimeMain(lv_event_t * e)
     // 本来只有主界面要加这个防止时间未初始化就更新值, 但是用户有可能会在时间未初始化时乱点点到别的界面, 所以每个界面都加上了
     if(globalTime > 0)
         updateCurrentTimeLabel();
+
+
+
+    // 临时放这
     init_progress_bar();
 }
 void setTimeMusic(lv_event_t * e)
@@ -906,7 +912,32 @@ void saveIDSetting(lv_event_t * e)
     nvs_close(nvs_handle);
 }
 
-// ******************** ID设置 ********************
+// ******************** Wifi设置 ********************
+// 保存Wifi的开关状态
+void saveWifiSwitchState(lv_event_t * e)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("WifiCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiSwitchState", "Failed to open NVS: %s", esp_err_to_name(err));
+        return;
+    }
+    // 读取当前开关状态
+    bool state = lv_obj_has_state(ui_Wifi_Switch_Switch2, LV_STATE_CHECKED);   
+
+    err = nvs_set_u8(nvs_handle, "enabled", state ? 1 : 0);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiSwitchState", "Failed to set enabled in NVS: %s", esp_err_to_name(err));
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveWifiSwitchState", "Failed to commit NVS changes");
+    }
+
+    nvs_close(nvs_handle);
+
+}
 // 初始化Wifi名称和密码
 void initWifiSettings(lv_event_t * e)
 {
@@ -916,6 +947,28 @@ void initWifiSettings(lv_event_t * e)
         ESP_LOGE("initWifiSettings", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
+
+    uint8_t wifi_enabled = 0;
+    err = nvs_get_u8(nvs_handle, "enabled", &wifi_enabled);
+    if (err != ESP_OK) {
+        ESP_LOGE("initWifiSettings", "Failed to get enabled from NVS: %s", esp_err_to_name(err));
+    }
+
+    if (wifi_enabled) {
+        lv_obj_add_state(ui_Wifi_Switch_Switch2, LV_STATE_CHECKED);
+        lv_obj_clear_flag(ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_clear_state(ui_Wifi_Switch_Switch2, LV_STATE_CHECKED);
+        lv_obj_add_state(ui_Wifi_Name_Input, LV_STATE_DISABLED);
+        lv_obj_add_state(ui_Wifi_Name_Enter_Btn, LV_STATE_DISABLED);
+        lv_obj_add_state(ui_Wifi_Password_Input, LV_STATE_DISABLED);
+        lv_obj_add_state(ui_Wifi_Password_Enter_Btn, LV_STATE_DISABLED);
+        lv_obj_add_state(ui_Wifi_Keyboard, LV_STATE_DISABLED);
+        lv_obj_add_flag(ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+
 
     // 读取Wifi名称
     size_t required_size = 0;
@@ -929,7 +982,7 @@ void initWifiSettings(lv_event_t * e)
     if (required_size > 0) {
         char *wifiName = malloc(required_size);
         if (wifiName == NULL) {
-            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Bluetooth name");
+            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Wifi name");
             nvs_close(nvs_handle);
             return;
         }
@@ -940,10 +993,10 @@ void initWifiSettings(lv_event_t * e)
             nvs_close(nvs_handle);
             return;
         }
-        lv_textarea_set_text(ui_Bluetooth_Name_Input2, wifiName);
+        lv_textarea_set_text(ui_Wifi_Name_Input, wifiName);
         free(wifiName);
     } else {
-        ESP_LOGI("initWifiSettings", "Bluetooth name not set in NVS");
+        ESP_LOGI("initWifiSettings", "Wifi name not set in NVS");
     }
 
     // 读取Wifi密码
@@ -958,7 +1011,7 @@ void initWifiSettings(lv_event_t * e)
     if (required_size > 0) {
         char *wifiPassword = malloc(required_size);
         if (wifiPassword == NULL) {
-            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Bluetooth password");
+            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Wifi password");
             nvs_close(nvs_handle);
             return;
         }
@@ -969,10 +1022,10 @@ void initWifiSettings(lv_event_t * e)
             nvs_close(nvs_handle);
             return;
         }
-        lv_textarea_set_text(ui_Bluetooth_Password_Input2, wifiPassword);
+        lv_textarea_set_text(ui_Wifi_Password_Input, wifiPassword);
         free(wifiPassword);
     } else {
-        ESP_LOGI("initWifiSettings", "Bluetooth password not set in NVS");
+        ESP_LOGI("initWifiSettings", "Wifi password not set in NVS");
     }
 
     nvs_close(nvs_handle);
@@ -1029,11 +1082,10 @@ void saveWifiPasswordSetting(lv_event_t * e)
     nvs_close(nvs_handle);
 }
 
-
 void disconnectWifi(lv_event_t * e)
 {
     wifi_disconnect();
-    lv_img_set_src(ui_Wifi_Status, &ui_img_236134236);
+    lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
 }
 
 void prevMusicList(lv_event_t *e)
@@ -1200,4 +1252,6 @@ void releasedProgressSlider(lv_event_t * e)
 
     // 跳转
 }
+
+
 

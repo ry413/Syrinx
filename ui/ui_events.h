@@ -50,6 +50,7 @@ void saveDateSetting(lv_event_t * e);
 void saveIDSetting(lv_event_t * e);
 void saveWifiNameSetting(lv_event_t * e);
 void saveWifiPasswordSetting(lv_event_t * e);
+void saveWifiSwitchState(lv_event_t * e);
 void nextTrack(lv_event_t * e);
 void prevTrack(lv_event_t * e);
 void PlayPause(lv_event_t * e);

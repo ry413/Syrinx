@@ -50,7 +50,7 @@ void ui_event_Guide_Btn( lv_event_t * e);
 lv_obj_t *ui_Guide_Btn;
 lv_obj_t *ui_Guide_Icon;
 lv_obj_t *ui_Guide_Text;
-lv_obj_t *ui_Wifi_Status;
+lv_obj_t *ui_Wifi_States_Icon;
 lv_obj_t *ui_Wifi_Img_Placeholder;
 lv_obj_t *ui_Music_Note_Img_Placeholder1;
 lv_obj_t *ui_Paused_Img_Placeholder;
@@ -451,7 +451,7 @@ void ui_event_Wifi_Name_Input( lv_event_t * e);
 lv_obj_t *ui_Wifi_Name_Input;
 void ui_event_Wifi_Name_Enter_Btn( lv_event_t * e);
 lv_obj_t *ui_Wifi_Name_Enter_Btn;
-lv_obj_t *ui_Wifi_Name_Enter_Btn1;
+lv_obj_t *ui_Wifi_Name_Enter_Text;
 lv_obj_t *ui_Wifi_Password;
 lv_obj_t *ui_Wifi_Password_Text;
 lv_obj_t *ui_Wifi_Password_Line;
@@ -459,10 +459,14 @@ void ui_event_Wifi_Password_Input( lv_event_t * e);
 lv_obj_t *ui_Wifi_Password_Input;
 void ui_event_Wifi_Password_Enter_Btn( lv_event_t * e);
 lv_obj_t *ui_Wifi_Password_Enter_Btn;
-lv_obj_t *ui_Wifi_Password_Enter_Icon;
+lv_obj_t *ui_Wifi_Password_Enter_Text;
 lv_obj_t *ui_Wifi_Keyboard;
 void ui_event_BackToSettingsWindow2( lv_event_t * e);
 lv_obj_t *ui_BackToSettingsWindow2;
+void ui_event_Wifi_Switch2( lv_event_t * e);
+lv_obj_t *ui_Wifi_Switch2;
+lv_obj_t *ui_Wifi_Switch_Text2;
+lv_obj_t *ui_Wifi_Switch_Switch2;
 
 
 // SCREEN: ui_Music_Play_Window
@@ -1012,6 +1016,18 @@ void ui_event_BackToSettingsWindow2( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
+}
+}
+void ui_event_Wifi_Switch2( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      _ui_state_modify( ui_Wifi_Switch_Switch2, LV_STATE_CHECKED, _UI_MODIFY_STATE_TOGGLE);
+      _ui_state_modify( ui_Wifi_Name_Input, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
+      _ui_state_modify( ui_Wifi_Name_Enter_Btn, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
+      _ui_state_modify( ui_Wifi_Password_Input, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
+      _ui_state_modify( ui_Wifi_Password_Enter_Btn, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
+      _ui_state_modify( ui_Wifi_Keyboard, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
+      saveWifiSwitchState( e );
 }
 }
 void ui_event_BackToMainWindowBtn9( lv_event_t * e) {

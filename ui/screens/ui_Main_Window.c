@@ -324,15 +324,15 @@ lv_obj_set_style_text_color(ui_Guide_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN 
 lv_obj_set_style_text_opa(ui_Guide_Text, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Guide_Text, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_Wifi_Status = lv_img_create(ui_Main_Window);
-lv_img_set_src(ui_Wifi_Status, &ui_img_236134236);
-lv_obj_set_width( ui_Wifi_Status, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Wifi_Status, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Wifi_Status, -97 );
-lv_obj_set_y( ui_Wifi_Status, -224 );
-lv_obj_set_align( ui_Wifi_Status, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Wifi_Status, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-lv_obj_clear_flag( ui_Wifi_Status, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+ui_Wifi_States_Icon = lv_img_create(ui_Main_Window);
+lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
+lv_obj_set_width( ui_Wifi_States_Icon, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_Wifi_States_Icon, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_Wifi_States_Icon, -97 );
+lv_obj_set_y( ui_Wifi_States_Icon, -224 );
+lv_obj_set_align( ui_Wifi_States_Icon, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_clear_flag( ui_Wifi_States_Icon, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Wifi_Img_Placeholder = lv_img_create(ui_Main_Window);
 lv_img_set_src(ui_Wifi_Img_Placeholder, &ui_img_1742736079);
