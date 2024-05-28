@@ -412,6 +412,14 @@ lv_obj_set_align( ui_Button3, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_Button3, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
 lv_obj_clear_flag( ui_Button3, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
+ui_On_Screen_Range = lv_obj_create(ui_Main_Window);
+lv_obj_remove_style_all(ui_On_Screen_Range);
+lv_obj_set_width( ui_On_Screen_Range, 480);
+lv_obj_set_height( ui_On_Screen_Range, 480);
+lv_obj_set_align( ui_On_Screen_Range, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN );   /// Flags
+lv_obj_clear_flag( ui_On_Screen_Range, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
 lv_obj_add_event_cb(ui_Music_Btn, ui_event_Music_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Nature_Sound_Btn, ui_event_Nature_Sound_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Bluetooth_Btn, ui_event_Bluetooth_Btn, LV_EVENT_ALL, NULL);
@@ -422,6 +430,7 @@ lv_obj_add_event_cb(ui_Disconnect_Wifi, ui_event_Disconnect_Wifi, LV_EVENT_ALL, 
 lv_obj_add_event_cb(ui_Button5, ui_event_Button5, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Button2, ui_event_Button2, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Button3, ui_event_Button3, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_On_Screen_Range, ui_event_On_Screen_Range, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Main_Window, ui_event_Main_Window, LV_EVENT_ALL, NULL);
 
 }

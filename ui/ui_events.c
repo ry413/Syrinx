@@ -12,6 +12,7 @@
 #include <freertos/portmacro.h>
 #include <esp_sntp.h>
 #include <nvs.h>
+#include <locale.h>
 
 #include "wifi.h"
 #include "backlight.h"
@@ -26,26 +27,24 @@
 
 //////////////////// GLOBAL VARIABLES ////////////////////
 
-// 全局变量用于存储日月时分的时间戳
-time_t globalTime = 0;
-lv_obj_t * currentTimeLabel;
+time_t globalTime = 0;                  // 全局变量用于存储日月时分的时间戳
+lv_obj_t * currentTimeLabel;            // 当前screen的TimeLabel
 static lv_obj_t *musicLists[MAX_LISTS]; // 存储 MusicList 的指针数组
-static int currentListIndex = 0; // 当前 MusicList 的索引
-static int numMusicLists = 0; // MusicList 的总数
-static bool playing = false;
+static int currentListIndex = 0;        // 当前 MusicList 的索引
+static int numMusicLists = 0;           // MusicList 的总数
+static bool playing = false;            // 播放状态
 
-static lv_timer_t *musicTimer; // 音频进度条定时器
-static int currentPlayTime = 0; // 音频进度条的当前值
-static int updateInterval = 0; // 进度条每次更新的间隔, 因为进度条上限固定为100
+static lv_timer_t *musicTimer;          // 音频进度条定时器
+static int currentPlayTime = 0;         // 音频进度条的当前值
+static int updateInterval = 0;          // 进度条每次更新的间隔, 因为进度条上限固定为100
 
 
 
 // prev开头的都是为了在修改值后没有点击[确认]而是[取消]的情况下, 将原来的值放回去
 // 不过它们实际上也是那些值的真实拥有者
 
-// 背光亮度等级和时间, 时间分为7级, 0代表永不熄灭
+// 背光亮度等级和时间, 背光时间分为7级, 0代表永不熄灭
 uint32_t prevBacklightLevel;
-int backlightTimes[7] = {0, 5, 10, 20, 30, 60, 300};
 uint32_t prevBacklightTimeLevel;
 // 日期与时间设置
 uint32_t prevTimeHour;
@@ -64,9 +63,10 @@ static void updateCurrentTimeLabel(void);
 static void obtainTime(void* pvParameter);
 static void updateTimeTask(void *pvParameter);
 static void initTimeTask(void *param);
-static void updateBacklightTime(int backlightTimeLevel);
-static uint32_t getBacklightTimeLevel();
 static void createMusicItemTask(void *pvParameter);
+static void format_time(int seconds, char * buffer, size_t buffer_size);
+static void update_progress(lv_timer_t * timer);
+static void init_progress_bar(void);
 static void getDurationTask(void *pvParameter);
 
 
@@ -80,6 +80,21 @@ static void updateCurrentTimeLabel(void) {
     localtime_r(&globalTime, &timeinfo);
     strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);
     lv_label_set_text(currentTimeLabel, timeStr);
+}
+// 获取中文星期几名称
+static const char* get_chinese_weekday(int wday) {
+    static const char* weekdays[] = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"};
+    return weekdays[wday];
+}
+// 更新日期到待机界面的日期Label上, 因为暂时全局就一个地方要显示日期
+static void updateCurrentDateLabel(void) {
+    struct tm timeinfo;
+    char dateStr[50];
+
+    localtime_r(&globalTime, &timeinfo);
+    // 手动格式化日期字符串
+    snprintf(dateStr, sizeof(dateStr), "%s/%02d月%02d日", get_chinese_weekday(timeinfo.tm_wday), timeinfo.tm_mon + 1, timeinfo.tm_mday);
+    lv_label_set_text(ui_Idle_Window_Date, dateStr);
 }
 // 从NTP获取时间
 static void obtainTime(void* pvParameter)
@@ -134,14 +149,27 @@ static void obtainTime(void* pvParameter)
 // 时间更新定时器
 static void updateTimeTask(void *pvParameter)
 {
+    // struct tm lastDateinfo;
+    // localtime_r(&globalTime, &lastDateinfo);
+    // int lastDay = lastDateinfo.tm_mday;
+
     while (1)
     {
         updateCurrentTimeLabel();
+
+        // struct tm currentDateinfo;
+        // localtime_r(&globalTime, &currentDateinfo);
+
+        // if (currentDateinfo.tm_mday != lastDay) {
+        updateCurrentDateLabel();
+        //     lastDay = currentDateinfo.tm_mday;
+        // }
+        
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         globalTime += 1;
     }
 }
-// 初始化时间任务
+// 初始化时间的任务
 static void initTimeTask(void *param)
 {
     EventGroupHandle_t wifi_event_group = get_wifi_event_group();
@@ -156,31 +184,7 @@ static void initTimeTask(void *param)
     }
     vTaskDelete(NULL); // 删除任务
 }
-// 更新背光时间到label上
-static void updateBacklightTime(int backlightTimeLevel)
-{
-    int backlightTime = backlightTimes[backlightTimeLevel];
-    if (backlightTime == 0) {
-        lv_label_set_text(ui_Backlight_Time_Value2, "off");
-    } else {
-        lv_label_set_text_fmt(ui_Backlight_Time_Value2, "%ds", backlightTime);
-    }
-}
-// 返回当前背光时间label上秒数对应的等级
-static uint32_t getBacklightTimeLevel()
-{
-    const char *text = lv_label_get_text(ui_Backlight_Time_Value2);
-    if (strcmp(text, "off") != 0) {
-        int backlightTime = atoi(text);
-        for (int i = 0; i < 7; i++) {
-            if (backlightTimes[i] == backlightTime) {
-                return i;
-                break;
-            }
-        }
-    }
-    return 0;
-}
+
 // 创建Music List及item的任务, 由这里发起get_all_file_names
 static void createMusicItemTask(void *pvParameters)
 {
@@ -216,6 +220,8 @@ static void createMusicItemTask(void *pvParameters)
     }
     // 将当前显示的设置为第一个列表
     currentListIndex = 0;
+    // 顺便初始化一下进度条
+    init_progress_bar();
     vTaskDelete(NULL);
 }
 // 将秒转为hh:mm:ss的函数
@@ -314,11 +320,6 @@ void setTimeMain(lv_event_t * e)
     // 本来只有主界面要加这个防止时间未初始化就更新值, 但是用户有可能会在时间未初始化时乱点点到别的界面, 所以每个界面都加上了
     if(globalTime > 0)
         updateCurrentTimeLabel();
-
-
-
-    // 临时放这
-    init_progress_bar();
 }
 void setTimeMusic(lv_event_t * e)
 {
@@ -356,6 +357,13 @@ void setTimeGuide(lv_event_t * e)
     if(globalTime > 0)
         updateCurrentTimeLabel();
 }
+void setTimeIdle(lv_event_t * e)
+{
+    currentTimeLabel = ui_Idle_Window_Time;
+    if(globalTime > 0)
+        updateCurrentTimeLabel();
+    
+}
 
 
 // ******************** 背光设置 ********************
@@ -370,20 +378,26 @@ void initBacklightSettings(lv_event_t * e)
     }
 
     err = nvs_get_u32(nvs_handle, "level", &prevBacklightLevel);
-    lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%ld", prevBacklightLevel);
     if (err != ESP_OK) {
         ESP_LOGE("backlightSettings", "Failed to get backlightLevel from NVS");
         nvs_close(nvs_handle);
         return;
     }
+    lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%ld", prevBacklightLevel);
 
     err = nvs_get_u32(nvs_handle, "time", &prevBacklightTimeLevel);
-    updateBacklightTime(prevBacklightTimeLevel);
     if (err != ESP_OK) {
         ESP_LOGE("backlightSettings", "Failed to get backlightTimeLevel from NVS");
         nvs_close(nvs_handle);
         return;
     }
+
+    set_backlight_time_to_label(ui_Backlight_Time_Value2, prevBacklightTimeLevel);
+    // 不为0(off)则初始化背光定时器
+    idle_window = ui_Idle_Window;
+    if (prevBacklightTimeLevel != 0)
+        init_backlight_timer(backlight_time_level_to_second(prevBacklightTimeLevel));
+
     nvs_close(nvs_handle);
 }
 // 确认保存背光亮度
@@ -414,7 +428,7 @@ void saveBacklightBrightness(lv_event_t * e)
 void cancelSaveBacklightBrightness(lv_event_t * e)
 {
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%ld", prevBacklightLevel);
-    setBacklight(prevBacklightLevel);
+    set_backlight(prevBacklightLevel);
 }
 // 增加背光亮度
 void addBrightness(lv_event_t * e)
@@ -423,7 +437,7 @@ void addBrightness(lv_event_t * e)
     int brightnessLevel = atoi(text);
     brightnessLevel = (brightnessLevel < 5) ? brightnessLevel + 1 : 5;
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%d", brightnessLevel);
-    setBacklight(brightnessLevel);
+    set_backlight(brightnessLevel);
 }
 // 减少背光亮度
 void decBrightness(lv_event_t * e)
@@ -432,7 +446,7 @@ void decBrightness(lv_event_t * e)
     int brightnessLevel = atoi(text);
     brightnessLevel = (brightnessLevel > 1) ? brightnessLevel - 1 : 1;
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%d", brightnessLevel);
-    setBacklight(brightnessLevel);
+    set_backlight(brightnessLevel);
 }
 // 确认保存背光时间
 void saveBacklightTime(lv_event_t * e)
@@ -443,7 +457,17 @@ void saveBacklightTime(lv_event_t * e)
         ESP_LOGE("saveBacklightTime", "Failed to open NVS");
         return;
     }
-    prevBacklightTimeLevel = getBacklightTimeLevel();
+
+    const char *second = lv_label_get_text(ui_Backlight_Time_Value2);
+    prevBacklightTimeLevel = backlight_time_second_to_level(atoi(second));
+
+    if (prevBacklightTimeLevel != 0) {
+        init_backlight_timer(atoi(second));
+    } else {
+        // 0(off)则关闭定时器
+        stop_backlight_timer();
+    }
+
     err = nvs_set_u32(nvs_handle, "time", prevBacklightTimeLevel);
     if (err != ESP_OK) {
         ESP_LOGE("saveBacklightTime", "Failed to set backlightTime in NVS");
@@ -459,25 +483,31 @@ void saveBacklightTime(lv_event_t * e)
 // 取消保存背光时间
 void cancelSaveBacklightTime(lv_event_t * e)
 {
-    updateBacklightTime(prevBacklightTimeLevel);
+    set_backlight_time_to_label(ui_Backlight_Time_Value2, prevBacklightTimeLevel);
 }
 // 增加背光时间
 void addBacklightTime(lv_event_t * e)
 {
-    int backlightTimeLevel = getBacklightTimeLevel();
-    if (backlightTimeLevel < 6) {
+    const char *second = lv_label_get_text(ui_Backlight_Time_Value2);
+    int backlightTimeLevel = backlight_time_second_to_level(atoi(second));
+
+    if (backlightTimeLevel < 6)
         backlightTimeLevel++;
-    }
-    updateBacklightTime(backlightTimeLevel);
+
+    set_backlight_time_to_label(ui_Backlight_Time_Value2, backlightTimeLevel);
 }
 // 减少背光时间
 void decBacklightTime(lv_event_t * e)
 {
-    int backlightTimeLevel = getBacklightTimeLevel();
-    if (backlightTimeLevel > 0) {
+    const char *second = lv_label_get_text(ui_Backlight_Time_Value2);
+    // atoi("off")会返回0, 这是可以利用的
+    int backlightTimeLevel = backlight_time_second_to_level(atoi(second));
+
+    if (backlightTimeLevel > 0)
         backlightTimeLevel--;
-    }
-    updateBacklightTime(backlightTimeLevel);
+
+    set_backlight_time_to_label(ui_Backlight_Time_Value2, backlightTimeLevel);
+
 }
 
 // ******************** 蓝牙设置 ********************
@@ -1255,3 +1285,27 @@ void releasedProgressSlider(lv_event_t * e)
 
 
 
+// 进入熄屏
+void offScreen(lv_event_t * e)
+{
+    // 关闭背光
+    set_backlight(0);
+    // 直接回到Main Window
+    lv_scr_load(ui_Main_Window);
+    // 启用"从熄屏中醒来"的可触摸区域
+    lv_obj_clear_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);
+}
+// 从熄屏中醒来
+void onScreen(lv_event_t * e)
+{
+	// 恢复背光
+    set_backlight(prevBacklightLevel);
+    lv_obj_add_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);
+}
+
+
+void idleBackToMainWindow(lv_event_t * e)
+{
+	lv_scr_load(ui_Main_Window);
+    reset_backlight_timer();
+}

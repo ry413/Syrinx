@@ -16,6 +16,7 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     screens/ui_Settings_ID_Window.c
     screens/ui_Settings_Wifi_Window.c
     screens/ui_Music_Play_Window.c
+    screens/ui_Idle_Window.c
     ui.c
     components/ui_comp_hook.c
     ui_helpers.c
@@ -63,6 +64,8 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     fonts/ui_font_LanTing40.c
     fonts/ui_font_LanTingFine18.c
     fonts/ui_font_LanTingFine22.c
-    fonts/ui_font_LanTingFine24.c)
+    fonts/ui_font_LanTingFine24.c
+    fonts/ui_font_Font100.c
+    fonts/ui_font_Font30.c)
 
 add_library(ui ${SOURCES})

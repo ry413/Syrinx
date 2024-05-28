@@ -63,6 +63,8 @@ void ui_event_Button2( lv_event_t * e);
 lv_obj_t *ui_Button2;
 void ui_event_Button3( lv_event_t * e);
 lv_obj_t *ui_Button3;
+void ui_event_On_Screen_Range( lv_event_t * e);
+lv_obj_t *ui_On_Screen_Range;
 
 
 // SCREEN: ui_Music_Window
@@ -224,7 +226,6 @@ lv_obj_t *ui_BackToMainWindowBtn6;
 
 // SCREEN: ui_Settings_Window
 void ui_Settings_Window_screen_init(void);
-void ui_event_Settings_Window( lv_event_t * e);
 lv_obj_t *ui_Settings_Window;
 lv_obj_t *ui_Header_Main2;
 lv_obj_t *ui_Header_Main_Text2;
@@ -496,6 +497,19 @@ lv_obj_t *ui_Play_Pause_Btn;
 lv_obj_t *ui_Play_Pause_Icon;
 void ui_event_Progress_Slider( lv_event_t * e);
 lv_obj_t *ui_Progress_Slider;
+
+
+// SCREEN: ui_Idle_Window
+void ui_Idle_Window_screen_init(void);
+void ui_event_Idle_Window( lv_event_t * e);
+lv_obj_t *ui_Idle_Window;
+lv_obj_t *ui_Idle_Window_Time;
+lv_obj_t *ui_Idle_Window_Date;
+void ui_event_Back_To_Main_Window_Range( lv_event_t * e);
+lv_obj_t *ui_Back_To_Main_Window_Range;
+void ui_event_Off_Screen_Btn( lv_event_t * e);
+lv_obj_t *ui_Off_Screen_Btn;
+lv_obj_t *ui_Off_Screen_Text;
 void ui_event____initial_actions0( lv_event_t * e);
 lv_obj_t *ui____initial_actions0;
 const lv_img_dsc_t *ui_imgset_back[1] = {&ui_img_1830113796};
@@ -600,6 +614,12 @@ void ui_event_Button3( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_CLICKED) {
       sendATAJ( e );
+}
+}
+void ui_event_On_Screen_Range( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_CLICKED) {
+      onScreen( e );
 }
 }
 void ui_event_Music_Window( lv_event_t * e) {
@@ -729,17 +749,6 @@ void ui_event_BackToMainWindowBtn6( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
-}
-}
-void ui_event_Settings_Window( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
-if ( event_code == LV_EVENT_SCREEN_LOADED) {
-      initVolumeSettings( e );
-      initIDSettings( e );
-      initDateTimeSettings( e );
-      initBluetoothSettings( e );
-      initBacklightSettings( e );
-      initWifiSettings( e );
 }
 }
 void ui_event_Settings_Backlight_Btn2( lv_event_t * e) {
@@ -1060,10 +1069,36 @@ if ( event_code == LV_EVENT_RELEASED) {
       releasedProgressSlider( e );
 }
 }
+void ui_event_Idle_Window( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SCREEN_LOADED) {
+      setTimeIdle( e );
+}
+}
+void ui_event_Back_To_Main_Window_Range( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_PRESSED) {
+      idleBackToMainWindow( e );
+}
+}
+void ui_event_Off_Screen_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_PRESSED) {
+      offScreen( e );
+}
+}
 void ui_event____initial_actions0( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SCREEN_LOAD_START) {
       initTime( e );
+}
+if ( event_code == LV_EVENT_SCREEN_LOAD_START) {
+      initWifiSettings( e );
+      initBacklightSettings( e );
+      initBluetoothSettings( e );
+      initDateTimeSettings( e );
+      initIDSettings( e );
+      initVolumeSettings( e );
 }
 }
 
@@ -1089,6 +1124,7 @@ ui_Settings_Time_Window_screen_init();
 ui_Settings_ID_Window_screen_init();
 ui_Settings_Wifi_Window_screen_init();
 ui_Music_Play_Window_screen_init();
+ui_Idle_Window_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
 lv_obj_add_event_cb(ui____initial_actions0, ui_event____initial_actions0, LV_EVENT_ALL, NULL);
 

@@ -161,13 +161,21 @@ static void example_lvgl_touch_cb(lv_indev_drv_t * drv, lv_indev_data_t * data)
     /* Get coordinates */
     bool touchpad_pressed = esp_lcd_touch_get_coordinates(drv->user_data, touchpad_x, touchpad_y, NULL, &touchpad_cnt, 1);
 
+    // 防止触摸时持续重置定时器
+    static bool is_touching = false;
     if (touchpad_pressed && touchpad_cnt > 0) {
         data->point.x = touchpad_x[0];
         data->point.y = touchpad_y[0];
         data->state = LV_INDEV_STATE_PR;
         ESP_LOGI(TAG, "X=%u Y=%u", data->point.x, data->point.y);
+        // 仅在状态变化时重置定时器
+        if (!is_touching) {
+            reset_backlight_timer();
+            is_touching = true;
+        }
     } else {
         data->state = LV_INDEV_STATE_REL;
+        is_touching = false;
     }
 }
 #endif
@@ -497,7 +505,7 @@ static void create_demo_application(void)
 {
 
     ui_init();
-    initBacklight();
+    init_backlight();
 
     
 // #if defined CONFIG_LV_USE_DEMO_WIDGETS

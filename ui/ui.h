@@ -71,6 +71,8 @@ void ui_event_Button2( lv_event_t * e);
 extern lv_obj_t *ui_Button2;
 void ui_event_Button3( lv_event_t * e);
 extern lv_obj_t *ui_Button3;
+void ui_event_On_Screen_Range( lv_event_t * e);
+extern lv_obj_t *ui_On_Screen_Range;
 // SCREEN: ui_Music_Window
 void ui_Music_Window_screen_init(void);
 void ui_event_Music_Window( lv_event_t * e);
@@ -218,7 +220,6 @@ void ui_event_BackToMainWindowBtn6( lv_event_t * e);
 extern lv_obj_t *ui_BackToMainWindowBtn6;
 // SCREEN: ui_Settings_Window
 void ui_Settings_Window_screen_init(void);
-void ui_event_Settings_Window( lv_event_t * e);
 extern lv_obj_t *ui_Settings_Window;
 extern lv_obj_t *ui_Header_Main2;
 extern lv_obj_t *ui_Header_Main_Text2;
@@ -478,6 +479,17 @@ extern lv_obj_t *ui_Play_Pause_Btn;
 extern lv_obj_t *ui_Play_Pause_Icon;
 void ui_event_Progress_Slider( lv_event_t * e);
 extern lv_obj_t *ui_Progress_Slider;
+// SCREEN: ui_Idle_Window
+void ui_Idle_Window_screen_init(void);
+void ui_event_Idle_Window( lv_event_t * e);
+extern lv_obj_t *ui_Idle_Window;
+extern lv_obj_t *ui_Idle_Window_Time;
+extern lv_obj_t *ui_Idle_Window_Date;
+void ui_event_Back_To_Main_Window_Range( lv_event_t * e);
+extern lv_obj_t *ui_Back_To_Main_Window_Range;
+void ui_event_Off_Screen_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Off_Screen_Btn;
+extern lv_obj_t *ui_Off_Screen_Text;
 void ui_event____initial_actions0( lv_event_t * e);
 extern lv_obj_t *ui____initial_actions0;
 
@@ -528,6 +540,8 @@ LV_FONT_DECLARE( ui_font_LanTing40);
 LV_FONT_DECLARE( ui_font_LanTingFine18);
 LV_FONT_DECLARE( ui_font_LanTingFine22);
 LV_FONT_DECLARE( ui_font_LanTingFine24);
+LV_FONT_DECLARE( ui_font_Font100);
+LV_FONT_DECLARE( ui_font_Font30);
 
 
 void ui_init(void);

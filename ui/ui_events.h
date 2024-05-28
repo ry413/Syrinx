@@ -11,10 +11,17 @@ extern "C" {
 #endif
 
 void initTime(lv_event_t * e);
+void initWifiSettings(lv_event_t * e);
+void initBacklightSettings(lv_event_t * e);
+void initBluetoothSettings(lv_event_t * e);
+void initDateTimeSettings(lv_event_t * e);
+void initIDSettings(lv_event_t * e);
+void initVolumeSettings(lv_event_t * e);
 void setTimeMain(lv_event_t * e);
 void disconnectWifi(lv_event_t * e);
 void sendATM2(lv_event_t * e);
 void sendATAJ(lv_event_t * e);
+void onScreen(lv_event_t * e);
 void setTimeMusic(lv_event_t * e);
 void prevMusicList(lv_event_t * e);
 void nextMusicList(lv_event_t * e);
@@ -23,12 +30,6 @@ void setTimeBluetooth(lv_event_t * e);
 void setTimeMode(lv_event_t * e);
 void setTimeWakeup(lv_event_t * e);
 void setTimeGuide(lv_event_t * e);
-void initVolumeSettings(lv_event_t * e);
-void initIDSettings(lv_event_t * e);
-void initDateTimeSettings(lv_event_t * e);
-void initBluetoothSettings(lv_event_t * e);
-void initBacklightSettings(lv_event_t * e);
-void initWifiSettings(lv_event_t * e);
 void decMaxVolume(lv_event_t * e);
 void addMaxVolume(lv_event_t * e);
 void decDefaultVolume(lv_event_t * e);
@@ -55,6 +56,9 @@ void nextTrack(lv_event_t * e);
 void prevTrack(lv_event_t * e);
 void PlayPause(lv_event_t * e);
 void releasedProgressSlider(lv_event_t * e);
+void setTimeIdle(lv_event_t * e);
+void idleBackToMainWindow(lv_event_t * e);
+void offScreen(lv_event_t * e);
 void playSelectedMusic(lv_event_t * e);
 
 #ifdef __cplusplus

@@ -717,6 +717,5 @@ lv_obj_add_event_cb(ui_Default_Volume_Add_Btn, ui_event_Default_Volume_Add_Btn, 
 lv_obj_add_event_cb(ui_Volume_Settings_Verify_Btn, ui_event_Volume_Settings_Verify_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Volume_Settings_Cancel_Btn, ui_event_Volume_Settings_Cancel_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_BackToMainWindowBtn8, ui_event_BackToMainWindowBtn8, LV_EVENT_ALL, NULL);
-lv_obj_add_event_cb(ui_Settings_Window, ui_event_Settings_Window, LV_EVENT_ALL, NULL);
 
 }
