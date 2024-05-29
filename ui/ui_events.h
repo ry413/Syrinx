@@ -45,6 +45,7 @@ void cancelSaveBacklightTime(lv_event_t * e);
 void decBacklightTime(lv_event_t * e);
 void addBacklightTime(lv_event_t * e);
 void saveBluetoothSetting(lv_event_t * e);
+void cancelSaveBluetoothSetting(lv_event_t * e);
 void saveTimeSetting(lv_event_t * e);
 void saveDateSetting(lv_event_t * e);
 void saveIDSetting(lv_event_t * e);

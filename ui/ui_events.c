@@ -13,6 +13,7 @@
 #include <esp_sntp.h>
 #include <nvs.h>
 #include <locale.h>
+#include "driver/uart.h"
 
 #include "wifi.h"
 #include "backlight.h"
@@ -46,6 +47,9 @@ static lv_timer_t *taskCreateTimer = NULL;// 防止一直点[下一首]这种按
 // 背光亮度等级和时间, 背光时间分为7级, 0代表永不熄灭
 uint32_t prevBacklightLevel;
 uint32_t prevBacklightTimeLevel;
+// 蓝牙名称与密码
+char *prevBluetoothName = NULL;
+char *prevBluetoothPassword = NULL;
 // 日期与时间设置
 uint32_t prevTimeHour;
 uint32_t prevTimeMin;
@@ -55,6 +59,8 @@ uint32_t prevDateDay;
 // 默认音量和最大音量
 uint32_t prevDefaultVolume;
 uint32_t prevMaxVolume;
+
+static TaskHandle_t durationTaskHandle = NULL;
 
 
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
@@ -68,7 +74,9 @@ static void format_time(int seconds, char * buffer, size_t buffer_size);
 static void update_progress(lv_timer_t * timer);
 static void initProgressBar(void);
 static void getDurationTask(void *pvParameter);
+static void createDurationTask(lv_timer_t *timer);
 static void playCurrentIndexMusic(void);
+static void bluetoothRebootTask(void *pvParameter);
 
 //////////////////// 不给lvgl事件直接调用的静态函数 ////////////////////
 
@@ -268,10 +276,12 @@ static void getDurationTask(void *pvParameter)
 
     if (bits & (EVENT_PLAY_MUSIC | EVENT_NEXT_TRACK | EVENT_PREV_TRACK)) {
         bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
+        uart_flush(UART_NUM_0);
         bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_DURATION, pdTRUE, pdFALSE, 3000);
         if (bits & EVENT_DURATION) {
             char time_str[12];
             format_time(current_music_duration, time_str, sizeof(time_str));
+            printf("Total time: %s\n", time_str);
             lv_label_set_text_static(ui_Total_Time, time_str);
 
             updateInterval = (current_music_duration / 100); // 进度条更新间隔
@@ -279,23 +289,49 @@ static void getDurationTask(void *pvParameter)
             lv_timer_resume(progressTimer); // 启动进度条更新定时器   
         }
     }
+
+    durationTaskHandle = NULL;
     vTaskDelete(NULL);
 }
-// 把这个timer跟getDurationTask写成一个函数, 不知道为什么会无限阻塞, 先不管
+// 如果把这个timer跟getDurationTask写成一个函数, 不知道为什么会无限阻塞, 先不管
 static void createDurationTask(lv_timer_t *timer)
 {
     playCurrentIndexMusic();
-    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, NULL);
+    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
     lv_timer_del(taskCreateTimer);
     taskCreateTimer = NULL;
 }
-// 重启
-static void rebootTask(void *pvParameter)
+// 播放当前index的音乐
+static void playCurrentIndexMusic(void) {
+    char command[50];
+    // index从0开始, id是从001开始的
+    snprintf(command, sizeof(command), "AT+AJ/music/%03d*.???", current_playing_index + 1);
+    bluetooth_send_at_command(command, CMD_PLAY_MUSIC);
+}
+// 更改蓝牙设置而需要的重启任务
+static void bluetoothRebootTask(void *pvParameter)
 {
-    bluetooth_send_at_command("AT+CZ", CMD_REBOOT);
+    char command[50];
+    snprintf(command, sizeof(command), "AT+BD%s", prevBluetoothName);
+    bluetooth_send_at_command(command, CMD_BLUETOOTH_NAME);
+    // 更改蓝牙名称和密码得一个个来
+    EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_NAME, pdTRUE, pdFALSE, 3000);
+    if (bits & EVENT_BLUETOOTH_NAME) {
+        snprintf(command, sizeof(command), "AT+BE%s", prevBluetoothPassword);
+        bluetooth_send_at_command(command, CMD_BLUETOOTH_PASSWORD);
+
+        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_PASSWORD, pdTRUE, pdFALSE, 3000);
+        if (bits & EVENT_BLUETOOTH_PASSWORD) {
+            bluetooth_send_at_command("AT+CZ", CMD_REBOOT);
+        }
+    }
     vTaskDelete(NULL);
 }
-
+// 刷新串口, 丢掉里边的数据的任务
+static void flushUart(void *pvParameter) {
+    uart_flush(UART_NUM_0);
+    vTaskDelete(NULL);
+}
 //////////////////// 给lvgl的事件用的回调 ////////////////////
 
 // ******************** initial actions ********************
@@ -530,23 +566,28 @@ void initBluetoothSettings(lv_event_t * e)
         nvs_close(nvs_handle);
         return;
     }
-
     if (required_size > 0) {
-        char *prevBluetoothName = malloc(required_size);
-        if (prevBluetoothName == NULL) {
+        char *tempBluetoothName = malloc(required_size);
+        if (tempBluetoothName == NULL) {
             ESP_LOGE("initBluetoothSettings", "Failed to allocate memory for Bluetooth name");
             nvs_close(nvs_handle);
             return;
         }
-        err = nvs_get_str(nvs_handle, "name", prevBluetoothName, &required_size);
+
+        err = nvs_get_str(nvs_handle, "name", tempBluetoothName, &required_size);
         if (err != ESP_OK) {
             ESP_LOGE("initBluetoothSettings", "Failed to get name from NVS: %s", esp_err_to_name(err));
-            free(prevBluetoothName);
+            free(tempBluetoothName);
             nvs_close(nvs_handle);
             return;
         }
+        if (prevBluetoothName != NULL) {
+            ESP_LOGE("initBluetoothSettings", "运行到这的时候prevBluetoothName不可能不是NULL");
+            free(prevBluetoothName);
+        }
+        prevBluetoothName = tempBluetoothName;
         lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
-        free(prevBluetoothName);
+        lv_label_set_text(ui_Bluetooth_Name_Value, prevBluetoothName);
     } else {
         ESP_LOGI("initBluetoothSettings", "Bluetooth name not set in NVS");
     }
@@ -561,63 +602,95 @@ void initBluetoothSettings(lv_event_t * e)
     }
 
     if (required_size > 0) {
-        char *prevBluetoothPassword = malloc(required_size);
-        if (prevBluetoothPassword == NULL) {
+        char *tempBluetoothPassword = malloc(required_size);
+        if (tempBluetoothPassword == NULL) {
             ESP_LOGE("initBluetoothSettings", "Failed to allocate memory for Bluetooth password");
             nvs_close(nvs_handle);
             return;
         }
-        err = nvs_get_str(nvs_handle, "password", prevBluetoothPassword, &required_size);
+
+        err = nvs_get_str(nvs_handle, "password", tempBluetoothPassword, &required_size);
         if (err != ESP_OK) {
             ESP_LOGE("initBluetoothSettings", "Failed to get password from NVS: %s", esp_err_to_name(err));
-            free(prevBluetoothPassword);
+            free(tempBluetoothPassword);
             nvs_close(nvs_handle);
             return;
         }
+
+        if (prevBluetoothPassword != NULL) {
+            ESP_LOGE("initBluetoothSettings", "这应该不会发生, 运行这部分的时候prevBluetoothPassword不可能不是NULL");
+            free(prevBluetoothPassword);
+        }
+        prevBluetoothPassword = tempBluetoothPassword;
         lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
-        free(prevBluetoothPassword);
+        lv_label_set_text(ui_Bluetooth_Password_Value, prevBluetoothPassword);
     } else {
         ESP_LOGI("initBluetoothSettings", "Bluetooth password not set in NVS");
     }
 
     nvs_close(nvs_handle);
 }
-// 保存蓝牙设置
+// 确认保存蓝牙设置
 void saveBluetoothSetting(lv_event_t * e)
 {
+    // 获取蓝牙名称与密码
     const char *name = lv_textarea_get_text(ui_Bluetooth_Name_Input2);
+    if (name != NULL) {
+        if (prevBluetoothName != NULL) {
+            free(prevBluetoothName); // 释放之前分配的内存
+        }
+        prevBluetoothName = strdup(name); // 复制字符串到全局变量
+    } else {
+        ESP_LOGE("saveBluetoothSetting", "Failed to get name from text area");
+    }
     const char *password = lv_textarea_get_text(ui_Bluetooth_Password_Input2);
+    if (password != NULL) {
+        if (prevBluetoothPassword != NULL) {
+            free(prevBluetoothPassword); // 释放之前分配的内存
+        }
+        prevBluetoothPassword = strdup(password); // 复制字符串到全局变量
+    } else {
+        ESP_LOGE("saveBluetoothSetting", "Failed to get password from text area");
+    }
 
+    // 保存蓝牙名称与密码
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("BluetoothCfg", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
         ESP_LOGE("saveBluetoothSetting", "Failed to open NVS");
         return;
     }
-    // 保存蓝牙名称
-    err = nvs_set_str(nvs_handle, "name", name);
+    err = nvs_set_str(nvs_handle, "name", prevBluetoothName);
     if (err != ESP_OK) {
         ESP_LOGE("saveBluetoothSetting", "Failed to set name in NVS");
         nvs_close(nvs_handle);
         return;
     }
-    // 保存蓝牙密码
-    err = nvs_set_str(nvs_handle, "password", password);
+    err = nvs_set_str(nvs_handle, "password", prevBluetoothPassword);
     if (err != ESP_OK) {
         ESP_LOGE("saveBluetoothSetting", "Failed to set password in NVS");
         nvs_close(nvs_handle);
         return;
     }
+    // 更新用户界面的信息
+    lv_label_set_text(ui_Bluetooth_Name_Value, prevBluetoothName);
+    lv_label_set_text(ui_Bluetooth_Password_Value, prevBluetoothPassword);
 
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
         ESP_LOGE("saveBluetoothSetting", "Failed to commit NVS changes");
     }
-
     nvs_close(nvs_handle);
-    xTaskCreate(rebootTask, "rebootTask", 4096, NULL, 5, NULL);
-}
 
+    xTaskCreate(bluetoothRebootTask, "bluetoothRebootTask", 4096, NULL, 5, NULL);
+}
+// 取消保存蓝牙设置
+void cancelSaveBluetoothSetting(lv_event_t * e)
+{
+    // 改完蓝牙设置后没点保存就退出界面, 就把原先的值设回来, 因为是textarea
+    lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
+    lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
+}
 // ******************** 时间设置 ********************
 // 初始化时间与日期
 void initDateTimeSettings(lv_event_t * e)
@@ -1140,15 +1213,10 @@ void nextMusicList(lv_event_t *e)
 void sendATM2(lv_event_t * e)
 {
 	// Your code here
-    bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
+    bluetooth_send_at_command("AT+BE7993", CMD_BLUETOOTH_PASSWORD);
 }
 
-static void playCurrentIndexMusic(void) {
-    char command[50];
-    // index从0开始, id是从001开始的
-    snprintf(command, sizeof(command), "AT+AJ/music/%03d*.???", current_playing_index + 1);
-    bluetooth_send_at_command(command, CMD_PLAY_MUSIC);
-}
+
 // 播放Music List中被点击的音乐
 void playSelectedMusic(lv_event_t * e)
 {
@@ -1177,6 +1245,17 @@ void playSelectedMusic(lv_event_t * e)
     char temp[4];
     sscanf(track_title, "%3[0-9]", temp);
     current_playing_index = atoi(temp) - 1;
+
+    // 杀掉旧任务
+    if (durationTaskHandle != NULL) {
+        vTaskDelete(durationTaskHandle);
+        durationTaskHandle = NULL;
+    }
+    // 除了杀掉任务, 还得刷新串口, 这个不异步的话会阻塞0.几秒的UI
+    // uart_flush(UART_NUM_0);
+    // xTaskCreate(flushUart, "flushUart", 4096, NULL, 6, NULL);
+    // 恢复CMD
+    current_command = CMD_NONE;
 
     if (taskCreateTimer != NULL) {
         lv_timer_reset(taskCreateTimer);
@@ -1207,6 +1286,17 @@ void nextTrack(lv_event_t * e) {
     lv_label_set_text(ui_Track_Title, track_title + 3);
     lv_label_set_text(ui_Track_Artist, "null");
 
+    // 杀掉旧任务
+    if (durationTaskHandle != NULL) {
+        vTaskDelete(durationTaskHandle);
+        durationTaskHandle = NULL;
+    }
+    // 除了杀掉任务, 还得刷新串口, 这个不异步的话会阻塞0.几秒的UI
+    // uart_flush(UART_NUM_0);
+    // xTaskCreate(flushUart, "flushUart", 4096, NULL, 6, NULL);
+    // 恢复CMD
+    current_command = CMD_NONE;
+
     if (taskCreateTimer != NULL) {
         lv_timer_reset(taskCreateTimer);
     } else {
@@ -1235,10 +1325,21 @@ void prevTrack(lv_event_t * e) {
     lv_label_set_text(ui_Track_Title, track_title + 3);
     lv_label_set_text(ui_Track_Artist, "null");
 
+    // 杀掉旧任务
+    if (durationTaskHandle != NULL) {
+        vTaskDelete(durationTaskHandle);
+        durationTaskHandle = NULL;
+    }
+    // 除了杀掉任务, 还得刷新串口, 这个不异步的话会阻塞0.几秒的UI
+    // uart_flush(UART_NUM_0);
+    // xTaskCreate(flushUart, "flushUart", 4096, NULL, 6, NULL);
+    // 恢复CMD
+    current_command = CMD_NONE;
+
     if (taskCreateTimer != NULL) {
         lv_timer_reset(taskCreateTimer);
     } else {
-        taskCreateTimer = lv_timer_create(createDurationTask, 1000, NULL);
+        taskCreateTimer = lv_timer_create(createDurationTask, 100, NULL);
     }
 }
 

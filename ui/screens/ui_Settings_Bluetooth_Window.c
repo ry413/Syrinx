@@ -127,8 +127,8 @@ lv_obj_set_height( ui_Bluetooth_Password_Input2, LV_SIZE_CONTENT);   /// 43
 lv_obj_set_x( ui_Bluetooth_Password_Input2, -10 );
 lv_obj_set_y( ui_Bluetooth_Password_Input2, -3 );
 lv_obj_set_align( ui_Bluetooth_Password_Input2, LV_ALIGN_CENTER );
-lv_textarea_set_max_length(ui_Bluetooth_Password_Input2,30);
-lv_textarea_set_text(ui_Bluetooth_Password_Input2,"exn3832cnao");
+lv_textarea_set_max_length(ui_Bluetooth_Password_Input2,4);
+lv_textarea_set_text(ui_Bluetooth_Password_Input2,"34567");
 lv_textarea_set_placeholder_text(ui_Bluetooth_Password_Input2,"Name");
 lv_textarea_set_one_line(ui_Bluetooth_Password_Input2,true);
 lv_obj_clear_flag( ui_Bluetooth_Password_Input2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags

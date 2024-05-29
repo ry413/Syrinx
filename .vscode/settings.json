@@ -33,7 +33,8 @@
         "uart.h": "c",
         "lvgl.h": "c",
         "bluetooth.h": "c",
-        "iconv.h": "c"
+        "iconv.h": "c",
+        "typeinfo": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

@@ -33,7 +33,7 @@ int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, �
 int current_music_duration = 0;
 
 
-static command_type_t current_command = CMD_NONE;
+command_type_t current_command = CMD_NONE;
 
 EventGroupHandle_t get_bluetooth_event_group(void) {
     return event_group;
@@ -302,8 +302,6 @@ esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
                             // 处理剩余的字节
                             for (int i = 3, j = 3; i < len / 2 + 1; i++, j+=2) {
                                 // 大端转小端
-                                // printf("response[%d]: %x\n", j, response[j]);
-                                // printf("response[%d]: %x\n", j + 1, response[j + 1]);
                                 utf16_str[i] = response[j] | (response[j + 1] << 8);
                             }
                             utf16_str[len / 2 + 1] = '\0'; // 确保数组末尾有终止符
@@ -312,7 +310,11 @@ esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
                             utf16_to_utf8(utf16_str, &utf8);
                             printf("UTF8编码的字符串: %s\n", utf8);
                             add_file_name(utf8_file_names, current_file_index - 1, utf8);
+                            free(utf8);
+                            // 这里直接return了, 因为MF+的处理太过特殊, 就不让后面的继续处理了
+                            return ESP_OK;
                         } else {
+                            // 消除空字节
                             int valid_len = 0;
                             for (int i = 0; i < len; i++) {
                                 if (response[total_len + i] != '\0') {
@@ -323,9 +325,9 @@ esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
                             total_len += valid_len;
                             response[total_len] = '\0';
 
-                            for (int i = 0; i < valid_len; i++) {
-                                ESP_LOGI(TAG, "Received byte: 0x%02X", response[total_len - valid_len + i]);
-                            }
+                            // for (int i = 0; i < valid_len; i++) {
+                            //     ESP_LOGI(TAG, "Received byte: 0x%02X", response[total_len - valid_len + i]);
+                            // }
                         }
 
                         // Check for end of response (assuming newline character marks the end)
@@ -387,8 +389,16 @@ void bluetooth_task(void *pvParameters) {
                     case CMD_PLAY_MUSIC:
                         xEventGroupSetBits(event_group, EVENT_PLAY_MUSIC);
                         break;
+                    case CMD_BLUETOOTH_NAME:
+                        printf("BLUENAME\n");
+                        xEventGroupSetBits(event_group, EVENT_BLUETOOTH_NAME);
+                        break;
+                    case CMD_BLUETOOTH_PASSWORD:
+                        printf("BLUEPASS\n");
+                        xEventGroupSetBits(event_group, EVENT_BLUETOOTH_PASSWORD);
+                        break;
                     default:
-                        ESP_LOGI(TAG, "Other Response: %s", response);
+                        ESP_LOGI(TAG, "Other CMD: %d", current_command);
                 }
             } else if (strncmp(response, "QA+", 3) == 0) {
                 ESP_LOGI(TAG, "Volume: %s", response);

@@ -16,6 +16,8 @@ typedef enum {
     CMD_PLAY_PAUSE,
     CMD_PLAY_MUSIC,
     CMD_GET_DURATION,
+    CMD_BLUETOOTH_NAME,
+    CMD_BLUETOOTH_PASSWORD,
     CMD_REBOOT
 } command_type_t;
 
@@ -27,7 +29,10 @@ typedef enum {
 #define EVENT_PLAY_PAUSE (1 << 5)
 #define EVENT_PLAY_MUSIC (1 << 6)
 #define EVENT_DURATION (1 << 7)
+#define EVENT_BLUETOOTH_NAME (1 << 8)
+#define EVENT_BLUETOOTH_PASSWORD (1 << 9)
 
+extern command_type_t current_command;
 
 extern char **utf8_file_names;
 extern int total_files_count;

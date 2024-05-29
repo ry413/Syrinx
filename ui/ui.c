@@ -924,6 +924,7 @@ void ui_event_BackToSettingsWindow1( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
+      cancelSaveBluetoothSetting( e );
 }
 }
 void ui_event_Time_Setting_Hour2( lv_event_t * e) {
