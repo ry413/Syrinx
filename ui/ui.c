@@ -376,9 +376,9 @@ lv_obj_t *ui_Bluetooth_Password_Text2;
 lv_obj_t *ui_Bluetooth_Password_Line2;
 void ui_event_Bluetooth_Password_Input2( lv_event_t * e);
 lv_obj_t *ui_Bluetooth_Password_Input2;
-void ui_event_Bluetooth_Name_Enter_Btn( lv_event_t * e);
-lv_obj_t *ui_Bluetooth_Name_Enter_Btn;
-lv_obj_t *ui_Bluetooth_Name_Enter_Text;
+void ui_event_Bluetooth_Settings_Enter_Btn( lv_event_t * e);
+lv_obj_t *ui_Bluetooth_Settings_Enter_Btn;
+lv_obj_t *ui_Bluetooth_Settings_Enter_Text;
 lv_obj_t *ui_Bluetooth_Keyboard2;
 void ui_event_BackToSettingsWindow1( lv_event_t * e);
 lv_obj_t *ui_BackToSettingsWindow1;
@@ -398,9 +398,6 @@ void ui_event_Time_Setting_Hour2( lv_event_t * e);
 lv_obj_t *ui_Time_Setting_Hour2;
 void ui_event_Time_Setting_Min2( lv_event_t * e);
 lv_obj_t *ui_Time_Setting_Min2;
-void ui_event_Time_Setting_Enter_Btn2( lv_event_t * e);
-lv_obj_t *ui_Time_Setting_Enter_Btn2;
-lv_obj_t *ui_Time_Setting_Enter_Icon2;
 lv_obj_t *ui_Date_Setting_Panel2;
 lv_obj_t *ui_Date_Settings_Text2;
 lv_obj_t *ui_Date_Setting_Line2;
@@ -410,12 +407,12 @@ void ui_event_Date_Setting_Month2( lv_event_t * e);
 lv_obj_t *ui_Date_Setting_Month2;
 void ui_event_Date_Setting_Day2( lv_event_t * e);
 lv_obj_t *ui_Date_Setting_Day2;
-void ui_event_Date_Setting_Enter_Btn2( lv_event_t * e);
-lv_obj_t *ui_Date_Setting_Enter_Btn2;
-lv_obj_t *ui_Date_Setting_Enter_Icon2;
 lv_obj_t *ui_Date_Time_Keyboard2;
 void ui_event_BackToMainWindow10( lv_event_t * e);
 lv_obj_t *ui_BackToMainWindow10;
+void ui_event_Time_Enter_Btn( lv_event_t * e);
+lv_obj_t *ui_Time_Enter_Btn;
+lv_obj_t *ui_Time_Enter_Text;
 
 
 // SCREEN: ui_Settings_ID_Window
@@ -914,7 +911,7 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_keyboard_set_target(ui_Bluetooth_Keyboard2,  ui_Bluetooth_Password_Input2);
 }
 }
-void ui_event_Bluetooth_Name_Enter_Btn( lv_event_t * e) {
+void ui_event_Bluetooth_Settings_Enter_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       saveBluetoothSetting( e );
@@ -939,12 +936,6 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_keyboard_set_target(ui_Date_Time_Keyboard2,  ui_Time_Setting_Min2);
 }
 }
-void ui_event_Time_Setting_Enter_Btn2( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
-if ( event_code == LV_EVENT_SHORT_CLICKED) {
-      saveTimeSetting( e );
-}
-}
 void ui_event_Date_Setting_Year2( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
@@ -963,16 +954,16 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_keyboard_set_target(ui_Date_Time_Keyboard2,  ui_Date_Setting_Day2);
 }
 }
-void ui_event_Date_Setting_Enter_Btn2( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
-if ( event_code == LV_EVENT_SHORT_CLICKED) {
-      saveDateSetting( e );
-}
-}
 void ui_event_BackToMainWindow10( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
+}
+}
+void ui_event_Time_Enter_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      saveTimeSetting( e );
 }
 }
 void ui_event_ID_Setting_Input2( lv_event_t * e) {

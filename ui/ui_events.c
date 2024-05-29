@@ -77,6 +77,7 @@ static void getDurationTask(void *pvParameter);
 static void createDurationTask(lv_timer_t *timer);
 static void playCurrentIndexMusic(void);
 static void bluetoothRebootTask(void *pvParameter);
+static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min);
 
 //////////////////// 不给lvgl事件直接调用的静态函数 ////////////////////
 
@@ -327,10 +328,24 @@ static void bluetoothRebootTask(void *pvParameter)
     }
     vTaskDelete(NULL);
 }
-// 刷新串口, 丢掉里边的数据的任务
-static void flushUart(void *pvParameter) {
-    uart_flush(UART_NUM_0);
-    vTaskDelete(NULL);
+// 时间转为时间戳
+static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min) {
+    struct tm timeinfo;
+
+    // 初始化 struct tm 结构
+    timeinfo.tm_year = year - 1900; // tm_year 从 1900 年开始计算
+    timeinfo.tm_mon = month - 1;    // tm_mon 是从 0 到 11，所以减 1
+    timeinfo.tm_mday = day;
+    timeinfo.tm_hour = hour;    // 8小时时区
+    timeinfo.tm_min = min;
+    timeinfo.tm_sec = 0;
+    timeinfo.tm_isdst = -1;         // 自动判断是否是夏令时
+
+    // 将 struct tm 结构转换为时间戳
+    time_t timestamp = mktime(&timeinfo);
+
+    // 返回时间戳
+    return timestamp;
 }
 //////////////////// 给lvgl的事件用的回调 ////////////////////
 
@@ -744,13 +759,22 @@ void initDateTimeSettings(lv_event_t * e)
     lv_textarea_set_text(ui_Date_Setting_Day2, day_text);
     lv_textarea_set_text(ui_Time_Setting_Hour2, hour_text);
     lv_textarea_set_text(ui_Time_Setting_Min2, min_text);
+
+    // 设置时间, 加8个时区
+    globalTime = convertToTimestamp(prevDateYear, prevDateMonth, prevDateDay, prevTimeHour, prevTimeMin);
+    // 更新待机界面的日期
+    struct tm timeinfo;
+    char dateStr[50];
+    localtime_r(&globalTime, &timeinfo);
+    snprintf(dateStr, sizeof(dateStr), "%s/%02d月%02d日", get_chinese_weekday(timeinfo.tm_wday), timeinfo.tm_mon + 1, timeinfo.tm_mday);
+    lv_label_set_text(ui_Idle_Window_Date, dateStr);
 }
-// 确认保存时间
+// 确认保存时间与日期
 void saveTimeSetting(lv_event_t * e)
 {
+    // 检查时间输入
     const char *hour_text = lv_textarea_get_text(ui_Time_Setting_Hour2);
     const char *min_text = lv_textarea_get_text(ui_Time_Setting_Min2);
-    // 检查输入
     int hour = atoi(hour_text);
     int min = atoi(min_text);
     if (hour < 0 || hour > 23 || min < 0 || min > 59) {
@@ -765,7 +789,30 @@ void saveTimeSetting(lv_event_t * e)
     }
     prevTimeHour = hour;
     prevTimeMin = min;
-
+    // 检查日期输入
+    const char *year_text = lv_textarea_get_text(ui_Date_Setting_Year2);
+    const char *month_text = lv_textarea_get_text(ui_Date_Setting_Month2);
+    const char *day_text = lv_textarea_get_text(ui_Date_Setting_Day2);
+    uint32_t year = (uint32_t)atoi(year_text);
+    uint32_t month = (uint32_t)atoi(month_text);
+    uint32_t day = (uint32_t)atoi(day_text);
+    if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+        char year_text[5];
+        snprintf(year_text, sizeof(year_text), "%ld", prevDateYear);
+        lv_textarea_set_text(ui_Date_Setting_Year2, year_text);
+        char month_text[3];
+        snprintf(month_text, sizeof(month_text), "%ld", prevDateMonth);
+        lv_textarea_set_text(ui_Date_Setting_Month2, month_text);
+        char day_text[3];
+        snprintf(day_text, sizeof(day_text), "%ld", prevDateDay);
+        lv_textarea_set_text(ui_Date_Setting_Day2, day_text);
+        ESP_LOGE("saveDateSetting", "Invalid input: year=%s, month=%s, day=%s", year_text, month_text, day_text);
+        return;
+    }
+    prevDateYear = year;
+    prevDateMonth = month;
+    prevDateDay = day;
+    // 储存到nvs里
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("TimeSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
@@ -784,57 +831,19 @@ void saveTimeSetting(lv_event_t * e)
         nvs_close(nvs_handle);
         return;
     }
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveTimeSetting", "Failed to commit NVS changes");
-    }
-
-    nvs_close(nvs_handle);
-}
-// 确认保存日期
-void saveDateSetting(lv_event_t * e)
-{
-    const char *year_text = lv_textarea_get_text(ui_Date_Setting_Year2);
-    const char *month_text = lv_textarea_get_text(ui_Date_Setting_Month2);
-    const char *day_text = lv_textarea_get_text(ui_Date_Setting_Day2);
-    // 检查输入
-    uint32_t year = (uint32_t)atoi(year_text);
-    uint32_t month = (uint32_t)atoi(month_text);
-    uint32_t day = (uint32_t)atoi(day_text);
-    if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
-        char year_text[5];
-        snprintf(year_text, sizeof(year_text), "%ld", prevDateYear);
-        lv_textarea_set_text(ui_Date_Setting_Year2, year_text);
-        char month_text[3];
-        snprintf(month_text, sizeof(month_text), "%ld", prevDateMonth);
-        lv_textarea_set_text(ui_Date_Setting_Month2, month_text);
-        char day_text[3];
-        snprintf(day_text, sizeof(day_text), "%ld", prevDateDay);
-        lv_textarea_set_text(ui_Date_Setting_Day2, day_text);
-
-        ESP_LOGE("saveDateSetting", "Invalid input: year=%s, month=%s, day=%s", year_text, month_text, day_text);
-        return;
-    }
-
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("TimeSettings", NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveDateSetting", "Failed to open NVS");
-        return;
-    }
-    err = nvs_set_u32(nvs_handle, "year", year);
+    err = nvs_set_u32(nvs_handle, "year", prevDateYear);
     if (err != ESP_OK) {
         ESP_LOGE("saveDateSetting", "Failed to set year in NVS");
         nvs_close(nvs_handle);
         return;
     }
-    err = nvs_set_u32(nvs_handle, "month", month);
+    err = nvs_set_u32(nvs_handle, "month", prevDateMonth);
     if (err != ESP_OK) {
         ESP_LOGE("saveDateSetting", "Failed to set month in NVS");
         nvs_close(nvs_handle);
         return;
     }
-    err = nvs_set_u32(nvs_handle, "day", day);
+    err = nvs_set_u32(nvs_handle, "day", prevDateDay);
     if (err != ESP_OK) {
         ESP_LOGE("saveDateSetting", "Failed to set day in NVS");
         nvs_close(nvs_handle);
@@ -842,8 +851,10 @@ void saveDateSetting(lv_event_t * e)
     }
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("saveDateSetting", "Failed to commit NVS changes");
+        ESP_LOGE("saveTimeSetting", "Failed to commit NVS changes");
     }
+    // 将更改后的时间设到globalTime上
+    globalTime = convertToTimestamp(prevDateYear, prevDateMonth, prevDateDay, prevTimeHour, prevTimeMin);
     nvs_close(nvs_handle);
 }
 

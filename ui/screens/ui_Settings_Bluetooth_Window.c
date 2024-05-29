@@ -52,17 +52,17 @@ lv_obj_set_style_text_font(ui_Header_Main_Volume_Value4, &ui_font_LanTing18, LV_
 
 ui_Bluetooth_Name2 = lv_obj_create(ui_Settings_Bluetooth_Window);
 lv_obj_remove_style_all(ui_Bluetooth_Name2);
-lv_obj_set_width( ui_Bluetooth_Name2, 480);
+lv_obj_set_width( ui_Bluetooth_Name2, 325);
 lv_obj_set_height( ui_Bluetooth_Name2, 70);
-lv_obj_set_x( ui_Bluetooth_Name2, 0 );
-lv_obj_set_y( ui_Bluetooth_Name2, -160 );
+lv_obj_set_x( ui_Bluetooth_Name2, -63 );
+lv_obj_set_y( ui_Bluetooth_Name2, -150 );
 lv_obj_set_align( ui_Bluetooth_Name2, LV_ALIGN_CENTER );
 lv_obj_clear_flag( ui_Bluetooth_Name2, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Bluetooth_Name_Text2 = lv_label_create(ui_Bluetooth_Name2);
 lv_obj_set_width( ui_Bluetooth_Name_Text2, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Bluetooth_Name_Text2, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Bluetooth_Name_Text2, 27 );
+lv_obj_set_x( ui_Bluetooth_Name_Text2, 4 );
 lv_obj_set_y( ui_Bluetooth_Name_Text2, 0 );
 lv_obj_set_align( ui_Bluetooth_Name_Text2, LV_ALIGN_LEFT_MID );
 lv_label_set_text(ui_Bluetooth_Name_Text2,"蓝牙名称:");
@@ -73,7 +73,7 @@ lv_obj_set_style_text_font(ui_Bluetooth_Name_Text2, &ui_font_LanTing18, LV_PART_
 ui_Bluetooth_Name_Line2 = lv_obj_create(ui_Bluetooth_Name2);
 lv_obj_set_width( ui_Bluetooth_Name_Line2, 325);
 lv_obj_set_height( ui_Bluetooth_Name_Line2, 3);
-lv_obj_set_x( ui_Bluetooth_Name_Line2, -63 );
+lv_obj_set_x( ui_Bluetooth_Name_Line2, 0 );
 lv_obj_set_y( ui_Bluetooth_Name_Line2, 30 );
 lv_obj_set_align( ui_Bluetooth_Name_Line2, LV_ALIGN_CENTER );
 lv_obj_clear_flag( ui_Bluetooth_Name_Line2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
@@ -81,7 +81,7 @@ lv_obj_clear_flag( ui_Bluetooth_Name_Line2, LV_OBJ_FLAG_SCROLLABLE );    /// Fla
 ui_Bluetooth_Name_Input2 = lv_textarea_create(ui_Bluetooth_Name2);
 lv_obj_set_width( ui_Bluetooth_Name_Input2, 213);
 lv_obj_set_height( ui_Bluetooth_Name_Input2, LV_SIZE_CONTENT);   /// 43
-lv_obj_set_x( ui_Bluetooth_Name_Input2, -10 );
+lv_obj_set_x( ui_Bluetooth_Name_Input2, 46 );
 lv_obj_set_y( ui_Bluetooth_Name_Input2, -3 );
 lv_obj_set_align( ui_Bluetooth_Name_Input2, LV_ALIGN_CENTER );
 lv_textarea_set_max_length(ui_Bluetooth_Name_Input2,30);
@@ -95,17 +95,17 @@ lv_obj_set_style_text_font(ui_Bluetooth_Name_Input2, &ui_font_LanTing18, LV_PART
 
 ui_Bluetooth_Password2 = lv_obj_create(ui_Settings_Bluetooth_Window);
 lv_obj_remove_style_all(ui_Bluetooth_Password2);
-lv_obj_set_width( ui_Bluetooth_Password2, 480);
+lv_obj_set_width( ui_Bluetooth_Password2, 325);
 lv_obj_set_height( ui_Bluetooth_Password2, 70);
-lv_obj_set_x( ui_Bluetooth_Password2, 0 );
-lv_obj_set_y( ui_Bluetooth_Password2, -76 );
+lv_obj_set_x( ui_Bluetooth_Password2, -63 );
+lv_obj_set_y( ui_Bluetooth_Password2, -77 );
 lv_obj_set_align( ui_Bluetooth_Password2, LV_ALIGN_CENTER );
 lv_obj_clear_flag( ui_Bluetooth_Password2, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Bluetooth_Password_Text2 = lv_label_create(ui_Bluetooth_Password2);
 lv_obj_set_width( ui_Bluetooth_Password_Text2, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Bluetooth_Password_Text2, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Bluetooth_Password_Text2, 27 );
+lv_obj_set_x( ui_Bluetooth_Password_Text2, 4 );
 lv_obj_set_y( ui_Bluetooth_Password_Text2, 0 );
 lv_obj_set_align( ui_Bluetooth_Password_Text2, LV_ALIGN_LEFT_MID );
 lv_label_set_text(ui_Bluetooth_Password_Text2,"蓝牙密码:");
@@ -116,7 +116,7 @@ lv_obj_set_style_text_font(ui_Bluetooth_Password_Text2, &ui_font_LanTing18, LV_P
 ui_Bluetooth_Password_Line2 = lv_obj_create(ui_Bluetooth_Password2);
 lv_obj_set_width( ui_Bluetooth_Password_Line2, 325);
 lv_obj_set_height( ui_Bluetooth_Password_Line2, 3);
-lv_obj_set_x( ui_Bluetooth_Password_Line2, -63 );
+lv_obj_set_x( ui_Bluetooth_Password_Line2, 0 );
 lv_obj_set_y( ui_Bluetooth_Password_Line2, 30 );
 lv_obj_set_align( ui_Bluetooth_Password_Line2, LV_ALIGN_CENTER );
 lv_obj_clear_flag( ui_Bluetooth_Password_Line2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
@@ -124,7 +124,7 @@ lv_obj_clear_flag( ui_Bluetooth_Password_Line2, LV_OBJ_FLAG_SCROLLABLE );    ///
 ui_Bluetooth_Password_Input2 = lv_textarea_create(ui_Bluetooth_Password2);
 lv_obj_set_width( ui_Bluetooth_Password_Input2, 213);
 lv_obj_set_height( ui_Bluetooth_Password_Input2, LV_SIZE_CONTENT);   /// 43
-lv_obj_set_x( ui_Bluetooth_Password_Input2, -10 );
+lv_obj_set_x( ui_Bluetooth_Password_Input2, 46 );
 lv_obj_set_y( ui_Bluetooth_Password_Input2, -3 );
 lv_obj_set_align( ui_Bluetooth_Password_Input2, LV_ALIGN_CENTER );
 lv_textarea_set_max_length(ui_Bluetooth_Password_Input2,4);
@@ -136,27 +136,27 @@ lv_obj_set_style_text_font(ui_Bluetooth_Password_Input2, &ui_font_LanTing18, LV_
 
 
 
-ui_Bluetooth_Name_Enter_Btn = lv_btn_create(ui_Settings_Bluetooth_Window);
-lv_obj_set_width( ui_Bluetooth_Name_Enter_Btn, 100);
-lv_obj_set_height( ui_Bluetooth_Name_Enter_Btn, 100);
-lv_obj_set_x( ui_Bluetooth_Name_Enter_Btn, 170 );
-lv_obj_set_y( ui_Bluetooth_Name_Enter_Btn, -120 );
-lv_obj_set_align( ui_Bluetooth_Name_Enter_Btn, LV_ALIGN_CENTER );
-lv_obj_set_flex_flow(ui_Bluetooth_Name_Enter_Btn,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Bluetooth_Name_Enter_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-lv_obj_add_flag( ui_Bluetooth_Name_Enter_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
-lv_obj_clear_flag( ui_Bluetooth_Name_Enter_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_shadow_color(ui_Bluetooth_Name_Enter_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_shadow_opa(ui_Bluetooth_Name_Enter_Btn, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_bg_color(ui_Bluetooth_Name_Enter_Btn, lv_color_hex(0x4893EF), LV_PART_MAIN | LV_STATE_PRESSED );
-lv_obj_set_style_bg_opa(ui_Bluetooth_Name_Enter_Btn, 255, LV_PART_MAIN| LV_STATE_PRESSED);
+ui_Bluetooth_Settings_Enter_Btn = lv_btn_create(ui_Settings_Bluetooth_Window);
+lv_obj_set_width( ui_Bluetooth_Settings_Enter_Btn, 100);
+lv_obj_set_height( ui_Bluetooth_Settings_Enter_Btn, 100);
+lv_obj_set_x( ui_Bluetooth_Settings_Enter_Btn, 170 );
+lv_obj_set_y( ui_Bluetooth_Settings_Enter_Btn, -120 );
+lv_obj_set_align( ui_Bluetooth_Settings_Enter_Btn, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(ui_Bluetooth_Settings_Enter_Btn,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(ui_Bluetooth_Settings_Enter_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+lv_obj_add_flag( ui_Bluetooth_Settings_Enter_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+lv_obj_clear_flag( ui_Bluetooth_Settings_Enter_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_shadow_color(ui_Bluetooth_Settings_Enter_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_shadow_opa(ui_Bluetooth_Settings_Enter_Btn, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(ui_Bluetooth_Settings_Enter_Btn, lv_color_hex(0x4893EF), LV_PART_MAIN | LV_STATE_PRESSED );
+lv_obj_set_style_bg_opa(ui_Bluetooth_Settings_Enter_Btn, 255, LV_PART_MAIN| LV_STATE_PRESSED);
 
-ui_Bluetooth_Name_Enter_Text = lv_label_create(ui_Bluetooth_Name_Enter_Btn);
-lv_obj_set_width( ui_Bluetooth_Name_Enter_Text, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Bluetooth_Name_Enter_Text, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( ui_Bluetooth_Name_Enter_Text, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Bluetooth_Name_Enter_Text,"保存");
-lv_obj_set_style_text_font(ui_Bluetooth_Name_Enter_Text, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
+ui_Bluetooth_Settings_Enter_Text = lv_label_create(ui_Bluetooth_Settings_Enter_Btn);
+lv_obj_set_width( ui_Bluetooth_Settings_Enter_Text, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_Bluetooth_Settings_Enter_Text, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_Bluetooth_Settings_Enter_Text, LV_ALIGN_CENTER );
+lv_label_set_text(ui_Bluetooth_Settings_Enter_Text,"保存");
+lv_obj_set_style_text_font(ui_Bluetooth_Settings_Enter_Text, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Bluetooth_Keyboard2 = lv_keyboard_create(ui_Settings_Bluetooth_Window);
 lv_obj_set_width( ui_Bluetooth_Keyboard2, 480);
@@ -179,7 +179,7 @@ lv_obj_set_style_img_recolor_opa(ui_BackToSettingsWindow1, 100, LV_PART_MAIN| LV
 
 lv_obj_add_event_cb(ui_Bluetooth_Name_Input2, ui_event_Bluetooth_Name_Input2, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Bluetooth_Password_Input2, ui_event_Bluetooth_Password_Input2, LV_EVENT_ALL, NULL);
-lv_obj_add_event_cb(ui_Bluetooth_Name_Enter_Btn, ui_event_Bluetooth_Name_Enter_Btn, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_Bluetooth_Settings_Enter_Btn, ui_event_Bluetooth_Settings_Enter_Btn, LV_EVENT_ALL, NULL);
 lv_keyboard_set_textarea(ui_Bluetooth_Keyboard2,ui_Bluetooth_Name_Input2);
 lv_obj_add_event_cb(ui_BackToSettingsWindow1, ui_event_BackToSettingsWindow1, LV_EVENT_ALL, NULL);
 
