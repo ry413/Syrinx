@@ -361,17 +361,14 @@ extern lv_obj_t *ui_Bluetooth_Name_Text2;
 extern lv_obj_t *ui_Bluetooth_Name_Line2;
 void ui_event_Bluetooth_Name_Input2( lv_event_t * e);
 extern lv_obj_t *ui_Bluetooth_Name_Input2;
-void ui_event_Bluetooth_Name_Enter_Btn2( lv_event_t * e);
-extern lv_obj_t *ui_Bluetooth_Name_Enter_Btn2;
-extern lv_obj_t *ui_Bluetooth_Name_Enter_Icon2;
 extern lv_obj_t *ui_Bluetooth_Password2;
 extern lv_obj_t *ui_Bluetooth_Password_Text2;
 extern lv_obj_t *ui_Bluetooth_Password_Line2;
 void ui_event_Bluetooth_Password_Input2( lv_event_t * e);
 extern lv_obj_t *ui_Bluetooth_Password_Input2;
-void ui_event_Bluetooth_Password_Enter_Btn2( lv_event_t * e);
-extern lv_obj_t *ui_Bluetooth_Password_Enter_Btn2;
-extern lv_obj_t *ui_Bluetooth_Password_Enter_Icon2;
+void ui_event_Bluetooth_Name_Enter_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Bluetooth_Name_Enter_Btn;
+extern lv_obj_t *ui_Bluetooth_Name_Enter_Text;
 extern lv_obj_t *ui_Bluetooth_Keyboard2;
 void ui_event_BackToSettingsWindow1( lv_event_t * e);
 extern lv_obj_t *ui_BackToSettingsWindow1;
@@ -470,13 +467,17 @@ extern lv_obj_t *ui_Play_Mode_Btn;
 extern lv_obj_t *ui_Play_Style_Text;
 extern lv_obj_t *ui_Current_Time;
 extern lv_obj_t *ui_Total_Time;
-void ui_event_Next_Track_Btn( lv_event_t * e);
-extern lv_obj_t *ui_Next_Track_Btn;
 void ui_event_Prev_Track_Btn( lv_event_t * e);
 extern lv_obj_t *ui_Prev_Track_Btn;
+void ui_event_Prev_Track_Icon( lv_event_t * e);
+extern lv_obj_t *ui_Prev_Track_Icon;
 void ui_event_Play_Pause_Btn( lv_event_t * e);
 extern lv_obj_t *ui_Play_Pause_Btn;
 extern lv_obj_t *ui_Play_Pause_Icon;
+void ui_event_Next_Track_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Next_Track_Btn;
+void ui_event_Next_Track_Icon( lv_event_t * e);
+extern lv_obj_t *ui_Next_Track_Icon;
 void ui_event_Progress_Slider( lv_event_t * e);
 extern lv_obj_t *ui_Progress_Slider;
 // SCREEN: ui_Idle_Window
@@ -529,19 +530,19 @@ LV_IMG_DECLARE( ui_img_239308628);   // assets/丽枫UI/Right triangle40.png
 LV_IMG_DECLARE( ui_img_1260392355);   // assets/丽枫UI/yes.png
 LV_IMG_DECLARE( ui_img_469799613);   // assets/丽枫UI/音乐.png
 LV_IMG_DECLARE( ui_img_1311962515);   // assets/丽枫UI/随机.png
-LV_IMG_DECLARE( ui_img_542960551);   // assets/丽枫UI/下一首.png
 LV_IMG_DECLARE( ui_img_542920328);   // assets/丽枫UI/上一首.png
 LV_IMG_DECLARE( ui_img_899744137);   // assets/丽枫UI/播放.png
+LV_IMG_DECLARE( ui_img_542960551);   // assets/丽枫UI/下一首.png
 
 
+LV_FONT_DECLARE( ui_font_Font100);
+LV_FONT_DECLARE( ui_font_Font30);
 LV_FONT_DECLARE( ui_font_LanTing18);
 LV_FONT_DECLARE( ui_font_LanTIng20);
 LV_FONT_DECLARE( ui_font_LanTing40);
 LV_FONT_DECLARE( ui_font_LanTingFine18);
 LV_FONT_DECLARE( ui_font_LanTingFine22);
 LV_FONT_DECLARE( ui_font_LanTingFine24);
-LV_FONT_DECLARE( ui_font_Font100);
-LV_FONT_DECLARE( ui_font_Font30);
 
 
 void ui_init(void);

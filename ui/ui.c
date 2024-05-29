@@ -371,17 +371,14 @@ lv_obj_t *ui_Bluetooth_Name_Text2;
 lv_obj_t *ui_Bluetooth_Name_Line2;
 void ui_event_Bluetooth_Name_Input2( lv_event_t * e);
 lv_obj_t *ui_Bluetooth_Name_Input2;
-void ui_event_Bluetooth_Name_Enter_Btn2( lv_event_t * e);
-lv_obj_t *ui_Bluetooth_Name_Enter_Btn2;
-lv_obj_t *ui_Bluetooth_Name_Enter_Icon2;
 lv_obj_t *ui_Bluetooth_Password2;
 lv_obj_t *ui_Bluetooth_Password_Text2;
 lv_obj_t *ui_Bluetooth_Password_Line2;
 void ui_event_Bluetooth_Password_Input2( lv_event_t * e);
 lv_obj_t *ui_Bluetooth_Password_Input2;
-void ui_event_Bluetooth_Password_Enter_Btn2( lv_event_t * e);
-lv_obj_t *ui_Bluetooth_Password_Enter_Btn2;
-lv_obj_t *ui_Bluetooth_Password_Enter_Icon2;
+void ui_event_Bluetooth_Name_Enter_Btn( lv_event_t * e);
+lv_obj_t *ui_Bluetooth_Name_Enter_Btn;
+lv_obj_t *ui_Bluetooth_Name_Enter_Text;
 lv_obj_t *ui_Bluetooth_Keyboard2;
 void ui_event_BackToSettingsWindow1( lv_event_t * e);
 lv_obj_t *ui_BackToSettingsWindow1;
@@ -488,13 +485,17 @@ lv_obj_t *ui_Play_Mode_Btn;
 lv_obj_t *ui_Play_Style_Text;
 lv_obj_t *ui_Current_Time;
 lv_obj_t *ui_Total_Time;
-void ui_event_Next_Track_Btn( lv_event_t * e);
-lv_obj_t *ui_Next_Track_Btn;
 void ui_event_Prev_Track_Btn( lv_event_t * e);
 lv_obj_t *ui_Prev_Track_Btn;
+void ui_event_Prev_Track_Icon( lv_event_t * e);
+lv_obj_t *ui_Prev_Track_Icon;
 void ui_event_Play_Pause_Btn( lv_event_t * e);
 lv_obj_t *ui_Play_Pause_Btn;
 lv_obj_t *ui_Play_Pause_Icon;
+void ui_event_Next_Track_Btn( lv_event_t * e);
+lv_obj_t *ui_Next_Track_Btn;
+void ui_event_Next_Track_Icon( lv_event_t * e);
+lv_obj_t *ui_Next_Track_Icon;
 void ui_event_Progress_Slider( lv_event_t * e);
 lv_obj_t *ui_Progress_Slider;
 
@@ -907,22 +908,16 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_keyboard_set_target(ui_Bluetooth_Keyboard2,  ui_Bluetooth_Name_Input2);
 }
 }
-void ui_event_Bluetooth_Name_Enter_Btn2( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
-if ( event_code == LV_EVENT_SHORT_CLICKED) {
-      saveBluetoothNameSetting( e );
-}
-}
 void ui_event_Bluetooth_Password_Input2( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_keyboard_set_target(ui_Bluetooth_Keyboard2,  ui_Bluetooth_Password_Input2);
 }
 }
-void ui_event_Bluetooth_Password_Enter_Btn2( lv_event_t * e) {
+void ui_event_Bluetooth_Name_Enter_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
-      saveBluetoothPasswordSetting( e );
+      saveBluetoothSetting( e );
 }
 }
 void ui_event_BackToSettingsWindow1( lv_event_t * e) {
@@ -1045,13 +1040,13 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
       _ui_screen_change( &ui_Music_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Music_Window_screen_init);
 }
 }
-void ui_event_Next_Track_Btn( lv_event_t * e) {
+void ui_event_Prev_Track_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
-      nextTrack( e );
+      prevTrack( e );
 }
 }
-void ui_event_Prev_Track_Btn( lv_event_t * e) {
+void ui_event_Prev_Track_Icon( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
       prevTrack( e );
@@ -1060,7 +1055,19 @@ if ( event_code == LV_EVENT_SHORT_CLICKED) {
 void ui_event_Play_Pause_Btn( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 if ( event_code == LV_EVENT_SHORT_CLICKED) {
-      PlayPause( e );
+      playPause( e );
+}
+}
+void ui_event_Next_Track_Btn( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      nextTrack( e );
+}
+}
+void ui_event_Next_Track_Icon( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+if ( event_code == LV_EVENT_SHORT_CLICKED) {
+      nextTrack( e );
 }
 }
 void ui_event_Progress_Slider( lv_event_t * e) {

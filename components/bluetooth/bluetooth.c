@@ -29,7 +29,7 @@ static EventGroupHandle_t event_group;
 char **utf8_file_names = NULL;  // 储存文件名的数组
 int total_files_count = 0;      // 这两个都是在初始化时获取全部文件名用的
 int current_file_index = 0; 
-int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在utf8_file_names中的索引
+int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在utf8_file_names中的索引, 我也不知道为什么要定义在这里
 int current_music_duration = 0;
 
 
@@ -371,64 +371,45 @@ void bluetooth_task(void *pvParameters) {
     while (1) {
         // 等待并接收响应
         if (bluetooth_wait_for_response(response, sizeof(response)) == ESP_OK) {
-            ESP_LOGI(TAG, "Received response: %s, cmd: %d\n", response, current_command);
-            switch (current_command) {
-                case CMD_GET_VOLUME:
-                    if (strncmp(response, "QA+", 3) == 0) {
-                        ESP_LOGI(TAG, "Volume: %s", response);
-                        // strncpy(volume_response, response, BUF_SIZE);
-                        // xEventGroupSetBits(event_group, EVENT_VOLUME_RESPONSE);
-                        break;
-                    }
-                    break;
-                case CMD_GET_TOTAL_FILES:
-                    if (strncmp(response, "M2+", 3) == 0) {
-                        sscanf(response, "M2+%d", &total_files_count);
-                        xEventGroupSetBits(event_group, EVENT_TOTAL_FILES);
-                    }
-                    break;
-                case CMD_GET_FILE_INDEX:
-                    if (strncmp(response, "M1+", 3) == 0) {
-                        sscanf(response, "M1+%d", &current_file_index);
-                        xEventGroupSetBits(event_group, EVENT_FILE_INDEX);
-                    }
-                    break;
-                case CMD_GET_FILE_NAME:
-                    if (strncmp(response, "MF+", 3) == 0) {
-                        // 另一个耦合的代价, 那边传来文件名后, 直接在wait_for_response那当场处理完储存了
-                        xEventGroupSetBits(event_group, EVENT_FILE_NAME);
-                    }
-                    break;
-                case CMD_NEXT_TRACK:
-                    if (strncmp(response, "OK", 2) == 0) {
+            ESP_LOGI(TAG, "Received response: cmd: %d, %s\n", current_command, response);
+            // 只有响应OK才需要判断是给谁的OK
+            if (strncmp(response, "OK", 2) == 0) {
+                switch (current_command) {
+                    case CMD_NEXT_TRACK:
                         xEventGroupSetBits(event_group, EVENT_NEXT_TRACK);
-                    }
-                    break;
-                case CMD_PREV_TRACK:
-                    if (strncmp(response, "OK", 2) == 0) {
+                        break;
+                    case CMD_PREV_TRACK:
                         xEventGroupSetBits(event_group, EVENT_PREV_TRACK);
-                    }
-                break;
-                case CMD_PLAY_PAUSE:
-                    if (strncmp(response, "OK", 2) == 0) {
+                        break;
+                    case CMD_PLAY_PAUSE:
                         xEventGroupSetBits(event_group, EVENT_PLAY_PAUSE);
-                    }
-                    break;
-                case CMD_PLAY_MUSIC:
-                    if (strncmp(response, "OK", 2) == 0) {
+                        break;
+                    case CMD_PLAY_MUSIC:
                         xEventGroupSetBits(event_group, EVENT_PLAY_MUSIC);
-                    }
-                    break;
-                case CMD_GET_DURATION:
-                    if (strncmp(response, "MT+", 3) == 0) {
-                        sscanf(response, "MT+%d", &current_music_duration);
-                        xEventGroupSetBits(event_group, EVENT_DURATION);
-                    }
-                default:
-                    ESP_LOGI(TAG, "Other Response: %s", response);
-                    // handle_general_response(response);
-                    break;
+                        break;
+                    default:
+                        ESP_LOGI(TAG, "Other Response: %s", response);
+                }
+            } else if (strncmp(response, "QA+", 3) == 0) {
+                ESP_LOGI(TAG, "Volume: %s", response);
+                // strncpy(volume_response, response, BUF_SIZE);
+                // xEventGroupSetBits(event_group, EVENT_VOLUME_RESPONSE);
+            } else if (strncmp(response, "M2+", 3) == 0) {
+                sscanf(response, "M2+%d", &total_files_count);
+                xEventGroupSetBits(event_group, EVENT_TOTAL_FILES);
+            } else if (strncmp(response, "M1+", 3) == 0) {
+                sscanf(response, "M1+%d", &current_file_index);
+                xEventGroupSetBits(event_group, EVENT_FILE_INDEX);
+            } else if (strncmp(response, "MF+", 3) == 0) {
+                // 另一个耦合, 那边传来文件名后, 直接在wait_for_response那当场处理完储存了
+                xEventGroupSetBits(event_group, EVENT_FILE_NAME);
+            } else if (strncmp(response, "MT+", 3) == 0) {
+                sscanf(response, "MT+%d", &current_music_duration);
+                xEventGroupSetBits(event_group, EVENT_DURATION);
+            } else if (response[0] == 0xF0) {
+                printf("REBOOTED\n");
             }
+            
         } else {
             ESP_LOGE(TAG, "Failed to get response");
         }

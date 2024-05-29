@@ -54,7 +54,7 @@ ui_Wifi_Name = lv_obj_create(ui_Settings_Wifi_Window);
 lv_obj_remove_style_all(ui_Wifi_Name);
 lv_obj_set_width( ui_Wifi_Name, 480);
 lv_obj_set_height( ui_Wifi_Name, 63);
-lv_obj_set_x( ui_Wifi_Name, 2 );
+lv_obj_set_x( ui_Wifi_Name, 0 );
 lv_obj_set_y( ui_Wifi_Name, -106 );
 lv_obj_set_align( ui_Wifi_Name, LV_ALIGN_CENTER );
 lv_obj_clear_flag( ui_Wifi_Name, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags

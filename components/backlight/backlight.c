@@ -94,10 +94,11 @@ void init_backlight_timer(uint32_t timeout_seconds) {
     }
     backlight_timer = lv_timer_create(backlight_timer_callback, timeout_seconds * 1000, NULL);
 }
-// 重置背光定时器
+// 重置并取消暂停背光定时器
 void reset_backlight_timer(void) {
     if (backlight_timer != NULL) {
         lv_timer_reset(backlight_timer);
+        lv_timer_resume(backlight_timer);
     }
 }
 // 关闭背光定时器
@@ -123,25 +124,10 @@ void set_backlight_time_to_label(lv_obj_t *target_label, int backlight_time_leve
 uint32_t backlight_time_level_to_second(int level) {
     return backlight_times[level];
 }
-
+// 将传入的背光时间秒数转为对应的等级
 int backlight_time_second_to_level(uint32_t second) {
     for (int i = 0; i < 7; i++)
         if (backlight_times[i] == second)
             return i;
     return 0;
 }
-
-// // 将传入的label上的秒数转为对应的等级
-// uint32_t get_backlight_time_level_from_label(lv_obj_t * target_label) {
-//     const char *text = lv_label_get_text(target_label);
-//     if (strcmp(text, "off") != 0) {
-//         uint32_t backlight_time = atoi(text);
-//         for (int i = 0; i < 7; i++) {
-//             if (backlight_times[i] == backlight_time) {
-//                 return i;
-//                 break;
-//             }
-//         }
-//     }
-//     return 0;
-// }

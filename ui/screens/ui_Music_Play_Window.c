@@ -162,31 +162,36 @@ lv_obj_set_style_text_color(ui_Total_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN 
 lv_obj_set_style_text_opa(ui_Total_Time, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Total_Time, &lv_font_montserrat_16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_Next_Track_Btn = lv_img_create(ui_Music_Play_Window);
-lv_img_set_src(ui_Next_Track_Btn, &ui_img_542960551);
-lv_obj_set_width( ui_Next_Track_Btn, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Next_Track_Btn, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Next_Track_Btn, 130 );
-lv_obj_set_y( ui_Next_Track_Btn, 160 );
-lv_obj_set_align( ui_Next_Track_Btn, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Next_Track_Btn, LV_OBJ_FLAG_CLICKABLE );   /// Flags
-lv_obj_clear_flag( ui_Next_Track_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_img_set_zoom(ui_Next_Track_Btn,384);
-lv_obj_set_style_bg_color(ui_Next_Track_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED );
-lv_obj_set_style_bg_opa(ui_Next_Track_Btn, 30, LV_PART_MAIN| LV_STATE_PRESSED);
-
-ui_Prev_Track_Btn = lv_img_create(ui_Music_Play_Window);
-lv_img_set_src(ui_Prev_Track_Btn, &ui_img_542920328);
-lv_obj_set_width( ui_Prev_Track_Btn, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Prev_Track_Btn, LV_SIZE_CONTENT);   /// 1
+ui_Prev_Track_Btn = lv_btn_create(ui_Music_Play_Window);
+lv_obj_set_width( ui_Prev_Track_Btn, 75);
+lv_obj_set_height( ui_Prev_Track_Btn, 75);
 lv_obj_set_x( ui_Prev_Track_Btn, -130 );
 lv_obj_set_y( ui_Prev_Track_Btn, 160 );
 lv_obj_set_align( ui_Prev_Track_Btn, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Prev_Track_Btn, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-lv_obj_clear_flag( ui_Prev_Track_Btn, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_img_set_zoom(ui_Prev_Track_Btn,384);
-lv_obj_set_style_bg_color(ui_Prev_Track_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED );
+lv_obj_set_flex_flow(ui_Prev_Track_Btn,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(ui_Prev_Track_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+lv_obj_add_flag( ui_Prev_Track_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+lv_obj_clear_flag( ui_Prev_Track_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_radius(ui_Prev_Track_Btn, 50, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(ui_Prev_Track_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(ui_Prev_Track_Btn, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_shadow_color(ui_Prev_Track_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_shadow_opa(ui_Prev_Track_Btn, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(ui_Prev_Track_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_PRESSED );
 lv_obj_set_style_bg_opa(ui_Prev_Track_Btn, 255, LV_PART_MAIN| LV_STATE_PRESSED);
+
+ui_Prev_Track_Icon = lv_img_create(ui_Prev_Track_Btn);
+lv_img_set_src(ui_Prev_Track_Icon, &ui_img_542920328);
+lv_obj_set_width( ui_Prev_Track_Icon, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_Prev_Track_Icon, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_Prev_Track_Icon, -130 );
+lv_obj_set_y( ui_Prev_Track_Icon, 160 );
+lv_obj_set_align( ui_Prev_Track_Icon, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Prev_Track_Icon, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_clear_flag( ui_Prev_Track_Icon, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_img_set_zoom(ui_Prev_Track_Icon,384);
+lv_obj_set_style_bg_color(ui_Prev_Track_Icon, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED );
+lv_obj_set_style_bg_opa(ui_Prev_Track_Icon, 255, LV_PART_MAIN| LV_STATE_PRESSED);
 
 ui_Play_Pause_Btn = lv_btn_create(ui_Music_Play_Window);
 lv_obj_set_width( ui_Play_Pause_Btn, 75);
@@ -215,6 +220,36 @@ lv_obj_add_flag( ui_Play_Pause_Icon, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
 lv_obj_clear_flag( ui_Play_Pause_Icon, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_img_set_zoom(ui_Play_Pause_Icon,384);
 
+ui_Next_Track_Btn = lv_btn_create(ui_Music_Play_Window);
+lv_obj_set_width( ui_Next_Track_Btn, 75);
+lv_obj_set_height( ui_Next_Track_Btn, 75);
+lv_obj_set_x( ui_Next_Track_Btn, 130 );
+lv_obj_set_y( ui_Next_Track_Btn, 160 );
+lv_obj_set_align( ui_Next_Track_Btn, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(ui_Next_Track_Btn,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(ui_Next_Track_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+lv_obj_add_flag( ui_Next_Track_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+lv_obj_clear_flag( ui_Next_Track_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_radius(ui_Next_Track_Btn, 50, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(ui_Next_Track_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(ui_Next_Track_Btn, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_shadow_color(ui_Next_Track_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_shadow_opa(ui_Next_Track_Btn, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(ui_Next_Track_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_PRESSED );
+lv_obj_set_style_bg_opa(ui_Next_Track_Btn, 255, LV_PART_MAIN| LV_STATE_PRESSED);
+
+ui_Next_Track_Icon = lv_img_create(ui_Next_Track_Btn);
+lv_img_set_src(ui_Next_Track_Icon, &ui_img_542960551);
+lv_obj_set_width( ui_Next_Track_Icon, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_Next_Track_Icon, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_Next_Track_Icon, 179 );
+lv_obj_set_y( ui_Next_Track_Icon, 161 );
+lv_obj_set_align( ui_Next_Track_Icon, LV_ALIGN_CENTER );
+lv_obj_clear_flag( ui_Next_Track_Icon, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_img_set_zoom(ui_Next_Track_Icon,384);
+lv_obj_set_style_bg_color(ui_Next_Track_Icon, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED );
+lv_obj_set_style_bg_opa(ui_Next_Track_Icon, 30, LV_PART_MAIN| LV_STATE_PRESSED);
+
 ui_Progress_Slider = lv_slider_create(ui_Music_Play_Window);
 lv_slider_set_value( ui_Progress_Slider, 25, LV_ANIM_OFF);
 if (lv_slider_get_mode(ui_Progress_Slider)==LV_SLIDER_MODE_RANGE ) lv_slider_set_left_value( ui_Progress_Slider, 0, LV_ANIM_OFF);
@@ -230,9 +265,11 @@ lv_obj_set_style_bg_color(ui_Progress_Slider, lv_color_hex(0xF05A5A), LV_PART_IN
 lv_obj_set_style_bg_opa(ui_Progress_Slider, 255, LV_PART_INDICATOR| LV_STATE_DEFAULT);
 
 lv_obj_add_event_cb(ui_BackToMainWindowBtn9, ui_event_BackToMainWindowBtn9, LV_EVENT_ALL, NULL);
-lv_obj_add_event_cb(ui_Next_Track_Btn, ui_event_Next_Track_Btn, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_Prev_Track_Icon, ui_event_Prev_Track_Icon, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Prev_Track_Btn, ui_event_Prev_Track_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Play_Pause_Btn, ui_event_Play_Pause_Btn, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_Next_Track_Icon, ui_event_Next_Track_Icon, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_Next_Track_Btn, ui_event_Next_Track_Btn, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Progress_Slider, ui_event_Progress_Slider, LV_EVENT_ALL, NULL);
 
 }

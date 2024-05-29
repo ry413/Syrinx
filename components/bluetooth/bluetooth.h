@@ -15,7 +15,8 @@ typedef enum {
     CMD_PREV_TRACK,
     CMD_PLAY_PAUSE,
     CMD_PLAY_MUSIC,
-    CMD_GET_DURATION
+    CMD_GET_DURATION,
+    CMD_REBOOT
 } command_type_t;
 
 #define EVENT_TOTAL_FILES (1 << 0)

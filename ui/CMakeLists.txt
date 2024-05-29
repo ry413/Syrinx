@@ -56,16 +56,16 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     images/ui_img_1260392355.c
     images/ui_img_469799613.c
     images/ui_img_1311962515.c
-    images/ui_img_542960551.c
     images/ui_img_542920328.c
     images/ui_img_899744137.c
+    images/ui_img_542960551.c
+    fonts/ui_font_Font100.c
+    fonts/ui_font_Font30.c
     fonts/ui_font_LanTing18.c
     fonts/ui_font_LanTIng20.c
     fonts/ui_font_LanTing40.c
     fonts/ui_font_LanTingFine18.c
     fonts/ui_font_LanTingFine22.c
-    fonts/ui_font_LanTingFine24.c
-    fonts/ui_font_Font100.c
-    fonts/ui_font_Font30.c)
+    fonts/ui_font_LanTingFine24.c)
 
 add_library(ui ${SOURCES})
