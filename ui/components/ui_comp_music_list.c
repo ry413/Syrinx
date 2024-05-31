@@ -8,25 +8,26 @@
 
 // COMPONENT Music List
 
-lv_obj_t *ui_Music_List_create(lv_obj_t *comp_parent) {
+lv_obj_t * ui_Music_List_create(lv_obj_t * comp_parent)
+{
 
-lv_obj_t *cui_Music_List;
-cui_Music_List = lv_obj_create(comp_parent);
-lv_obj_remove_style_all(cui_Music_List);
-lv_obj_set_width( cui_Music_List, 480);
-lv_obj_set_height( cui_Music_List, 410);
-lv_obj_set_x( cui_Music_List, 0 );
-lv_obj_set_y( cui_Music_List, 32 );
-lv_obj_set_align( cui_Music_List, LV_ALIGN_CENTER );
-lv_obj_set_flex_flow(cui_Music_List,LV_FLEX_FLOW_COLUMN);
-lv_obj_set_flex_align(cui_Music_List, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-lv_obj_clear_flag( cui_Music_List, LV_OBJ_FLAG_CLICKABLE );    /// Flags
+    lv_obj_t * cui_Music_List;
+    cui_Music_List = lv_obj_create(comp_parent);
+    lv_obj_remove_style_all(cui_Music_List);
+    lv_obj_set_width(cui_Music_List, 480);
+    lv_obj_set_height(cui_Music_List, 410);
+    lv_obj_set_x(cui_Music_List, 0);
+    lv_obj_set_y(cui_Music_List, 32);
+    lv_obj_set_align(cui_Music_List, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(cui_Music_List, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(cui_Music_List, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_clear_flag(cui_Music_List, LV_OBJ_FLAG_CLICKABLE);      /// Flags
 
-lv_obj_t ** children = lv_mem_alloc(sizeof(lv_obj_t *) * _UI_COMP_MUSIC_LIST_NUM);
-children[UI_COMP_MUSIC_LIST_MUSIC_LIST] = cui_Music_List;
-lv_obj_add_event_cb(cui_Music_List, get_component_child_event_cb, LV_EVENT_GET_COMP_CHILD, children);
-lv_obj_add_event_cb(cui_Music_List, del_component_child_event_cb, LV_EVENT_DELETE, children);
-ui_comp_Music_List_create_hook(cui_Music_List);
-return cui_Music_List; 
+    lv_obj_t ** children = lv_mem_alloc(sizeof(lv_obj_t *) * _UI_COMP_MUSIC_LIST_NUM);
+    children[UI_COMP_MUSIC_LIST_MUSIC_LIST] = cui_Music_List;
+    lv_obj_add_event_cb(cui_Music_List, get_component_child_event_cb, LV_EVENT_GET_COMP_CHILD, children);
+    lv_obj_add_event_cb(cui_Music_List, del_component_child_event_cb, LV_EVENT_DELETE, children);
+    ui_comp_Music_List_create_hook(cui_Music_List);
+    return cui_Music_List;
 }
 

@@ -1,10 +1,13 @@
 #include "backlight.h"
 #include <esp_log.h>
 #include "nvs.h"
+#include "stdio.h"
 
 
 // 背光定时器是为了进入待机界面, 并不是黑屏
-// 背光定时器是为了进入待机界面, 并不是黑屏
+
+uint32_t backlight_level = 0;
+uint32_t backlight_time_level = 0;
 
 
 static lv_timer_t *backlight_timer;      // 背光定时器
@@ -87,7 +90,7 @@ void init_backlight(void) {
     ledc_timer_config(&timer_conf);
     ledc_channel_config(&ledc_conf);
 }
-// 初始化背光定时器, 修改背光时间时也调用这里, 也就是创建新的定时器
+// 创建背光定时器, 修改背光时间时也调用这里, 也就是会创建新的定时器
 void init_backlight_timer(uint32_t timeout_seconds) {
     if (backlight_timer != NULL) {
         lv_timer_del(backlight_timer);

@@ -10,7 +10,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/portmacro.h>
-#include <esp_sntp.h>
 #include <nvs.h>
 #include <locale.h>
 #include "driver/uart.h"
@@ -18,6 +17,7 @@
 #include "wifi.h"
 #include "backlight.h"
 #include "bluetooth.h"
+#include "timesync.h"
 
 #include "ui_comp_music_item.h"
 
@@ -28,8 +28,6 @@
 
 //////////////////// GLOBAL VARIABLES ////////////////////
 
-time_t globalTime = 0;                  // 全局变量用于存储日月时分的时间戳
-lv_obj_t * currentTimeLabel;            // 当前screen的TimeLabel
 static lv_obj_t *musicLists[MAX_LISTS]; // 存储 MusicList 的指针数组
 static int currentListIndex = 0;        // 当前 MusicList 的索引
 static int numMusicLists = 0;           // MusicList 的总数
@@ -41,34 +39,29 @@ static int updateInterval = 0;          // 进度条每次更新的间隔, 因�
 static lv_timer_t *taskCreateTimer = NULL;// 防止一直点[下一首]这种按钮, 会一直创建getDurationTask
 
 
+
 // prev开头的都是为了在修改值后没有点击[确认]而是[取消]的情况下, 将原来的值放回去
 // 不过它们实际上也是那些值的真实拥有者
 
-// 背光亮度等级和时间, 背光时间分为7级, 0代表永不熄灭
-uint32_t prevBacklightLevel;
-uint32_t prevBacklightTimeLevel;
+
 // 蓝牙名称与密码
 char *prevBluetoothName = NULL;
 char *prevBluetoothPassword = NULL;
-// 日期与时间设置
-uint32_t prevTimeHour;
-uint32_t prevTimeMin;
-uint32_t prevDateYear;
-uint32_t prevDateMonth;
-uint32_t prevDateDay;
-// 默认音量和最大音量
+
+// 默认音量与最大音量
 uint32_t prevDefaultVolume;
 uint32_t prevMaxVolume;
+char *prevWifiName = NULL;
+char *prevWifiPassword = NULL;
 
 static TaskHandle_t durationTaskHandle = NULL;
+
+bool isMusicMode = true;
 
 
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
 
-static void updateCurrentTimeLabel(void);
-static void obtainTime(void* pvParameter);
-static void updateTimeTask(void *pvParameter);
-static void initTimeTask(void *param);
+static void wifiGetTimeTask(void *param);
 static void createMusicItemTask(void *pvParameter);
 static void format_time(int seconds, char * buffer, size_t buffer_size);
 static void update_progress(lv_timer_t * timer);
@@ -81,105 +74,17 @@ static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, ui
 
 //////////////////// 不给lvgl事件直接调用的静态函数 ////////////////////
 
-// 把globalTime更新到currentTimeLabel上
-static void updateCurrentTimeLabel(void) {
-    struct tm timeinfo;
-    char timeStr[9];
-
-    localtime_r(&globalTime, &timeinfo);
-    strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);
-    lv_label_set_text(currentTimeLabel, timeStr);
-}
-// 获取中文星期几名称
-static const char* get_chinese_weekday(int wday)
-{
-    static const char* weekdays[] = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"};
-    return weekdays[wday];
-}
-// 更新日期到待机界面的日期Label上, 因为暂时全局就一个地方要显示日期
-static void updateCurrentDateLabel(void) {
-    struct tm timeinfo;
-    char dateStr[50];
-
-    localtime_r(&globalTime, &timeinfo);
-    // 手动格式化日期字符串
-    snprintf(dateStr, sizeof(dateStr), "%s/%02d月%02d日", get_chinese_weekday(timeinfo.tm_wday), timeinfo.tm_mon + 1, timeinfo.tm_mday);
-    lv_label_set_text(ui_Idle_Window_Date, dateStr);
-}
-// 从NTP获取时间
-static void obtainTime(void* pvParameter)
-{
-    // NTP服务器列表, 这是macOS上使用ntpdate测试出的一些延迟低的服务器, 2024.5.15
-    const char* ntp_servers[] = {
-        "cn.ntp.org.cn",
-        // "edu.ntp.org.cn",
-        // "ntp.sjtu.edu.cn",
-        // "ntp.aliyun.com",
-        // "pool.ntp.org",
-    };
-    const int num_ntp_servers = sizeof(ntp_servers) / sizeof(ntp_servers[0]);
-
-    time_t now = 0;
-    struct tm timeinfo = { 0 };
-    int retry = 0;
-    const int retry_count = 20;
-    // 放个IP
-    ip_addr_t *addr = NULL;
-    ipaddr_aton("111.230.50.201", addr);
-    esp_sntp_setserver(0, addr);
-
-    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    for (int i = 0; i < num_ntp_servers; ++i) {
-        esp_sntp_setservername(i, ntp_servers[i]);
-    }
-    esp_sntp_init();
-
-    while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
-        ESP_LOGI("obtainTime", "等待系统时间设置... (%d/%d) 正在尝试连接服务器: %s", retry, retry_count, ntp_servers[retry % num_ntp_servers]);
-
-        time(&now);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-        localtime_r(&now, &timeinfo);
-    }
-
-    if (retry >= retry_count) {
-        ESP_LOGE("obtainTime", "在 %d 次重试后无法获取时间。请检查您的网络连接。", retry_count);
-    } else {
-        ESP_LOGI("obtainTime", "系统时间已设置。");
-        // 修正时区
-        timeinfo.tm_hour += 8;
-        mktime(&timeinfo);
-        // 保存全局时间
-        globalTime = mktime(&timeinfo);
-    }
-    // 启动定时器
-    xTaskCreate(updateTimeTask, "updateTimeTask", 2048, NULL, 5, NULL);
-    vTaskDelete(NULL);
-}
-// 时间更新定时器
-static void updateTimeTask(void *pvParameter)
-{
-    while (1)
-    {
-        updateCurrentTimeLabel();
-        updateCurrentDateLabel();
-        
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        globalTime += 1;
-    }
-}
-// 初始化时间的任务
-static void initTimeTask(void *param)
+// 联网获取时间的任务
+static void wifiGetTimeTask(void *param)
 {
     EventGroupHandle_t wifi_event_group = get_wifi_event_group();
     EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdTRUE, WIFI_CONNECTION_TIMEOUT);
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI("initTimeTask", "Wi-Fi 已连接");
+        ESP_LOGI("wifiGetTimeTask", "Wi-Fi 已连接");
         lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
-        // 异步, 否则会阻塞UI线程
-        xTaskCreate(obtainTime, "obtainTime", 4096, NULL, 5, NULL);
+        obtain_time();
     } else {
-        ESP_LOGE("initTimeTask", "Wi-Fi 未连接");
+        ESP_LOGE("wifiGetTimeTask", "Wi-Fi 未连接");
     }
     vTaskDelete(NULL); // 删除任务
 }
@@ -239,7 +144,7 @@ static void format_time(int seconds, char * buffer, size_t buffer_size)
         fprintf(stderr, "Error formatting time string\n");
     }
 }
-// 更新进度条和时间标签的回调函数
+// 更新进度条与时间标签的回调函数
 static void update_progress(lv_timer_t * timer)
 {
     static int interval_counter = 0;
@@ -273,16 +178,18 @@ static void initProgressBar(void)
 // 获取音乐总时长, 并启动进度条定时器的任务, 因为要先有总时长, 才能使用进度条
 static void getDurationTask(void *pvParameter)
 {
-    EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_PLAY_MUSIC | EVENT_NEXT_TRACK | EVENT_PREV_TRACK, pdTRUE, pdFALSE, 3000);
+    EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_PLAY_MUSIC | EVENT_NEXT_TRACK | EVENT_PREV_TRACK, pdTRUE, pdFALSE, portMAX_DELAY);
 
     if (bits & (EVENT_PLAY_MUSIC | EVENT_NEXT_TRACK | EVENT_PREV_TRACK)) {
         bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
         uart_flush(UART_NUM_0);
-        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_DURATION, pdTRUE, pdFALSE, 3000);
+        xEventGroupClearBits(get_bluetooth_event_group(), EVENT_DURATION);  // 这行令人良心不安, 防止上一次的事件给这次接收到, 说多了不都是怕用户不正常乱点
+        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_DURATION, pdTRUE, pdFALSE, portMAX_DELAY);
         if (bits & EVENT_DURATION) {
             char time_str[12];
             format_time(current_music_duration, time_str, sizeof(time_str));
-            printf("Total time: %s\n", time_str);
+            ESP_LOGI("WTF", "Total time: %s", time_str);
+            // printf("Total time: %s\n", time_str);
             lv_label_set_text_static(ui_Total_Time, time_str);
 
             updateInterval = (current_music_duration / 100); // 进度条更新间隔
@@ -315,7 +222,7 @@ static void bluetoothRebootTask(void *pvParameter)
     char command[50];
     snprintf(command, sizeof(command), "AT+BD%s", prevBluetoothName);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_NAME);
-    // 更改蓝牙名称和密码得一个个来
+    // 更改蓝牙名称与密码得一个个来
     EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_NAME, pdTRUE, pdFALSE, 3000);
     if (bits & EVENT_BLUETOOTH_NAME) {
         snprintf(command, sizeof(command), "AT+BE%s", prevBluetoothPassword);
@@ -350,76 +257,81 @@ static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, ui
 //////////////////// 给lvgl的事件用的回调 ////////////////////
 
 // ******************** initial actions ********************
-// 不知道有什么要写在initial actions里的, 暂时写个initTime
-// 初始化全局时间
-void initTime(lv_event_t * e)
-{
-    // 在初始化时间时把默认显示时间的label设置为主界面的, 否则currentTimeLabel为空很危险
-    currentTimeLabel = ui_Header_Main_Time;
-    // 因为要等待WiFi连接才能开始获取事件, 所以创建异步任务, 否则会阻塞界面加载
-    xTaskCreate(initTimeTask, "initTimeTask", 4096, NULL, 5, NULL);
 
-    // 临时放这
+// 除了这个, 还有各个init[****]Settings函数也在initital actions
+void initActions(lv_event_t * e)
+{
+    // 初始化音乐列表
     xTaskCreate(createMusicItemTask, "createMusicItemTask", 8192, NULL, 5, NULL);
+    // 设置待机界面的日期label, 只能写在这了, 毕竟日期就这个地方会显示
+    set_date_label(ui_Idle_Window_Date);
 }
 
+// ******************** 各界面加载完成后的回调 ********************
+// 各个screen loaded时, 将screen的时间label设置为time_label上, 保持全局时间显示, Settings界面没有这东西
 
-// ******************** 未知分类 ********************
-// 各个screen loaded时, 将时间label设置到currentTimeLabel上, 保持全局时间显示, Settings界面没有
-void setTimeMain(lv_event_t * e)
+void mainScrLoaded(lv_event_t * e)
 {
-    currentTimeLabel = ui_Header_Main_Time;
+    set_time_label(ui_Header_Main_Time);
     // 本来只有主界面要加这个防止时间未初始化就更新值, 但是用户有可能会在时间未初始化时乱点点到别的界面, 所以每个界面都加上了
-    if(globalTime > 0)
-        updateCurrentTimeLabel();
+    if(global_time > 0)
+    // 每个screen loaded时立即更新一次, 否则就要等到timer来更新了
+        update_current_time_label();
 }
-void setTimeMusic(lv_event_t * e)
+void musicScrLoaded(lv_event_t * e)
 {
-    currentTimeLabel = ui_Header_Music_Time;
-    if(globalTime > 0)
-        updateCurrentTimeLabel();
+    set_time_label(ui_Header_Music_Time);
+    if(global_time > 0)
+        update_current_time_label();}
+void natureSoundScrLoaded(lv_event_t * e)
+{
+    set_time_label(ui_Header_Nature_Sound_Time);
+    if(global_time > 0)
+        update_current_time_label();
 }
-void setTimeNatureSound(lv_event_t * e)
+void bluetoothScrLoaded(lv_event_t * e)
 {
-    currentTimeLabel = ui_Header_Nature_Sound_Time;
-    if(globalTime > 0)
-        updateCurrentTimeLabel();
+    set_time_label(ui_Header_Bluetooth_Time);
+    if(global_time > 0)
+        update_current_time_label();
+    bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);   // AT+CM不响应OK, 什么都不响应
+    isMusicMode = false;
+    // 开一个一分钟无操作回主界面的timer, isMusicMode = true
+    // 一分钟无操作回到主界面并进入待机
+    // 在蓝牙界面待机时, 不回到主界面
 }
-void setTimeBluetooth(lv_event_t * e)
+void modeScrLoaded(lv_event_t * e)
 {
-    currentTimeLabel = ui_Header_Bluetooth_Time;
-    if(globalTime > 0)
-        updateCurrentTimeLabel();
+    set_time_label(ui_Header_Mode_Time);
+    if(global_time > 0)
+        update_current_time_label();
+
 }
-void setTimeMode(lv_event_t * e)
+void wakeupScrLoaded(lv_event_t * e)
 {
-    currentTimeLabel = ui_Header_Mode_Time;
-    if(globalTime > 0)
-        updateCurrentTimeLabel();
+	set_time_label(ui_Header_Wake_up_Time);
+    if(global_time > 0)
+        update_current_time_label();
+
 }
-void setTimeWakeup(lv_event_t * e)
+void guideScrLoaded(lv_event_t * e)
 {
-	currentTimeLabel = ui_Header_Wake_up_Time;
-    if(globalTime > 0)
-        updateCurrentTimeLabel();
+    set_time_label(ui_Header_Guide_Time);
+    if(global_time > 0)
+        update_current_time_label();
+    // 指南界面时, 不进入待机状态
 }
-void setTimeGuide(lv_event_t * e)
+void idleScrLoaded(lv_event_t * e)
 {
-    currentTimeLabel = ui_Header_Guide_Time;
-    if(globalTime > 0)
-        updateCurrentTimeLabel();
-}
-void setTimeIdle(lv_event_t * e)
-{
-    currentTimeLabel = ui_Idle_Window_Time;
-    if(globalTime > 0)
-        updateCurrentTimeLabel();
-    
+    set_time_label(ui_Idle_Window_Time);
+    if(global_time > 0)
+        update_current_time_label();
+
 }
 
+// ******************** 背光相关 ********************
 
-// ******************** 背光设置 ********************
-// 初始化背光亮度和时间
+// 初始化背光亮度与时间, 以及创建进入待机的定时器
 void initBacklightSettings(lv_event_t * e)
 {
     nvs_handle_t nvs_handle;
@@ -429,26 +341,26 @@ void initBacklightSettings(lv_event_t * e)
         return;
     }
 
-    err = nvs_get_u32(nvs_handle, "level", &prevBacklightLevel);
+    err = nvs_get_u32(nvs_handle, "level", &backlight_level);
     if (err != ESP_OK) {
-        ESP_LOGE("backlightSettings", "Failed to get backlightLevel from NVS");
+        ESP_LOGE("backlightSettings", "Failed to get backlight_level from NVS");
         nvs_close(nvs_handle);
         return;
     }
-    lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%ld", prevBacklightLevel);
+    lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%ld", backlight_level);
 
-    err = nvs_get_u32(nvs_handle, "time", &prevBacklightTimeLevel);
+    err = nvs_get_u32(nvs_handle, "time", &backlight_time_level);
     if (err != ESP_OK) {
         ESP_LOGE("backlightSettings", "Failed to get backlightTimeLevel from NVS");
         nvs_close(nvs_handle);
         return;
     }
 
-    set_backlight_time_to_label(ui_Backlight_Time_Value2, prevBacklightTimeLevel);
-    // 不为0(off)则初始化背光定时器
+    set_backlight_time_to_label(ui_Backlight_Time_Value2, backlight_time_level);
+    // 不为0(off)则创建背光定时器
     idle_window = ui_Idle_Window;
-    if (prevBacklightTimeLevel != 0)
-        init_backlight_timer(backlight_time_level_to_second(prevBacklightTimeLevel));
+    if (backlight_time_level != 0)
+        init_backlight_timer(backlight_time_level_to_second(backlight_time_level));
 
     nvs_close(nvs_handle);
 }
@@ -458,29 +370,29 @@ void saveBacklightBrightness(lv_event_t * e)
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("BLSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("saveBacklightLevel", "Failed to open NVS");
+        ESP_LOGE("savebacklight_level", "Failed to open NVS");
         return;
     }
     const char *text = lv_label_get_text(ui_Backlight_Brightness_Value2);
-    prevBacklightLevel = atoi(text);
-    err = nvs_set_u32(nvs_handle, "level", prevBacklightLevel);
+    backlight_level = atoi(text);
+    err = nvs_set_u32(nvs_handle, "level", backlight_level);
 
     if (err != ESP_OK) {
-        ESP_LOGE("saveBacklightLevel", "Failed to set backlightLevel in NVS");
+        ESP_LOGE("savebacklight_level", "Failed to set backlight_level in NVS");
         nvs_close(nvs_handle);
         return;
     }
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("saveBacklightLevel", "Failed to commit NVS changes");
+        ESP_LOGE("savebacklight_level", "Failed to commit NVS changes");
     }
     nvs_close(nvs_handle);
 }
 // 取消保存背光亮度
 void cancelSaveBacklightBrightness(lv_event_t * e)
 {
-    lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%ld", prevBacklightLevel);
-    set_backlight(prevBacklightLevel);
+    lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%ld", backlight_level);
+    set_backlight(backlight_level);
 }
 // 增加背光亮度
 void addBrightness(lv_event_t * e)
@@ -511,16 +423,16 @@ void saveBacklightTime(lv_event_t * e)
     }
 
     const char *second = lv_label_get_text(ui_Backlight_Time_Value2);
-    prevBacklightTimeLevel = backlight_time_second_to_level(atoi(second));
+    backlight_time_level = backlight_time_second_to_level(atoi(second));
 
-    if (prevBacklightTimeLevel != 0) {
+    if (backlight_time_level != 0) {
         init_backlight_timer(atoi(second));
     } else {
         // 0(off)则关闭定时器
         stop_backlight_timer();
     }
 
-    err = nvs_set_u32(nvs_handle, "time", prevBacklightTimeLevel);
+    err = nvs_set_u32(nvs_handle, "time", backlight_time_level);
     if (err != ESP_OK) {
         ESP_LOGE("saveBacklightTime", "Failed to set backlightTime in NVS");
         nvs_close(nvs_handle);
@@ -535,7 +447,7 @@ void saveBacklightTime(lv_event_t * e)
 // 取消保存背光时间
 void cancelSaveBacklightTime(lv_event_t * e)
 {
-    set_backlight_time_to_label(ui_Backlight_Time_Value2, prevBacklightTimeLevel);
+    set_backlight_time_to_label(ui_Backlight_Time_Value2, backlight_time_level);
 }
 // 增加背光时间
 void addBacklightTime(lv_event_t * e)
@@ -561,9 +473,35 @@ void decBacklightTime(lv_event_t * e)
     set_backlight_time_to_label(ui_Backlight_Time_Value2, backlightTimeLevel);
 
 }
+// 进入熄屏
+void offScreen(lv_event_t * e)
+{
+    // 关闭背光
+    set_backlight(0);
+    // 直接回到Main Window
+    lv_scr_load(ui_Main_Window);
+    // 启用"从熄屏中醒来"的可触摸区域
+    lv_obj_clear_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);
+}
+// 从熄屏中醒来
+void onScreen(lv_event_t * e)
+{
+	// 恢复背光
+    set_backlight(backlight_level);
+    lv_obj_add_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);
+    reset_backlight_timer();
+}
+// 从待机界面回到主界面
+void idleBackToMainWindow(lv_event_t * e)
+{
+	lv_scr_load(ui_Main_Window);
+    reset_backlight_timer();
+}
 
-// ******************** 蓝牙设置 ********************
-// 初始化蓝牙名称和密码
+
+// ******************** 蓝牙相关 ********************
+
+// 初始化蓝牙名称与密码
 void initBluetoothSettings(lv_event_t * e)
 {
     nvs_handle_t nvs_handle;
@@ -706,68 +644,73 @@ void cancelSaveBluetoothSetting(lv_event_t * e)
     lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
     lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
 }
-// ******************** 时间设置 ********************
+// ******************** 时间相关 ********************
+
 // 初始化时间与日期
 void initDateTimeSettings(lv_event_t * e)
 {
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("TimeSettings", NVS_READONLY, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("initDateTimeSettings", "Failed to open NVS: %s", esp_err_to_name(err));
-        return;
-    }
-    err = nvs_get_u32(nvs_handle, "year", &prevDateYear);
-    if (err != ESP_OK) {
-        ESP_LOGE("initDateTimeSettings", "Failed to get year from NVS: %s", esp_err_to_name(err));
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_get_u32(nvs_handle, "month", &prevDateMonth);
-    if (err != ESP_OK) {
-        ESP_LOGE("initDateTimeSettings", "Failed to get month from NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_get_u32(nvs_handle, "day", &prevDateDay);
-    if (err != ESP_OK) {
-        ESP_LOGE("initDateTimeSettings", "Failed to get day from NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_get_u32(nvs_handle, "hour", &prevTimeHour);
-    if (err != ESP_OK) {
-        ESP_LOGE("initDateTimeSettings", "Failed to get hour from NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_get_u32(nvs_handle, "minute", &prevTimeMin);
-    if (err != ESP_OK) {
-        ESP_LOGE("initDateTimeSettings", "Failed to get minute from NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    nvs_close(nvs_handle);
+    // nvs_handle_t nvs_handle;
+    // esp_err_t err = nvs_open("TimeSettings", NVS_READONLY, &nvs_handle);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE("initDateTimeSettings", "Failed to open NVS: %s", esp_err_to_name(err));
+    //     return;
+    // }
+    // err = nvs_get_u32(nvs_handle, "year", &prevdate_year);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE("initDateTimeSettings", "Failed to get year from NVS: %s", esp_err_to_name(err));
+    //     nvs_close(nvs_handle);
+    //     return;
+    // }
+    // err = nvs_get_u32(nvs_handle, "month", &prevdate_month);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE("initDateTimeSettings", "Failed to get month from NVS");
+    //     nvs_close(nvs_handle);
+    //     return;
+    // }
+    // err = nvs_get_u32(nvs_handle, "day", &prevdate_day);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE("initDateTimeSettings", "Failed to get day from NVS");
+    //     nvs_close(nvs_handle);
+    //     return;
+    // }
+    // err = nvs_get_u32(nvs_handle, "hour", &prevtime_hour);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE("initDateTimeSettings", "Failed to get hour from NVS");
+    //     nvs_close(nvs_handle);
+    //     return;
+    // }
+    // err = nvs_get_u32(nvs_handle, "minute", &prevtime_min);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE("initDateTimeSettings", "Failed to get minute from NVS");
+    //     nvs_close(nvs_handle);
+    //     return;
+    // }
+    // nvs_close(nvs_handle);
 
-    char year_text[5], month_text[3], day_text[3], hour_text[3], min_text[3];
-    snprintf(year_text, sizeof(year_text), "%ld", prevDateYear);
-    snprintf(month_text, sizeof(month_text), "%02ld", prevDateMonth);
-    snprintf(day_text, sizeof(day_text), "%02ld", prevDateDay);
-    snprintf(hour_text, sizeof(hour_text), "%02ld", prevTimeHour);
-    snprintf(min_text, sizeof(min_text), "%02ld", prevTimeMin);
-    lv_textarea_set_text(ui_Date_Setting_Year2, year_text);
-    lv_textarea_set_text(ui_Date_Setting_Month2, month_text);
-    lv_textarea_set_text(ui_Date_Setting_Day2, day_text);
-    lv_textarea_set_text(ui_Time_Setting_Hour2, hour_text);
-    lv_textarea_set_text(ui_Time_Setting_Min2, min_text);
+    // char year_text[5], month_text[3], day_text[3], hour_text[3], min_text[3];
+    // snprintf(year_text, sizeof(year_text), "%ld", prevdate_year);
+    // snprintf(month_text, sizeof(month_text), "%02ld", prevdate_month);
+    // snprintf(day_text, sizeof(day_text), "%02ld", prevdate_day);
+    // snprintf(hour_text, sizeof(hour_text), "%02ld", prevtime_hour);
+    // snprintf(min_text, sizeof(min_text), "%02ld", prevtime_min);
+    // lv_textarea_set_text(ui_Date_Setting_Year2, year_text);
+    // lv_textarea_set_text(ui_Date_Setting_Month2, month_text);
+    // lv_textarea_set_text(ui_Date_Setting_Day2, day_text);
+    // lv_textarea_set_text(ui_Time_Setting_Hour2, hour_text);
+    // lv_textarea_set_text(ui_Time_Setting_Min2, min_text);
 
-    // 设置时间, 加8个时区
-    globalTime = convertToTimestamp(prevDateYear, prevDateMonth, prevDateDay, prevTimeHour, prevTimeMin);
-    // 更新待机界面的日期
-    struct tm timeinfo;
-    char dateStr[50];
-    localtime_r(&globalTime, &timeinfo);
-    snprintf(dateStr, sizeof(dateStr), "%s/%02d月%02d日", get_chinese_weekday(timeinfo.tm_wday), timeinfo.tm_mon + 1, timeinfo.tm_mday);
-    lv_label_set_text(ui_Idle_Window_Date, dateStr);
+    // // 设置时间, 加8个时区
+    // global_time = convertToTimestamp(prevdate_year, prevdate_month, prevdate_day, prevtime_hour, prevtime_min);
+    // // 更新待机界面的日期
+    // struct tm timeinfo;
+    // char dateStr[50];
+    // localtime_r(&global_time, &timeinfo);
+    // snprintf(dateStr, sizeof(dateStr), "%s/%02d月%02d日", get_chinese_weekday(timeinfo.tm_wday), timeinfo.tm_mon + 1, timeinfo.tm_mday);
+    // lv_label_set_text(ui_Idle_Window_Date, dateStr);
+    // // 初始化时间Label
+    // currentTimeLabel = ui_Header_Main_Time;
+    // // 启动定时器
+    // xTaskCreate(updateTimeTask, "updateTimeTask", 2048, NULL, 5, NULL);
 }
 // 确认保存时间与日期
 void saveTimeSetting(lv_event_t * e)
@@ -779,16 +722,16 @@ void saveTimeSetting(lv_event_t * e)
     int min = atoi(min_text);
     if (hour < 0 || hour > 23 || min < 0 || min > 59) {
         char hour_text[3];
-        snprintf(hour_text, sizeof(hour_text), "%ld", prevTimeHour);
+        snprintf(hour_text, sizeof(hour_text), "%ld", time_hour);
         lv_textarea_set_text(ui_Time_Setting_Hour2, hour_text);
         char min_text[3];
-        snprintf(min_text, sizeof(min_text), "%ld", prevTimeMin);
+        snprintf(min_text, sizeof(min_text), "%ld", time_min);
         lv_textarea_set_text(ui_Time_Setting_Min2, min_text);
         ESP_LOGE("saveTimeSetting", "Invalid input: hour=%s, minute=%s", hour_text, min_text);
         return;
     }
-    prevTimeHour = hour;
-    prevTimeMin = min;
+    time_hour = hour;
+    time_min = min;
     // 检查日期输入
     const char *year_text = lv_textarea_get_text(ui_Date_Setting_Year2);
     const char *month_text = lv_textarea_get_text(ui_Date_Setting_Month2);
@@ -798,68 +741,56 @@ void saveTimeSetting(lv_event_t * e)
     uint32_t day = (uint32_t)atoi(day_text);
     if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
         char year_text[5];
-        snprintf(year_text, sizeof(year_text), "%ld", prevDateYear);
+        snprintf(year_text, sizeof(year_text), "%ld", date_year);
         lv_textarea_set_text(ui_Date_Setting_Year2, year_text);
         char month_text[3];
-        snprintf(month_text, sizeof(month_text), "%ld", prevDateMonth);
+        snprintf(month_text, sizeof(month_text), "%ld", date_month);
         lv_textarea_set_text(ui_Date_Setting_Month2, month_text);
         char day_text[3];
-        snprintf(day_text, sizeof(day_text), "%ld", prevDateDay);
+        snprintf(day_text, sizeof(day_text), "%ld", date_day);
         lv_textarea_set_text(ui_Date_Setting_Day2, day_text);
         ESP_LOGE("saveDateSetting", "Invalid input: year=%s, month=%s, day=%s", year_text, month_text, day_text);
         return;
     }
-    prevDateYear = year;
-    prevDateMonth = month;
-    prevDateDay = day;
-    // 储存到nvs里
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("TimeSettings", NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveTimeSetting", "Failed to open NVS");
-        return;
+    date_year = year;
+    date_month = month;
+    date_day = day;
+    global_time = convertToTimestamp(date_year, date_month, date_day, time_hour, time_min);
+    if (update_time_task_handle == NULL) {
+        xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
     }
-    err = nvs_set_u32(nvs_handle, "hour", prevTimeHour);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveTimeSetting", "Failed to set hour in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_set_u32(nvs_handle, "minute", prevTimeMin);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveTimeSetting", "Failed to set minute in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_set_u32(nvs_handle, "year", prevDateYear);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveDateSetting", "Failed to set year in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_set_u32(nvs_handle, "month", prevDateMonth);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveDateSetting", "Failed to set month in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_set_u32(nvs_handle, "day", prevDateDay);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveDateSetting", "Failed to set day in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveTimeSetting", "Failed to commit NVS changes");
-    }
-    // 将更改后的时间设到globalTime上
-    globalTime = convertToTimestamp(prevDateYear, prevDateMonth, prevDateDay, prevTimeHour, prevTimeMin);
-    nvs_close(nvs_handle);
 }
+// 取消保存时间设置
+void cancelSaveTimeSettings(lv_event_t * e)
+{
+    // 转换时间小时为字符串并设置文本区域
+    char hour_str[3];  // 假设小时不会超过两位数
+    snprintf(hour_str, sizeof(hour_str), "%ld", time_hour);
+    lv_textarea_set_text(ui_Time_Setting_Hour2, hour_str);
 
-// ******************** 音量设置 ********************
-// 初始化默认音量和最大音量
+    // 转换时间分钟为字符串并设置文本区域
+    char min_str[3];  // 假设分钟不会超过两位数
+    snprintf(min_str, sizeof(min_str), "%ld", time_min);
+    lv_textarea_set_text(ui_Time_Setting_Min2, min_str);
+
+    // 转换日期年份为字符串并设置文本区域
+    char year_str[5];  // 假设年份最多四位数
+    snprintf(year_str, sizeof(year_str), "%ld", date_year);
+    lv_textarea_set_text(ui_Date_Setting_Year2, year_str);
+
+    // 转换日期月份为字符串并设置文本区域
+    char month_str[3];  // 假设月份不会超过两位数
+    snprintf(month_str, sizeof(month_str), "%ld", date_month);
+    lv_textarea_set_text(ui_Date_Setting_Month2, month_str);
+
+    // 转换日期天数为字符串并设置文本区域
+    char day_str[3];  // 假设日期不会超过两位数
+    snprintf(day_str, sizeof(day_str), "%ld", date_day);
+    lv_textarea_set_text(ui_Date_Setting_Day2, day_str);
+}
+// ******************** 音量相关 ********************
+
+// 初始化默认音量与最大音量
 void initVolumeSettings(lv_event_t * e)
 {
     nvs_handle_t nvs_handle;
@@ -958,8 +889,14 @@ void cancelSaveVolumeSettings(lv_event_t * e)
     lv_label_set_text_fmt(ui_Default_Volume_Value, "%ld", prevDefaultVolume);
     lv_label_set_text_fmt(ui_Max_Volume_Value, "%ld", prevMaxVolume);
 }
+// 修改音量
+void changeVolume(lv_event_t * e)
+{
+	// Your code here
+}
 
-// ******************** ID设置 ********************
+// ******************** ID相关 ********************
+
 // 初始化ID设置
 void initIDSettings(lv_event_t * e)
 {
@@ -981,7 +918,7 @@ void initIDSettings(lv_event_t * e)
         ESP_LOGE("initIDSettings", "Failed to commit NVS changes");
     }
     // 将 uint32_t 转换为字符串
-    char id_str[12]; // uint32_t 最大值为 4294967295，需要 11 个字符的空间加上 null 终止符, 谁知道哪来的那么大ID
+    char id_str[12]; // uint32_t 最大值为 4294967295，需要 11 个字符的空间加上 null 终止符, 谁知道哪会来那么大ID
     snprintf(id_str, sizeof(id_str), "%lu", id);
     lv_textarea_set_text(ui_ID_Setting_Input2, id_str);
     nvs_close(nvs_handle);
@@ -1010,7 +947,105 @@ void saveIDSetting(lv_event_t * e)
     nvs_close(nvs_handle);
 }
 
-// ******************** Wifi设置 ********************
+// ******************** Wifi相关 ********************
+
+// 初始化Wifi名称与密码
+void initWifiSettings(lv_event_t * e)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("WifiCfg", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("initWifiSettings", "Failed to open NVS: %s", esp_err_to_name(err));
+        return;
+    }
+    // 读取wifi开关状态
+    uint8_t wifi_enabled = 0;
+    err = nvs_get_u8(nvs_handle, "enabled", &wifi_enabled);
+    if (err != ESP_OK) {
+        ESP_LOGE("initWifiSettings", "Failed to get enabled from NVS: %s", esp_err_to_name(err));
+    }
+    if (wifi_enabled) {
+        lv_obj_add_state(ui_Wifi_Switch_Switch2, LV_STATE_CHECKED);
+        lv_obj_clear_flag(ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN);
+        // 只有启用wifi才联网获取时间
+        xTaskCreate(wifiGetTimeTask, "wifiGetTimeTask", 4096, NULL, 5, NULL);
+    } else {
+        // 如果禁用wifi, 把相关UI禁用掉
+        lv_obj_clear_state(ui_Wifi_Switch_Switch2, LV_STATE_CHECKED);
+        lv_obj_add_state(ui_Wifi_Name_Input, LV_STATE_DISABLED);
+        lv_obj_add_state(ui_Wifi_Password_Input, LV_STATE_DISABLED);
+        lv_obj_add_state(ui_Wifi_Enter_Btn, LV_STATE_DISABLED);
+        lv_obj_add_state(ui_Wifi_Keyboard, LV_STATE_DISABLED);
+        lv_obj_add_flag(ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    // 读取Wifi名称
+    size_t required_size = 0;
+    err = nvs_get_str(nvs_handle, "name", NULL, &required_size);
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGE("initWifiSettings", "Failed to get size for name from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return;
+    }
+    if (required_size > 0) {
+        char *tempWifiName = malloc(required_size);
+        if (tempWifiName == NULL) {
+            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Wifi name");
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_get_str(nvs_handle, "name", tempWifiName, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE("initWifiSettings", "Failed to get name from NVS: %s", esp_err_to_name(err));
+            free(tempWifiName);
+            nvs_close(nvs_handle);
+            return;
+        }
+        if (prevWifiName != NULL) {
+            ESP_LOGE("initWifiSettings", "运行到这时prevWifiName不可能不为NULL");
+            free(prevWifiName);
+        }
+        prevWifiName = tempWifiName;
+        lv_textarea_set_text(ui_Wifi_Name_Input, prevWifiName);
+    } else {
+        ESP_LOGI("initWifiSettings", "Wifi name not set in NVS");
+    }
+
+    // 读取Wifi密码
+    required_size = 0;
+    err = nvs_get_str(nvs_handle, "password", NULL, &required_size);
+    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+        ESP_LOGE("initWifiSettings", "Failed to get size for password from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return;
+    }
+    if (required_size > 0) {
+        char *tempWifiPassword = malloc(required_size);
+        if (tempWifiPassword == NULL) {
+            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Wifi password");
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_get_str(nvs_handle, "password", tempWifiPassword, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE("initWifiSettings", "Failed to get password from NVS: %s", esp_err_to_name(err));
+            free(tempWifiPassword);
+            nvs_close(nvs_handle);
+            return;
+        }
+        if (prevBluetoothPassword != NULL) {
+            ESP_LOGE("initWifiSettings", "运行到这时prevWifiPassword不可能不为NULL");
+            free(prevWifiPassword);
+        }
+        prevWifiPassword = tempWifiPassword;
+        lv_textarea_set_text(ui_Wifi_Password_Input, prevWifiPassword);
+    } else {
+        ESP_LOGI("initWifiSettings", "Wifi password not set in NVS");
+    }
+
+    nvs_close(nvs_handle);
+}
 // 保存Wifi的开关状态
 void saveWifiSwitchState(lv_event_t * e)
 {
@@ -1036,103 +1071,16 @@ void saveWifiSwitchState(lv_event_t * e)
     nvs_close(nvs_handle);
 
 }
-// 初始化Wifi名称和密码
-void initWifiSettings(lv_event_t * e)
-{
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("WifiCfg", NVS_READONLY, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("initWifiSettings", "Failed to open NVS: %s", esp_err_to_name(err));
-        return;
-    }
-
-    uint8_t wifi_enabled = 0;
-    err = nvs_get_u8(nvs_handle, "enabled", &wifi_enabled);
-    if (err != ESP_OK) {
-        ESP_LOGE("initWifiSettings", "Failed to get enabled from NVS: %s", esp_err_to_name(err));
-    }
-
-    if (wifi_enabled) {
-        lv_obj_add_state(ui_Wifi_Switch_Switch2, LV_STATE_CHECKED);
-        lv_obj_clear_flag(ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        // 如果禁用wifi, 把相关UI禁用掉
-        lv_obj_clear_state(ui_Wifi_Switch_Switch2, LV_STATE_CHECKED);
-        lv_obj_add_state(ui_Wifi_Name_Input, LV_STATE_DISABLED);
-        lv_obj_add_state(ui_Wifi_Name_Enter_Btn, LV_STATE_DISABLED);
-        lv_obj_add_state(ui_Wifi_Password_Input, LV_STATE_DISABLED);
-        lv_obj_add_state(ui_Wifi_Password_Enter_Btn, LV_STATE_DISABLED);
-        lv_obj_add_state(ui_Wifi_Keyboard, LV_STATE_DISABLED);
-        lv_obj_add_flag(ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
-
-
-
-    // 读取Wifi名称
-    size_t required_size = 0;
-    err = nvs_get_str(nvs_handle, "name", NULL, &required_size);
-    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGE("initWifiSettings", "Failed to get size for name from NVS: %s", esp_err_to_name(err));
-        nvs_close(nvs_handle);
-        return;
-    }
-
-    if (required_size > 0) {
-        char *wifiName = malloc(required_size);
-        if (wifiName == NULL) {
-            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Wifi name");
-            nvs_close(nvs_handle);
-            return;
-        }
-        err = nvs_get_str(nvs_handle, "name", wifiName, &required_size);
-        if (err != ESP_OK) {
-            ESP_LOGE("initWifiSettings", "Failed to get name from NVS: %s", esp_err_to_name(err));
-            free(wifiName);
-            nvs_close(nvs_handle);
-            return;
-        }
-        lv_textarea_set_text(ui_Wifi_Name_Input, wifiName);
-        free(wifiName);
-    } else {
-        ESP_LOGI("initWifiSettings", "Wifi name not set in NVS");
-    }
-
-    // 读取Wifi密码
-    required_size = 0;
-    err = nvs_get_str(nvs_handle, "password", NULL, &required_size);
-    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGE("initWifiSettings", "Failed to get size for password from NVS: %s", esp_err_to_name(err));
-        nvs_close(nvs_handle);
-        return;
-    }
-
-    if (required_size > 0) {
-        char *wifiPassword = malloc(required_size);
-        if (wifiPassword == NULL) {
-            ESP_LOGE("initWifiSettings", "Failed to allocate memory for Wifi password");
-            nvs_close(nvs_handle);
-            return;
-        }
-        err = nvs_get_str(nvs_handle, "password", wifiPassword, &required_size);
-        if (err != ESP_OK) {
-            ESP_LOGE("initWifiSettings", "Failed to get password from NVS: %s", esp_err_to_name(err));
-            free(wifiPassword);
-            nvs_close(nvs_handle);
-            return;
-        }
-        lv_textarea_set_text(ui_Wifi_Password_Input, wifiPassword);
-        free(wifiPassword);
-    } else {
-        ESP_LOGI("initWifiSettings", "Wifi password not set in NVS");
-    }
-
-    nvs_close(nvs_handle);
-}
-// 确认保存WiFi名称
-void saveWifiNameSetting(lv_event_t * e)
+// 确认保存Wifi名称与密码
+void saveWifiSetting(lv_event_t * e)
 {
     const char *name = lv_textarea_get_text(ui_Wifi_Name_Input);
+    if (name != NULL) {
+        if (prevWifiName != NULL)
+            free(prevWifiName);
+        prevWifiName = strdup(name);
+    }
+    const char *password = lv_textarea_get_text(ui_Wifi_Password_Input);
 
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("WifiCfg", NVS_READWRITE, &nvs_handle);
@@ -1140,30 +1088,10 @@ void saveWifiNameSetting(lv_event_t * e)
         ESP_LOGE("saveWifiNameSetting", "Failed to open NVS");
         return;
     }
-
     err = nvs_set_str(nvs_handle, "name", name);
     if (err != ESP_OK) {
         ESP_LOGE("saveWifiNameSetting", "Failed to set name in NVS");
         nvs_close(nvs_handle);
-        return;
-    }
-
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveWifiNameSetting", "Failed to commit NVS changes");
-    }
-
-    nvs_close(nvs_handle);
-}
-// 确认保存WiFi密码
-void saveWifiPasswordSetting(lv_event_t * e)
-{
-    const char *password = lv_textarea_get_text(ui_Wifi_Password_Input);
-
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("WifiCfg", NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE("saveWifiPasswordSetting", "Failed to open NVS");
         return;
     }
     err = nvs_set_str(nvs_handle, "password", password);
@@ -1172,21 +1100,25 @@ void saveWifiPasswordSetting(lv_event_t * e)
         nvs_close(nvs_handle);
         return;
     }
-
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("saveWifiPasswordSetting", "Failed to commit NVS changes");
+        ESP_LOGE("saveWifiNameSetting", "Failed to commit NVS changes");
     }
 
     nvs_close(nvs_handle);
 }
 
+
+// 断开Wifi
 void disconnectWifi(lv_event_t * e)
 {
     wifi_disconnect();
     lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
 }
 
+// ******************** 音乐相关 ********************
+
+// 上一页音乐
 void prevMusicList(lv_event_t *e)
 {
     if (numMusicLists == 0)
@@ -1203,7 +1135,7 @@ void prevMusicList(lv_event_t *e)
     // 显示上一个列表
     lv_obj_clear_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
 }
-
+// 下一页音乐
 void nextMusicList(lv_event_t *e)
 {
     if (numMusicLists == 0)
@@ -1220,14 +1152,6 @@ void nextMusicList(lv_event_t *e)
     // 显示下一个列表
     lv_obj_clear_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
 }
-
-void sendATM2(lv_event_t * e)
-{
-	// Your code here
-    bluetooth_send_at_command("AT+BE7993", CMD_BLUETOOTH_PASSWORD);
-}
-
-
 // 播放Music List中被点击的音乐
 void playSelectedMusic(lv_event_t * e)
 {
@@ -1257,14 +1181,11 @@ void playSelectedMusic(lv_event_t * e)
     sscanf(track_title, "%3[0-9]", temp);
     current_playing_index = atoi(temp) - 1;
 
-    // 杀掉旧任务
+    // 杀掉旧任务, 这里面也会刷新串口
     if (durationTaskHandle != NULL) {
         vTaskDelete(durationTaskHandle);
         durationTaskHandle = NULL;
     }
-    // 除了杀掉任务, 还得刷新串口, 这个不异步的话会阻塞0.几秒的UI
-    // uart_flush(UART_NUM_0);
-    // xTaskCreate(flushUart, "flushUart", 4096, NULL, 6, NULL);
     // 恢复CMD
     current_command = CMD_NONE;
 
@@ -1275,7 +1196,7 @@ void playSelectedMusic(lv_event_t * e)
     }
 
 }
-
+// 下一首音乐
 void nextTrack(lv_event_t * e) {
     // 暂停定时器
     lv_timer_pause(progressTimer);
@@ -1302,10 +1223,6 @@ void nextTrack(lv_event_t * e) {
         vTaskDelete(durationTaskHandle);
         durationTaskHandle = NULL;
     }
-    // 除了杀掉任务, 还得刷新串口, 这个不异步的话会阻塞0.几秒的UI
-    // uart_flush(UART_NUM_0);
-    // xTaskCreate(flushUart, "flushUart", 4096, NULL, 6, NULL);
-    // 恢复CMD
     current_command = CMD_NONE;
 
     if (taskCreateTimer != NULL) {
@@ -1314,7 +1231,7 @@ void nextTrack(lv_event_t * e) {
         taskCreateTimer = lv_timer_create(createDurationTask, 1000, NULL);
     }
 }
-
+// 上一首音乐
 void prevTrack(lv_event_t * e) {
     // 暂停定时器
     lv_timer_pause(progressTimer);
@@ -1353,7 +1270,7 @@ void prevTrack(lv_event_t * e) {
         taskCreateTimer = lv_timer_create(createDurationTask, 100, NULL);
     }
 }
-
+// 播放/暂停
 void playPause(lv_event_t * e) {
     bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE);
     if(playing) {
@@ -1366,13 +1283,7 @@ void playPause(lv_event_t * e) {
         playing = true;
     }
 }
-
-
-void sendATAJ(lv_event_t * e)
-{
-	// Your code here
-}
-
+// 拖动进度条并释放后的回调, 跳转至目标进度
 void releasedProgressSlider(lv_event_t * e)
 {
     int percentage = lv_slider_get_value(ui_Progress_Slider);
@@ -1387,28 +1298,14 @@ void releasedProgressSlider(lv_event_t * e)
 
 
 
-// 进入熄屏
-void offScreen(lv_event_t * e)
+void sendATM2(lv_event_t * e)
 {
-    // 关闭背光
-    set_backlight(0);
-    // 直接回到Main Window
-    lv_scr_load(ui_Main_Window);
-    // 启用"从熄屏中醒来"的可触摸区域
-    lv_obj_clear_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);
+	// Your code here
+    bluetooth_send_at_command("AT+BE7993", CMD_BLUETOOTH_PASSWORD);
 }
-// 从熄屏中醒来
-void onScreen(lv_event_t * e)
+void sendATAJ(lv_event_t * e)
 {
-	// 恢复背光
-    set_backlight(prevBacklightLevel);
-    lv_obj_add_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);
-    reset_backlight_timer();
+	// Your code here
 }
 
-// 从待机界面回到主界面
-void idleBackToMainWindow(lv_event_t * e)
-{
-	lv_scr_load(ui_Main_Window);
-    reset_backlight_timer();
-}
+

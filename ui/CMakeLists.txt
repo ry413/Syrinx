@@ -1,4 +1,4 @@
-SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
+SET(SOURCES components/ui_comp_header_volume.c
     components/ui_comp_music_item.c
     components/ui_comp_music_list.c
     components/ui_comp.c
@@ -22,7 +22,6 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     ui_helpers.c
     ui_events.c
     images/ui_img_1621519077.c
-    images/ui_img_490182776.c
     images/ui_img_2087007852.c
     images/ui_img_227802216.c
     images/ui_img_907415264.c
@@ -33,6 +32,7 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     images/ui_img_1742736079.c
     images/ui_img_35201459.c
     images/ui_img_2101671624.c
+    images/ui_img_490182776.c
     images/ui_img_861711258.c
     images/ui_img_348826415.c
     images/ui_img_12669592.c
@@ -53,7 +53,6 @@ SET(SOURCES components/ui_comp_backtomainwindowbtn7.c
     images/ui_img_728059867.c
     images/ui_img_404002205.c
     images/ui_img_239308628.c
-    images/ui_img_1260392355.c
     images/ui_img_469799613.c
     images/ui_img_1311962515.c
     images/ui_img_542920328.c

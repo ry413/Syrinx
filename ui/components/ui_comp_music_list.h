@@ -15,7 +15,7 @@ extern "C" {
 // COMPONENT Music List
 #define UI_COMP_MUSIC_LIST_MUSIC_LIST 0
 #define _UI_COMP_MUSIC_LIST_NUM 1
-lv_obj_t *ui_Music_List_create(lv_obj_t *comp_parent);
+lv_obj_t * ui_Music_List_create(lv_obj_t * comp_parent);
 
 #ifdef __cplusplus
 } /*extern "C"*/

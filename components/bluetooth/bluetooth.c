@@ -23,8 +23,9 @@
 
 static const char *TAG = "Bluetooth";
 static QueueHandle_t uart_queue;
-
 static EventGroupHandle_t event_group;
+
+bool is_music_mode = true;
 
 char **utf8_file_names = NULL;  // 储存文件名的数组
 int total_files_count = 0;      // 这两个都是在初始化时获取全部文件名用的
@@ -368,7 +369,7 @@ esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
     }
 }
 
-void bluetooth_task(void *pvParameters) {
+void bluetooth_monitor_task(void *pvParameters) {
     char response[BUF_SIZE];
     while (1) {
         // 等待并接收响应
@@ -376,26 +377,46 @@ void bluetooth_task(void *pvParameters) {
             ESP_LOGI(TAG, "Received response: cmd: %d, %s\n", current_command, response);
             // 只有响应OK才需要判断是给谁的OK
             if (strncmp(response, "OK", 2) == 0) {
+                // 暂时没用的就不设置事件组了
                 switch (current_command) {
                     case CMD_NEXT_TRACK:
                         xEventGroupSetBits(event_group, EVENT_NEXT_TRACK);
                         break;
                     case CMD_PREV_TRACK:
-                        xEventGroupSetBits(event_group, EVENT_PREV_TRACK);
+                        // xEventGroupSetBits(event_group, EVENT_PREV_TRACK);
                         break;
                     case CMD_PLAY_PAUSE:
                         xEventGroupSetBits(event_group, EVENT_PLAY_PAUSE);
                         break;
+                    case CMD_STOP_STATE:
+                        xEventGroupSetBits(event_group, EVENT_STOP_STATE);
+                        break;
+                    case CMD_PLAY_STATE:
+                        // xEventGroupSetBits(event_group, EVENT_PLAY_STATE);
+                        break;
+                    case CMD_PAUSE_STATE:
+                        // xEventGroupSetBits(event_group, EVENT_PAUSE_STATE);
+                        break;
                     case CMD_PLAY_MUSIC:
                         xEventGroupSetBits(event_group, EVENT_PLAY_MUSIC);
                         break;
+                    case CMD_SET_VOLUME:
+                        xEventGroupSetBits(event_group, EVENT_SET_VOLUME);
+                        break;
                     case CMD_BLUETOOTH_NAME:
-                        printf("BLUENAME\n");
                         xEventGroupSetBits(event_group, EVENT_BLUETOOTH_NAME);
                         break;
                     case CMD_BLUETOOTH_PASSWORD:
-                        printf("BLUEPASS\n");
                         xEventGroupSetBits(event_group, EVENT_BLUETOOTH_PASSWORD);
+                        break;
+                    case CMD_DISCONNECT_BLUETOOTH:
+                        xEventGroupSetBits(event_group, EVENT_DISCONNECT_BLUETOOTH);
+                        break;
+                    case CMD_ON_MUTE:
+                        xEventGroupSetBits(event_group, EVENT_ON_MUTE);
+                        break;
+                    case CMD_OFF_MUTE:
+                        xEventGroupSetBits(event_group, EVENT_OFF_MUTE);
                         break;
                     default:
                         ESP_LOGI(TAG, "Other CMD: %d", current_command);

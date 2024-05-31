@@ -15,15 +15,17 @@
 #include "driver/gpio.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "driver/uart.h"
+#include "nvs_flash.h"
 
 #include "st7701s.h"
 
+#include "touch.h"
 #include "ui.h"
 #include "wifi.h"
 #include "backlight.h"
-#include "nvs_flash.h"
-#include "driver/uart.h"
 #include "bluetooth.h"
+#include "rs485.h"
 
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
@@ -50,6 +52,8 @@
 #endif
 
 static const char *TAG = "example";
+lv_indev_t * indev_touch = NULL;
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////// Please update the following configuration according to your LCD spec //////////////////////////////
@@ -463,6 +467,8 @@ static void lvgl_task(void *pvParameter)
 #endif
     lv_disp_t *disp=lv_disp_drv_register(&disp_drv);
 
+
+
 #if CONFIG_EXAMPLE_LCD_TOUCH_ENABLED
     static lv_indev_drv_t indev_drv;    // Input device driver (Touch)
     lv_indev_drv_init(&indev_drv);
@@ -471,7 +477,7 @@ static void lvgl_task(void *pvParameter)
     indev_drv.read_cb = example_lvgl_touch_cb;
     indev_drv.user_data = tp;
 
-    lv_indev_drv_register(&indev_drv);
+    indev_touch = lv_indev_drv_register(&indev_drv);
 #endif
 
     ESP_LOGI(TAG, "Install LVGL tick timer");
@@ -543,6 +549,16 @@ static void monitor_task(void *pvParameter)
 	}
 }
 
+void disabled_touch(void) {
+    if (indev_touch) {
+        lv_indev_enable(indev_touch, false);
+    }
+}
+void enable_touch(void) {
+    if (indev_touch) {
+        lv_indev_enable(indev_touch, true);
+    }
+}
 /**********************
  *   APPLICATION MAIN
  **********************/
@@ -560,10 +576,12 @@ void app_main() {
         ESP_LOGE(TAG, "NVS初始化失败: %s", esp_err_to_name(ret));
     }
     // xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096*2, NULL, 2, NULL, 1);
-    xTaskCreate(lvgl_task, "lvgl_task", 4096, NULL, 2, NULL);
+    xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096, NULL, 2, NULL, 1);
+    // xTaskCreate(lvgl_task, "lvgl_task", 4096, NULL, 3, NULL);
     xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
-    xTaskCreate(wifi_task, "wifi_task", 4096, NULL, 5, NULL);
+    xTaskCreate(init_wifi_task, "init_wifi_task", 4096, NULL, 5, NULL);     // 异步初始化wifi
     bluetooth_init();
-    xTaskCreate(bluetooth_task, "bluetooth_task", 8192, NULL, 3, NULL); // 创建蓝牙任务
-
+    xTaskCreate(bluetooth_monitor_task, "bluetooth_monitor_task", 8192, NULL, 3, NULL); // 创建蓝牙任务
+    rs485_init();
+    xTaskCreate(rs485_monitor_task, "rs485_monitor_task", 4096, NULL, 5, NULL);
 }

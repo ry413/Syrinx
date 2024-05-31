@@ -6,67 +6,70 @@
 #include "../ui.h"
 
 
-void ui_event_comp_Music_Item_Music_Item( lv_event_t * e) {
-    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
-lv_obj_t **comp_Music_Item = lv_event_get_user_data(e);
-if ( event_code == LV_EVENT_SHORT_CLICKED) {
-      playSelectedMusic( e );
-}
+void ui_event_comp_Music_Item_Music_Item(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    lv_obj_t ** comp_Music_Item = lv_event_get_user_data(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        playSelectedMusic(e);
+    }
 }
 
 // COMPONENT Music Item
 
-lv_obj_t *ui_Music_Item_create(lv_obj_t *comp_parent) {
+lv_obj_t * ui_Music_Item_create(lv_obj_t * comp_parent)
+{
 
-lv_obj_t *cui_Music_Item;
-cui_Music_Item = lv_obj_create(comp_parent);
-lv_obj_remove_style_all(cui_Music_Item);
-lv_obj_set_width( cui_Music_Item, 480);
-lv_obj_set_height( cui_Music_Item, 66);
-lv_obj_set_x( cui_Music_Item, 1 );
-lv_obj_set_y( cui_Music_Item, -84 );
-lv_obj_set_align( cui_Music_Item, LV_ALIGN_CENTER );
-lv_obj_clear_flag( cui_Music_Item, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_t * cui_Music_Item;
+    cui_Music_Item = lv_obj_create(comp_parent);
+    lv_obj_remove_style_all(cui_Music_Item);
+    lv_obj_set_width(cui_Music_Item, 480);
+    lv_obj_set_height(cui_Music_Item, 66);
+    lv_obj_set_x(cui_Music_Item, 1);
+    lv_obj_set_y(cui_Music_Item, -84);
+    lv_obj_set_align(cui_Music_Item, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(cui_Music_Item, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-lv_obj_t *cui_Music_Name;
-cui_Music_Name = lv_label_create(cui_Music_Item);
-lv_obj_set_width( cui_Music_Name, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( cui_Music_Name, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( cui_Music_Name, 100 );
-lv_obj_set_y( cui_Music_Name, 0 );
-lv_obj_set_align( cui_Music_Name, LV_ALIGN_LEFT_MID );
-lv_label_set_text(cui_Music_Name,"自定铃声");
-lv_obj_set_style_text_color(cui_Music_Name, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(cui_Music_Name, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(cui_Music_Name, &ui_font_LanTing18, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_t * cui_Music_Name;
+    cui_Music_Name = lv_label_create(cui_Music_Item);
+    lv_obj_set_width(cui_Music_Name, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(cui_Music_Name, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(cui_Music_Name, 100);
+    lv_obj_set_y(cui_Music_Name, 0);
+    lv_obj_set_align(cui_Music_Name, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(cui_Music_Name, "自定铃声");
+    lv_obj_set_style_text_color(cui_Music_Name, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(cui_Music_Name, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(cui_Music_Name, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-lv_obj_t *cui_Music_Item_Line;
-cui_Music_Item_Line = lv_obj_create(cui_Music_Item);
-lv_obj_set_width( cui_Music_Item_Line, 450);
-lv_obj_set_height( cui_Music_Item_Line, 3);
-lv_obj_set_align( cui_Music_Item_Line, LV_ALIGN_BOTTOM_MID );
-lv_obj_clear_flag( cui_Music_Item_Line, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_t * cui_Music_Item_Line;
+    cui_Music_Item_Line = lv_obj_create(cui_Music_Item);
+    lv_obj_set_width(cui_Music_Item_Line, 450);
+    lv_obj_set_height(cui_Music_Item_Line, 3);
+    lv_obj_set_align(cui_Music_Item_Line, LV_ALIGN_BOTTOM_MID);
+    lv_obj_clear_flag(cui_Music_Item_Line, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-lv_obj_t *cui_Music_Item_Icon;
-cui_Music_Item_Icon = lv_img_create(cui_Music_Item);
-lv_img_set_src(cui_Music_Item_Icon, &ui_img_35201459);
-lv_obj_set_width( cui_Music_Item_Icon, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( cui_Music_Item_Icon, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( cui_Music_Item_Icon, 50 );
-lv_obj_set_y( cui_Music_Item_Icon, 0 );
-lv_obj_set_align( cui_Music_Item_Icon, LV_ALIGN_LEFT_MID );
-lv_obj_add_flag( cui_Music_Item_Icon, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-lv_obj_clear_flag( cui_Music_Item_Icon, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_t * cui_Music_Item_Icon;
+    cui_Music_Item_Icon = lv_img_create(cui_Music_Item);
+    lv_img_set_src(cui_Music_Item_Icon, &ui_img_35201459);
+    lv_obj_set_width(cui_Music_Item_Icon, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(cui_Music_Item_Icon, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(cui_Music_Item_Icon, 50);
+    lv_obj_set_y(cui_Music_Item_Icon, 0);
+    lv_obj_set_align(cui_Music_Item_Icon, LV_ALIGN_LEFT_MID);
+    lv_obj_add_flag(cui_Music_Item_Icon, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(cui_Music_Item_Icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-lv_obj_t ** children = lv_mem_alloc(sizeof(lv_obj_t *) * _UI_COMP_MUSIC_ITEM_NUM);
-children[UI_COMP_MUSIC_ITEM_MUSIC_ITEM] = cui_Music_Item;
-children[UI_COMP_MUSIC_ITEM_MUSIC_NAME] = cui_Music_Name;
-children[UI_COMP_MUSIC_ITEM_MUSIC_ITEM_LINE] = cui_Music_Item_Line;
-children[UI_COMP_MUSIC_ITEM_MUSIC_ITEM_ICON] = cui_Music_Item_Icon;
-lv_obj_add_event_cb(cui_Music_Item, get_component_child_event_cb, LV_EVENT_GET_COMP_CHILD, children);
-lv_obj_add_event_cb(cui_Music_Item, del_component_child_event_cb, LV_EVENT_DELETE, children);
-lv_obj_add_event_cb(cui_Music_Item, ui_event_comp_Music_Item_Music_Item, LV_EVENT_ALL, children);
-ui_comp_Music_Item_create_hook(cui_Music_Item);
-return cui_Music_Item; 
+    lv_obj_t ** children = lv_mem_alloc(sizeof(lv_obj_t *) * _UI_COMP_MUSIC_ITEM_NUM);
+    children[UI_COMP_MUSIC_ITEM_MUSIC_ITEM] = cui_Music_Item;
+    children[UI_COMP_MUSIC_ITEM_MUSIC_NAME] = cui_Music_Name;
+    children[UI_COMP_MUSIC_ITEM_MUSIC_ITEM_LINE] = cui_Music_Item_Line;
+    children[UI_COMP_MUSIC_ITEM_MUSIC_ITEM_ICON] = cui_Music_Item_Icon;
+    lv_obj_add_event_cb(cui_Music_Item, get_component_child_event_cb, LV_EVENT_GET_COMP_CHILD, children);
+    lv_obj_add_event_cb(cui_Music_Item, del_component_child_event_cb, LV_EVENT_DELETE, children);
+    lv_obj_add_event_cb(cui_Music_Item, ui_event_comp_Music_Item_Music_Item, LV_EVENT_ALL, children);
+    ui_comp_Music_Item_create_hook(cui_Music_Item);
+    return cui_Music_Item;
 }
 

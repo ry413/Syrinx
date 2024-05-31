@@ -102,7 +102,7 @@ EventGroupHandle_t get_wifi_event_group(void) {
     return s_wifi_event_group;
 }
 
-void wifi_task(void *pvParameter) {
+void init_wifi_task(void *pvParameter) {
     wifi_init_sta();
     vTaskDelete(NULL);
 }

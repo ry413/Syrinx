@@ -7,7 +7,7 @@
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
-void wifi_task(void *pvParameter);
+void init_wifi_task(void *pvParameter);
 EventGroupHandle_t get_wifi_event_group(void);
 void wifi_disconnect(void);
 

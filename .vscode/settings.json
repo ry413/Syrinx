@@ -34,7 +34,18 @@
         "lvgl.h": "c",
         "bluetooth.h": "c",
         "iconv.h": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "stdint.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "span": "c",
+        "ui_events.h": "c",
+        "rs485.h": "c",
+        "bitset": "c",
+        "regex": "c",
+        "ui_comp_music_item.h": "c",
+        "timesync.h": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

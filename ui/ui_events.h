@@ -5,31 +5,32 @@
 
 #ifndef _UI_EVENTS_H
 #define _UI_EVENTS_H
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void initTime(lv_event_t * e);
+
 void initWifiSettings(lv_event_t * e);
 void initBacklightSettings(lv_event_t * e);
 void initBluetoothSettings(lv_event_t * e);
 void initDateTimeSettings(lv_event_t * e);
 void initIDSettings(lv_event_t * e);
 void initVolumeSettings(lv_event_t * e);
-void setTimeMain(lv_event_t * e);
+void initActions(lv_event_t * e);
+void mainScrLoaded(lv_event_t * e);
 void disconnectWifi(lv_event_t * e);
 void sendATM2(lv_event_t * e);
 void sendATAJ(lv_event_t * e);
+void changeVolume(lv_event_t * e);
 void onScreen(lv_event_t * e);
-void setTimeMusic(lv_event_t * e);
+void musicScrLoaded(lv_event_t * e);
 void prevMusicList(lv_event_t * e);
 void nextMusicList(lv_event_t * e);
-void setTimeNatureSound(lv_event_t * e);
-void setTimeBluetooth(lv_event_t * e);
-void setTimeMode(lv_event_t * e);
-void setTimeWakeup(lv_event_t * e);
-void setTimeGuide(lv_event_t * e);
+void natureSoundScrLoaded(lv_event_t * e);
+void bluetoothScrLoaded(lv_event_t * e);
+void modeScrLoaded(lv_event_t * e);
+void wakeupScrLoaded(lv_event_t * e);
+void guideScrLoaded(lv_event_t * e);
 void decMaxVolume(lv_event_t * e);
 void addMaxVolume(lv_event_t * e);
 void decDefaultVolume(lv_event_t * e);
@@ -46,16 +47,16 @@ void decBacklightTime(lv_event_t * e);
 void addBacklightTime(lv_event_t * e);
 void saveBluetoothSetting(lv_event_t * e);
 void cancelSaveBluetoothSetting(lv_event_t * e);
+void cancelSaveTimeSettings(lv_event_t * e);
 void saveTimeSetting(lv_event_t * e);
 void saveIDSetting(lv_event_t * e);
-void saveWifiNameSetting(lv_event_t * e);
-void saveWifiPasswordSetting(lv_event_t * e);
 void saveWifiSwitchState(lv_event_t * e);
+void saveWifiSetting(lv_event_t * e);
 void prevTrack(lv_event_t * e);
 void playPause(lv_event_t * e);
 void nextTrack(lv_event_t * e);
 void releasedProgressSlider(lv_event_t * e);
-void setTimeIdle(lv_event_t * e);
+void idleScrLoaded(lv_event_t * e);
 void idleBackToMainWindow(lv_event_t * e);
 void offScreen(lv_event_t * e);
 void playSelectedMusic(lv_event_t * e);

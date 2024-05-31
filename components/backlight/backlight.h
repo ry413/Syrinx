@@ -1,6 +1,7 @@
 #ifndef BACKLIGHT_H
 #define BACKLIGHT_H
 
+#include "stdio.h"
 #include "driver/ledc.h"
 #include "../lvgl/lvgl.h"
 
@@ -11,6 +12,10 @@
 #define LEDC_RESOLUTION      LEDC_TIMER_8_BIT
 
 extern lv_obj_t *idle_window;   // 待机界面的指针
+
+// 背光亮度等级与时间, 背光时间分为7级, 0代表永不熄灭
+extern uint32_t backlight_level;
+extern uint32_t backlight_time_level;
 
 void init_backlight(void);
 void set_backlight(uint32_t level);
