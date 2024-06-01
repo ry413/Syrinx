@@ -197,6 +197,9 @@ void get_all_file_names(void) {
 
     // 总文件数
     if (bits & EVENT_TOTAL_FILES) {
+
+        total_files_count = 12;         // 临时
+        
         ESP_LOGI(TAG, "Total files: %d", total_files_count);
         
         utf8_file_names = (char **)malloc(total_files_count * sizeof(char *));

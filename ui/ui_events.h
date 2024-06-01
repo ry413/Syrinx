@@ -19,8 +19,6 @@ void initVolumeSettings(lv_event_t * e);
 void initActions(lv_event_t * e);
 void mainScrLoaded(lv_event_t * e);
 void disconnectWifi(lv_event_t * e);
-void sendATM2(lv_event_t * e);
-void sendATAJ(lv_event_t * e);
 void changeVolume(lv_event_t * e);
 void onScreen(lv_event_t * e);
 void resetInactivityTimer(lv_event_t * e);

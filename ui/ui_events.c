@@ -1346,9 +1346,6 @@ void prevTrack(lv_event_t * e) {
         vTaskDelete(durationTaskHandle);
         durationTaskHandle = NULL;
     }
-    // 除了杀掉任务, 还得刷新串口, 这个不异步的话会阻塞0.几秒的UI
-    // uart_flush(UART_NUM_0);
-    // xTaskCreate(flushUart, "flushUart", 4096, NULL, 6, NULL);
     // 恢复CMD
     current_command = CMD_NONE;
 
@@ -1382,18 +1379,6 @@ void releasedProgressSlider(lv_event_t * e)
     lv_label_set_text(ui_Current_Time, time_str);
 
     // 跳转
+
 }
-
-
-
-void sendATM2(lv_event_t * e)
-{
-	// Your code here
-    bluetooth_send_at_command("AT+BE7993", CMD_BLUETOOTH_PASSWORD);
-}
-void sendATAJ(lv_event_t * e)
-{
-	// Your code here
-}
-
 

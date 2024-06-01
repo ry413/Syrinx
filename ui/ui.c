@@ -57,10 +57,6 @@ lv_obj_t * ui_Disconnect_Wifi;
 lv_obj_t * ui_Label1;
 void ui_event_Button5(lv_event_t * e);
 lv_obj_t * ui_Button5;
-void ui_event_Button2(lv_event_t * e);
-lv_obj_t * ui_Button2;
-void ui_event_Button3(lv_event_t * e);
-lv_obj_t * ui_Button3;
 lv_obj_t * ui_Header_Volume;
 void ui_event_On_Screen_Range(lv_event_t * e);
 lv_obj_t * ui_On_Screen_Range;
@@ -603,22 +599,6 @@ void ui_event_Button5(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_screen_change(&ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
-    }
-}
-void ui_event_Button2(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_CLICKED) {
-        sendATM2(e);
-    }
-}
-void ui_event_Button3(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_CLICKED) {
-        sendATAJ(e);
     }
 }
 void ui_event_On_Screen_Range(lv_event_t * e)

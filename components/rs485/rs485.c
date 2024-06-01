@@ -149,11 +149,13 @@ void process_command(rs485_packet_t *packet, size_t len) {
     }
     // 浴室播放
     else if (memcmp(packet->command, (uint8_t[]){0x16, 0xA0, 0x00, 0x02, 0x00}, (size_t)5) == 0) {
-
+        // 播放bath目录下的001
+        bluetooth_send_at_command("AT+AJ/bath/001*.???", CMD_PLAY_MUSIC);
     }
     // 浴室停止播放
     else if (memcmp(packet->command, (uint8_t[]){0x78, 0x60, 0xE3, 0x26, 0x02}, (size_t)5) == 0) {
-
+        // 停止播放
+        bluetooth_send_at_command("AT+AA0", CMD_STOP_STATE);
     }
     // 未知指令
     else {

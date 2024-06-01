@@ -36,7 +36,7 @@ static uint32_t backlight_level_to_duty(uint32_t level) {
         case 5:
             return 255;
         default:
-            ESP_LOGE("backlightLevelToDuty", "这不应该发生, 错误的亮度级别: %ld", level);
+            ESP_LOGE("backlightLevelToDuty", "错误的亮度级别: %ld", level);
             return 255;
     }
 }
@@ -47,7 +47,7 @@ void set_backlight(uint32_t level) {
 }
 // 背光定时器回调, 进入待机界面
 static void backlight_timer_callback(lv_timer_t * timer) {
-    ESP_LOGI("backlight_timer_cb", "Backlight timeout reached, turning off backlight");
+    ESP_LOGI("backlight_timer_cb", "背光超时, 关闭背光");
     lv_scr_load(idle_window);
     lv_timer_pause(backlight_timer);
 }
