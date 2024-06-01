@@ -72,6 +72,8 @@ extern lv_obj_t * ui_Button3;
 extern lv_obj_t * ui_Header_Volume;
 void ui_event_On_Screen_Range(lv_event_t * e);
 extern lv_obj_t * ui_On_Screen_Range;
+void ui_event_placeadeasdasd(lv_event_t * e);
+extern lv_obj_t * ui_placeadeasdasd;
 // SCREEN: ui_Music_Window
 void ui_Music_Window_screen_init(void);
 void ui_event_Music_Window(lv_event_t * e);

@@ -5,10 +5,10 @@
 
 #ifndef _UI_EVENTS_H
 #define _UI_EVENTS_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 void initWifiSettings(lv_event_t * e);
 void initBacklightSettings(lv_event_t * e);
@@ -23,11 +23,13 @@ void sendATM2(lv_event_t * e);
 void sendATAJ(lv_event_t * e);
 void changeVolume(lv_event_t * e);
 void onScreen(lv_event_t * e);
+void resetInactivityTimer(lv_event_t * e);
 void musicScrLoaded(lv_event_t * e);
 void prevMusicList(lv_event_t * e);
 void nextMusicList(lv_event_t * e);
 void natureSoundScrLoaded(lv_event_t * e);
 void bluetoothScrLoaded(lv_event_t * e);
+void leaveBlutoothWindow(lv_event_t * e);
 void modeScrLoaded(lv_event_t * e);
 void wakeupScrLoaded(lv_event_t * e);
 void guideScrLoaded(lv_event_t * e);

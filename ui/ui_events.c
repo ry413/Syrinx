@@ -25,6 +25,7 @@
 #define WIFI_CONNECTION_TIMEOUT pdMS_TO_TICKS(30000)  // 30秒超时时间
 #define MAX_ITEMS_PER_LIST 5
 #define MAX_LISTS 10  // 假设最多有 10 个 MusicList
+#define BLUETOOTH_INACTIVE_TIME 0.2   // 蓝牙界面无操作几分钟就离开蓝牙界面的几
 
 //////////////////// GLOBAL VARIABLES ////////////////////
 
@@ -38,7 +39,7 @@ static int currentPlayTime = 0;         // 音频进度条的当前值
 static int updateInterval = 0;          // 进度条每次更新的间隔, 因为进度条上限固定为100
 static lv_timer_t *taskCreateTimer = NULL;// 防止一直点[下一首]这种按钮, 会一直创建getDurationTask
 
-
+static lv_timer_t *inactiveTimer;       // 进入蓝牙界面多久时间不操作就返回主界面, 的定时器
 
 // prev开头的都是为了在修改值后没有点击[确认]而是[取消]的情况下, 将原来的值放回去
 // 不过它们实际上也是那些值的真实拥有者
@@ -55,6 +56,7 @@ char *prevWifiName = NULL;
 char *prevWifiPassword = NULL;
 
 static TaskHandle_t durationTaskHandle = NULL;
+static TaskHandle_t bluetooth_connection_task_handle = NULL;
 
 bool isMusicMode = true;
 
@@ -71,7 +73,7 @@ static void createDurationTask(lv_timer_t *timer);
 static void playCurrentIndexMusic(void);
 static void bluetoothRebootTask(void *pvParameter);
 static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min);
-
+static void inactiveLeaveBluetooth(lv_timer_t *timer);
 //////////////////// 不给lvgl事件直接调用的静态函数 ////////////////////
 
 // 联网获取时间的任务
@@ -210,7 +212,8 @@ static void createDurationTask(lv_timer_t *timer)
     taskCreateTimer = NULL;
 }
 // 播放当前index的音乐
-static void playCurrentIndexMusic(void) {
+static void playCurrentIndexMusic(void)
+{
     char command[50];
     // index从0开始, id是从001开始的
     snprintf(command, sizeof(command), "AT+AJ/music/%03d*.???", current_playing_index + 1);
@@ -254,6 +257,68 @@ static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, ui
     // 返回时间戳
     return timestamp;
 }
+// 在蓝牙界面无操作一定时间触发的回调
+static void inactiveLeaveBluetooth(lv_timer_t *timer)
+{
+    // 返回主界面
+    lv_scr_load(ui_Main_Window);
+    // 换到音乐模式
+    bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);   // AT+CM无响应
+    vTaskDelay(2000);                                            // 连着发的话AA2就无效了, 谁让CM不响应OK
+    bluetooth_send_at_command("AT+AA2", CMD_PAUSE_STATE);       // 回到音乐模式会自动播放, 所以这里暂停
+    isMusicMode = true;
+    // 至于为什么在回调里要判断timer存不存在, 是因为这个回调被timer之外的东西调用了, 这可能很不该
+    if (inactiveTimer != NULL) {
+        lv_timer_del(inactiveTimer);
+        inactiveTimer = NULL;
+    }
+
+    if (bluetooth_connection_task_handle != NULL) {
+        vTaskDelete(bluetooth_connection_task_handle);
+        bluetooth_connection_task_handle = NULL;
+    }
+}
+// 调用回调的任务, 还不都是因为那回调里有延时会阻塞界面
+static void inactiveLeaveBlutoothTask(void *pvParameter)
+{
+    inactiveLeaveBluetooth(NULL);
+    vTaskDelete(NULL);
+}
+// 如果有操作(蓝牙连接或触摸)就重置定时器
+void resetInactivityTimer(lv_event_t * e)
+{
+    if (inactiveTimer != NULL) {
+        lv_timer_reset(inactiveTimer);
+    }
+}
+// 持续监听蓝牙是否连接的任务
+void bluetooth_connection_task(void *pvParameter)
+{
+    while (1)
+    {
+        // 在蓝牙界面时永远每10秒检查一次状态, 因为时间很多. 如果检测到已连接就停止timer, 在那之后如果有一次检测到蓝牙断开, 就重新开始timer
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+        // 持续检查蓝牙状态
+        bluetooth_send_at_command("AT+TS", CMD_BLUETOOTH_STATE);
+        EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_WAIT_FOR_CONNET | EVENT_BLUETOOTH_CONNECTED, pdTRUE, pdFALSE, portMAX_DELAY);
+        if (bits & EVENT_BLUETOOTH_CONNECTED) {
+            printf("蓝牙处于连接状态\n");
+            // 销毁离开蓝牙界面的定时器
+            if (inactiveTimer != NULL) {
+                lv_timer_del(inactiveTimer);
+                inactiveTimer = NULL;
+            }
+        } else if (bits & EVENT_BLUETOOTH_WAIT_FOR_CONNET) {
+            printf("蓝牙处于等待连接状态\n");
+            // 如果这个timer是NULL, 说明现在是蓝牙已连接后被断开的状况, 所以重新开始timer, 否则无事发生
+            if (inactiveTimer == NULL) {
+                inactiveTimer = lv_timer_create(inactiveLeaveBluetooth, BLUETOOTH_INACTIVE_TIME * 60 * 1000, NULL);
+            }
+        }
+    }
+    bluetooth_connection_task_handle = NULL;
+    vTaskDelete(NULL);
+}
 //////////////////// 给lvgl的事件用的回调 ////////////////////
 
 // ******************** initial actions ********************
@@ -275,7 +340,7 @@ void mainScrLoaded(lv_event_t * e)
     set_time_label(ui_Header_Main_Time);
     // 本来只有主界面要加这个防止时间未初始化就更新值, 但是用户有可能会在时间未初始化时乱点点到别的界面, 所以每个界面都加上了
     if(global_time > 0)
-    // 每个screen loaded时立即更新一次, 否则就要等到timer来更新了
+    // 每个screen loaded时立即更新一次, 否则就要等到1秒的timeout才更新了
         update_current_time_label();
 }
 void musicScrLoaded(lv_event_t * e)
@@ -296,9 +361,20 @@ void bluetoothScrLoaded(lv_event_t * e)
         update_current_time_label();
     bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);   // AT+CM不响应OK, 什么都不响应
     isMusicMode = false;
-    // 开一个一分钟无操作回主界面的timer, isMusicMode = true
-    // 一分钟无操作回到主界面并进入待机
+    // 开启定时器, 无操作一定时间后离开蓝牙界面(回到主界面)并回到音乐模式
+    if (inactiveTimer != NULL) {
+        lv_timer_del(inactiveTimer);
+    }
+    inactiveTimer = lv_timer_create(inactiveLeaveBluetooth, BLUETOOTH_INACTIVE_TIME * 60 * 1000, NULL);
+    // 同时开启任务, 持续监听蓝牙连接状态
+    if (bluetooth_connection_task_handle == NULL) {
+        xTaskCreate(bluetooth_connection_task, "bluetooth_connection_task", 4096, NULL, 5, &bluetooth_connection_task_handle);
+    }
+
+
     // 在蓝牙界面待机时, 不回到主界面
+
+
 }
 void modeScrLoaded(lv_event_t * e)
 {
@@ -319,7 +395,12 @@ void guideScrLoaded(lv_event_t * e)
     set_time_label(ui_Header_Guide_Time);
     if(global_time > 0)
         update_current_time_label();
-    // 指南界面时, 不进入待机状态
+    // 指南界面时, 不进入待机状态, 所以停止定时器
+}
+void guideScrUnloaded(lv_event_t * e)
+{
+    // 离开指南界面时恢复待机定时器
+
 }
 void idleScrLoaded(lv_event_t * e)
 {
@@ -644,6 +725,13 @@ void cancelSaveBluetoothSetting(lv_event_t * e)
     lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
     lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
 }
+// 点击返回按钮离开蓝牙界面
+void leaveBlutoothWindow(lv_event_t * e)
+{
+    // 创建任务调用这个回调, 所以这个按钮只调用CALL FUNCTION, 并不CHANGE SCREEN
+    xTaskCreate(inactiveLeaveBlutoothTask, "inactiveLeaveBlutoothTask", 4096, NULL, 5, NULL);
+}
+
 // ******************** 时间相关 ********************
 
 // 初始化时间与日期

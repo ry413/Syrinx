@@ -437,7 +437,20 @@ void bluetooth_monitor_task(void *pvParameters) {
             } else if (strncmp(response, "MT+", 3) == 0) {
                 sscanf(response, "MT+%d", &current_music_duration);
                 xEventGroupSetBits(event_group, EVENT_DURATION);
-            } else if (response[0] == 0xF0) {
+            } else if (strncmp(response, "TS+", 3) == 0) {
+                int bl_state;
+                sscanf(response, "TS+%d", &bl_state);
+                // 1是等待连接
+                if (bl_state == 1) {
+                    xEventGroupSetBits(event_group, EVENT_BLUETOOTH_WAIT_FOR_CONNET);
+                }
+                // 0表示处于音乐模式, TS指令只在蓝牙模式发, 所以应该不可能出现(所以丢掉了), 如果是剩下的就表示已接通
+                else if (bl_state != 0) {
+                    xEventGroupSetBits(event_group, EVENT_BLUETOOTH_CONNECTED);
+                }
+            }
+            // AT+CZ复位芯片时会发个0xF0
+            else if (response[0] == 0xF0) {
                 printf("REBOOTED\n");
             }
             

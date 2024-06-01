@@ -28,6 +28,8 @@ typedef enum {
     CMD_CHANGE_TO_MUSIC,        // AT+CM    切换到音乐模式
     CMD_ON_MUTE,                // AT+CU1   静音
     CMD_OFF_MUTE,               // AT+CU0   取消静音
+    CMD_BLUETOOTH_STATE,         // AT+TS    获取蓝牙状态
+    CMD_BLUETOOTH_WAIT_FOR_CONNECT // AT+BA0   等待蓝牙连接
 } command_type_t;
 
 #define EVENT_TOTAL_FILES (1 << 0)
@@ -49,6 +51,8 @@ typedef enum {
 // #define EVENT_CHANGE_TO_MUSIC (1 << 16)
 #define EVENT_ON_MUTE (1 << 17)
 #define EVENT_OFF_MUTE (1 << 18)
+#define EVENT_BLUETOOTH_CONNECTED (1 << 19)
+#define EVENT_BLUETOOTH_WAIT_FOR_CONNET (1 << 20)
 
 extern bool is_music_mode;
 
