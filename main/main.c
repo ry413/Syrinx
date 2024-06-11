@@ -175,7 +175,7 @@ static void example_lvgl_touch_cb(lv_indev_drv_t * drv, lv_indev_data_t * data)
         // 仅在状态变化时重置定时器
         if (!is_touching) {
             reset_backlight_timer();    // 背光待机定时器
-            resetInactivityTimer(NULL); // 也重置蓝牙界面无操作就返回主界面的定时器
+            resetInactiveTimer(NULL); // 也重置蓝牙界面无操作就返回主界面的定时器
             is_touching = true;
         }
     } else {

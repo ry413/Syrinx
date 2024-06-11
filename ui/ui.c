@@ -92,18 +92,22 @@ lv_obj_t * ui_Header_Nature_Sound_Text;
 lv_obj_t * ui_Header_Nature_Sound_Time;
 lv_obj_t * ui_Nature_Sound_Menu;
 lv_obj_t * ui_Bird_Sound;
+void ui_event_Bird_Sound_Btn(lv_event_t * e);
 lv_obj_t * ui_Bird_Sound_Btn;
 lv_obj_t * ui_Bird_Sound_Icon;
 lv_obj_t * ui_Bird_Sound_Text;
 lv_obj_t * ui_Bug_Sound;
+void ui_event_Bug_Sound_Btn(lv_event_t * e);
 lv_obj_t * ui_Bug_Sound_Btn;
 lv_obj_t * ui_Bug_Sound_Icon;
 lv_obj_t * ui_Bug_Sound_Text;
 lv_obj_t * ui_Forest_Sound;
+void ui_event_Forest_Sound_Btn(lv_event_t * e);
 lv_obj_t * ui_Forest_Sound_Btn;
 lv_obj_t * ui_Forest_Sound_Icon;
 lv_obj_t * ui_Forest_Sound_Text;
 lv_obj_t * ui_Sea_Sound;
+void ui_event_Sea_Sound_Btn(lv_event_t * e);
 lv_obj_t * ui_Sea_Sound_Btn;
 lv_obj_t * ui_Sea_Sound_Icon;
 lv_obj_t * ui_Sea_Sound_Text;
@@ -186,11 +190,15 @@ lv_obj_t * ui_Header_Wake_up_Time;
 lv_obj_t * ui_Custom_Ringtone;
 lv_obj_t * ui_Custom_Ringtone_Text;
 lv_obj_t * ui_Custom_Ringtone_Line;
+void ui_event_Custom_Ringtone_Btn(lv_event_t * e);
+lv_obj_t * ui_Custom_Ringtone_Btn;
 lv_obj_t * ui_Custom_Ringtone_Decora_Icon;
-lv_obj_t * ui_Wake_up_Time;
-lv_obj_t * ui_Wake_up_Time_Text;
-lv_obj_t * ui_Wake_up_Time_Line;
-lv_obj_t * ui_Wake_up_Time_Decora_Icon;
+lv_obj_t * ui_Wakeup_Time;
+lv_obj_t * ui_Wakeup_Time_Text;
+lv_obj_t * ui_Wakeup_Time_Line;
+void ui_event_Wakeup_Time_Btn(lv_event_t * e);
+lv_obj_t * ui_Wakeup_Time_Btn;
+lv_obj_t * ui_Wakeup_Time_Decora_Icon;
 void ui_event_BackToMainWindowBtn5(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn5;
 lv_obj_t * ui_Header_Volume6;
@@ -536,6 +544,9 @@ void ui_event_Main_Window(lv_event_t * e)
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         mainScrLoaded(e);
     }
+    if(event_code == LV_EVENT_SCREEN_UNLOADED) {
+        leaveMainWindow(e);
+    }
 }
 void ui_event_Music_Btn(lv_event_t * e)
 {
@@ -614,7 +625,7 @@ void ui_event_placeadeasdasd(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        resetInactivityTimer(e);
+        resetInactiveTimer(e);
     }
 }
 void ui_event_Music_Window(lv_event_t * e)
@@ -657,12 +668,45 @@ void ui_event_Nature_Sound_Window(lv_event_t * e)
         natureSoundScrLoaded(e);
     }
 }
+void ui_event_Bird_Sound_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        selectBirdSound(e);
+    }
+}
+void ui_event_Bug_Sound_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        selectBugSound(e);
+    }
+}
+void ui_event_Forest_Sound_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        selectForestSound(e);
+    }
+}
+void ui_event_Sea_Sound_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        selectSeaSound(e);
+    }
+}
 void ui_event_BackToMainWindowBtn7(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_screen_change(&ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
+        leaveNatureSoundWindow(e);
     }
 }
 void ui_event_Bluetooth_WIndow(lv_event_t * e)
@@ -751,6 +795,22 @@ void ui_event_Wake_up_Window(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         wakeupScrLoaded(e);
+    }
+}
+void ui_event_Custom_Ringtone_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        _ui_flag_modify(ui_Backlight_Time_Panel2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+    }
+}
+void ui_event_Wakeup_Time_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        _ui_flag_modify(ui_Backlight_Time_Panel2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
 void ui_event_BackToMainWindowBtn5(lv_event_t * e)

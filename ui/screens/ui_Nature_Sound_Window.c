@@ -72,6 +72,10 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_obj_set_style_radius(ui_Bird_Sound_Btn, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_Bird_Sound_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Bird_Sound_Btn, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_Bird_Sound_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ui_Bird_Sound_Btn, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ui_Bird_Sound_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ui_Bird_Sound_Btn, 0, LV_PART_MAIN | LV_STATE_CHECKED);
 
     ui_Bird_Sound_Icon = lv_img_create(ui_Bird_Sound_Btn);
     lv_img_set_src(ui_Bird_Sound_Icon, &ui_img_12669592);
@@ -114,6 +118,10 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_obj_set_style_radius(ui_Bug_Sound_Btn, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_Bug_Sound_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Bug_Sound_Btn, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_Bug_Sound_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ui_Bug_Sound_Btn, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ui_Bug_Sound_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ui_Bug_Sound_Btn, 0, LV_PART_MAIN | LV_STATE_CHECKED);
 
     ui_Bug_Sound_Icon = lv_img_create(ui_Bug_Sound_Btn);
     lv_img_set_src(ui_Bug_Sound_Icon, &ui_img_2034599484);
@@ -156,6 +164,10 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_obj_set_style_radius(ui_Forest_Sound_Btn, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_Forest_Sound_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Forest_Sound_Btn, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_Forest_Sound_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ui_Forest_Sound_Btn, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ui_Forest_Sound_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ui_Forest_Sound_Btn, 0, LV_PART_MAIN | LV_STATE_CHECKED);
 
     ui_Forest_Sound_Icon = lv_img_create(ui_Forest_Sound_Btn);
     lv_img_set_src(ui_Forest_Sound_Icon, &ui_img_304460963);
@@ -198,6 +210,10 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_obj_set_style_radius(ui_Sea_Sound_Btn, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_Sea_Sound_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Sea_Sound_Btn, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_Sea_Sound_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ui_Sea_Sound_Btn, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ui_Sea_Sound_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ui_Sea_Sound_Btn, 0, LV_PART_MAIN | LV_STATE_CHECKED);
 
     ui_Sea_Sound_Icon = lv_img_create(ui_Sea_Sound_Btn);
     lv_img_set_src(ui_Sea_Sound_Icon, &ui_img_1893023884);
@@ -236,6 +252,10 @@ void ui_Nature_Sound_Window_screen_init(void)
 
 
 
+    lv_obj_add_event_cb(ui_Bird_Sound_Btn, ui_event_Bird_Sound_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Bug_Sound_Btn, ui_event_Bug_Sound_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Forest_Sound_Btn, ui_event_Forest_Sound_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Sea_Sound_Btn, ui_event_Sea_Sound_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BackToMainWindowBtn7, ui_event_BackToMainWindowBtn7, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Nature_Sound_Window, ui_event_Nature_Sound_Window, LV_EVENT_ALL, NULL);
 

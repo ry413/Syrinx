@@ -165,9 +165,9 @@ esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type
 
 // 添加文件名到列表
 void add_file_name(char **utf8_file_names, int index, const char *file_name) {
-    // 确保 file_name 以 "MF+" 开头并以 ".mp3" 结尾, 理想中显然这不应该出错, 谁知道呢
+    // 确保 file_name 以 "MF+" 开头并以 ".mp3" 结尾
     if (strncmp(file_name, "MF+", 3) != 0 || strcmp(file_name + strlen(file_name) - 4, ".mp3") != 0) {
-        ESP_LOGE(TAG,"Invalid file name format: %s", file_name);
+        ESP_LOGE(TAG, "Invalid file name format: %s", file_name);
         return;
     }
 
@@ -176,29 +176,49 @@ void add_file_name(char **utf8_file_names, int index, const char *file_name) {
 
     // 计算新的文件名长度（去除 ".mp3" 的长度）
     size_t name_length = strlen(name_start) - 4;
+    
+    // 检查 name_length 是否合理
+    if (name_length <= 0) {
+        ESP_LOGE(TAG, "Invalid file name length after processing: %s", file_name);
+        return;
+    }
 
-    // 创建临时缓冲区以存储处理后的文件名
-    char temp_name[name_length + 1];
+    // 动态分配内存以存储处理后的文件名
+    char *temp_name = (char *)malloc(name_length + 1);
+    if (temp_name == NULL) {
+        ESP_LOGE(TAG, "Failed to allocate memory for temp_name");
+        return;
+    }
+
+    // 复制处理后的文件名到临时缓冲区
     strncpy(temp_name, name_start, name_length);
     temp_name[name_length] = '\0';
 
+    // 将处理后的文件名复制到 utf8_file_names 列表中
     utf8_file_names[index] = strdup(temp_name);
+    free(temp_name);  // 释放临时缓冲区
     if (utf8_file_names[index] == NULL) {
-        ESP_LOGE(TAG, "Failed to duplicate string");
+        ESP_LOGE(TAG, "Failed to duplicate string for utf8_file_names[%d]", index);
         return;
-    };
+    }
 }
 void get_all_file_names(void) {
     // 开机时会收到一个ERR+1, 所以这里延迟一秒等那个ERR+1被读掉
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     // 发送获取总文件数的命令
-    bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
-    EventBits_t bits = xEventGroupWaitBits(event_group, EVENT_TOTAL_FILES, pdTRUE, pdFALSE, portMAX_DELAY);
+    // bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
+    // EventBits_t bits = xEventGroupWaitBits(event_group, EVENT_TOTAL_FILES, pdTRUE, pdFALSE, portMAX_DELAY);
+
+    // // 总文件数
+    // if (bits & EVENT_TOTAL_FILES) {
+
+    bluetooth_send_at_command("AT+AJ/music/001*.???", CMD_PLAY_MUSIC);
+    EventBits_t bits = xEventGroupWaitBits(event_group, EVENT_PLAY_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
 
     // 总文件数
-    if (bits & EVENT_TOTAL_FILES) {
+    if (bits & EVENT_PLAY_MUSIC) {
 
-        total_files_count = 12;         // 临时
+        total_files_count = 2;         // 临时
         
         ESP_LOGI(TAG, "Total files: %d", total_files_count);
         
@@ -380,6 +400,7 @@ void bluetooth_monitor_task(void *pvParameters) {
             ESP_LOGI(TAG, "Received response: cmd: %d, %s\n", current_command, response);
             // 只有响应OK才需要判断是给谁的OK
             if (strncmp(response, "OK", 2) == 0) {
+                printf("OK!!: %d\n", current_command);
                 // 暂时没用的就不设置事件组了
                 switch (current_command) {
                     case CMD_NEXT_TRACK:
@@ -420,6 +441,13 @@ void bluetooth_monitor_task(void *pvParameters) {
                         break;
                     case CMD_OFF_MUTE:
                         xEventGroupSetBits(event_group, EVENT_OFF_MUTE);
+                        break;
+                    case CMD_MODE_CHANGE:
+                        xEventGroupSetBits(event_group, EVENT_MODE_CHANGED);
+                        break;
+                    case CMD_SINGLE_CYCLE_MODE_CHANGE:
+                        printf("WTF\n");
+                        xEventGroupSetBits(event_group, EVENT_SINGLE_CYCLE_MODE_CHANGED);
                         break;
                     default:
                         ESP_LOGI(TAG, "Other CMD: %d", current_command);

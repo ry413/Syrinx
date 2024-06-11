@@ -49,7 +49,6 @@ void set_backlight(uint32_t level) {
 static void backlight_timer_callback(lv_timer_t * timer) {
     ESP_LOGI("backlight_timer_cb", "背光超时, 关闭背光");
     lv_scr_load(idle_window);
-    lv_timer_pause(backlight_timer);
 }
 
 
@@ -92,6 +91,7 @@ void init_backlight(void) {
 }
 // 创建背光定时器, 修改背光时间时也调用这里, 也就是会创建新的定时器
 void init_backlight_timer(uint32_t timeout_seconds) {
+    printf("已创建背光定时器\n");
     if (backlight_timer != NULL) {
         lv_timer_del(backlight_timer);
     }
