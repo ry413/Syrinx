@@ -6,8 +6,8 @@
 
 // 背光定时器是为了进入待机界面, 并不是黑屏
 
-uint32_t backlight_level = 0;
-uint32_t backlight_time_level = 0;
+uint32_t backlight_level = 3;
+uint32_t backlight_time_level = 3;
 
 
 static lv_timer_t *backlight_timer;      // 背光定时器
@@ -66,7 +66,8 @@ void init_backlight(void) {
     if (err != ESP_OK) {
         ESP_LOGE("initBacklight", "Failed to get backlightLevel from NVS");
         nvs_close(nvs_handle);
-        return;
+        backlightLevel = 3;
+        // return;
     }
     nvs_close(nvs_handle);
 
@@ -91,11 +92,15 @@ void init_backlight(void) {
 }
 // 创建背光定时器, 修改背光时间时也调用这里, 也就是会创建新的定时器
 void init_backlight_timer(uint32_t timeout_seconds) {
-    printf("已创建背光定时器\n");
+    // 0则为永不关闭背光
+    if(timeout_seconds == 0) {
+        return;
+    }
     if (backlight_timer != NULL) {
         lv_timer_del(backlight_timer);
     }
     backlight_timer = lv_timer_create(backlight_timer_callback, timeout_seconds * 1000, NULL);
+    printf("已创建背光定时器\n");
 }
 // 重置并取消暂停背光定时器
 void reset_backlight_timer(void) {

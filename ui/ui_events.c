@@ -49,8 +49,8 @@ char *prevBluetoothName = NULL;
 char *prevBluetoothPassword = NULL;
 
 // 默认音量与最大音量
-uint32_t prevDefaultVolume;
-uint32_t prevMaxVolume;
+uint32_t prevDefaultVolume = 50;
+uint32_t prevMaxVolume = 100;
 char *prevWifiName = NULL;
 char *prevWifiPassword = NULL;
 
@@ -293,15 +293,16 @@ static void cleanBluetoothTask(void *pvParameter)
 // 在非主界面无操作一定时间后的回调
 static void inactiveCallback(lv_timer_t *timer)
 {
-    // 在返回之前的那个screen
+    // 记录当前screen
     lv_obj_t *prevScreen = lv_scr_act();
-    // 先返回主界面再处理
     lv_scr_load(ui_Main_Window);
 
     // 如果之前处于蓝牙界面
     if (prevScreen == ui_Bluetooth_WIndow)
     {
+        xTaskCreate(cleanBluetoothTask, "cleanBluetoothTask", 4096, NULL, 5, NULL);
     }
+    // 如果之前处于...
 
     delInactiveTimer();
 }
@@ -322,14 +323,8 @@ static void delInactiveTimer(void)
         inactiveTimer = NULL;
     }
 }
-// // 调用回调的任务, 还不都是因为那回调里有延时会阻塞界面
-// static void inactiveLeaveBlutoothTask(void *pvParameter)
-// {
-//     inactiveLeaveBluetooth(NULL);
-//     vTaskDelete(NULL);
-// }
 
-// 如果有操作(触摸)就重置定时器, 暴露给main.c中的触摸屏回调使用
+// 暴露给main.c中的触摸屏回调使用
 void resetInactiveTimer(lv_event_t *e)
 {
     if (inactiveTimer != NULL)
@@ -401,11 +396,9 @@ void musicScrLoaded(lv_event_t *e)
 }
 void natureSoundScrLoaded(lv_event_t *e)
 {
-    printf("aaaa\n");
     set_time_label(ui_Header_Nature_Sound_Time);
     if (global_time > 0)
         update_current_time_label();
-    printf("bbbb\n");
 }
 void bluetoothScrLoaded(lv_event_t *e)
 {
@@ -458,7 +451,7 @@ void idleScrLoaded(lv_event_t *e)
 void initBacklightSettings(lv_event_t *e)
 {
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("BLSettings", NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open("BLSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
     {
         ESP_LOGE("backlightSettings", "Failed to open NVS");
@@ -466,20 +459,34 @@ void initBacklightSettings(lv_event_t *e)
     }
 
     err = nvs_get_u32(nvs_handle, "level", &backlight_level);
-    if (err != ESP_OK)
+    if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGE("backlightSettings", "Failed to get backlight_level from NVS");
-        nvs_close(nvs_handle);
-        return;
+        ESP_LOGW("backlightSettings", "NVS中未找到'level', 将写入默认值 %d", backlight_level);
+        err = nvs_set_u32(nvs_handle, "level", backlight_level);
+        if (err != ESP_OK) {
+            ESP_LOGE("backlightSettings", "Failed to set default value for 'level': %s", esp_err_to_name(err));
+        } else {
+            nvs_commit(nvs_handle);
+        }
+    } else if (err != ESP_OK)
+    {
+        ESP_LOGE("backlightSettings", "Failed to get 'level' from NVS: %s", esp_err_to_name(err));
     }
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value2, "%ld", backlight_level);
 
     err = nvs_get_u32(nvs_handle, "time", &backlight_time_level);
-    if (err != ESP_OK)
+    if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGE("backlightSettings", "Failed to get backlightTimeLevel from NVS");
-        nvs_close(nvs_handle);
-        return;
+        ESP_LOGW("backlightSettings", "NVS中未找到'time'，将写入默认值 %d", backlight_time_level);
+        err = nvs_set_u32(nvs_handle, "time", backlight_time_level);
+        if (err != ESP_OK) {
+            ESP_LOGE("backlightSettings", "Failed to set default value for 'time': %s", esp_err_to_name(err));
+        } else {
+            nvs_commit(nvs_handle);
+        }
+    } else if (err != ESP_OK)
+    {
+        ESP_LOGE("backlightSettings", "Failed to get 'time' from NVS: %s", esp_err_to_name(err));
     }
 
     set_backlight_time_to_label(ui_Backlight_Time_Value2, backlight_time_level);
@@ -613,7 +620,8 @@ void leaveMainWindow(lv_event_t *e)
     // 进入Idle即正常待机, 直接返回
     if (currentScreen == ui_Idle_Window)
     {
-        printf("Idle\n");
+        printf("is Idle\n");
+        delInactiveTimer();
         return;
     }
     else
@@ -655,7 +663,7 @@ void idleBackToMainWindow(lv_event_t *e)
 void initBluetoothSettings(lv_event_t *e)
 {
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("BluetoothCfg", NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open("BluetoothCfg", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
     {
         ESP_LOGE("initBluetoothSettings", "Failed to open NVS: %s", esp_err_to_name(err));
@@ -665,13 +673,30 @@ void initBluetoothSettings(lv_event_t *e)
     // 读取蓝牙名称
     size_t required_size = 0;
     err = nvs_get_str(nvs_handle, "name", NULL, &required_size);
-    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
+    if (err == ESP_ERR_NVS_NOT_FOUND)
+    {
+        const char *defaultBluetoothName = "Default_BT_Name";
+        ESP_LOGW("initBluetoothSettings", "NVS中未找到'name', 将写入默认值 %s", defaultBluetoothName);
+        err = nvs_set_str(nvs_handle, "name", defaultBluetoothName);
+        if (err != ESP_OK)
+        {
+            ESP_LOGE("initBluetoothSettings", "Failed to set default name in NVS: %s", esp_err_to_name(err));
+        }
+        else
+        {
+            nvs_commit(nvs_handle);
+        }
+        prevBluetoothName = strdup(defaultBluetoothName);
+        lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
+        lv_label_set_text(ui_Bluetooth_Name_Value, prevBluetoothName);
+    }
+    else if (err != ESP_OK)
     {
         ESP_LOGE("initBluetoothSettings", "Failed to get size for name from NVS: %s", esp_err_to_name(err));
         nvs_close(nvs_handle);
         return;
     }
-    if (required_size > 0)
+    else
     {
         char *tempBluetoothName = malloc(required_size);
         if (tempBluetoothName == NULL)
@@ -691,29 +716,40 @@ void initBluetoothSettings(lv_event_t *e)
         }
         if (prevBluetoothName != NULL)
         {
-            ESP_LOGE("initBluetoothSettings", "运行到这的时候prevBluetoothName不可能不是NULL");
             free(prevBluetoothName);
         }
         prevBluetoothName = tempBluetoothName;
         lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
         lv_label_set_text(ui_Bluetooth_Name_Value, prevBluetoothName);
     }
-    else
-    {
-        ESP_LOGI("initBluetoothSettings", "Bluetooth name not set in NVS");
-    }
 
     // 读取蓝牙密码
     required_size = 0;
     err = nvs_get_str(nvs_handle, "password", NULL, &required_size);
-    if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
+    if (err == ESP_ERR_NVS_NOT_FOUND)
+    {
+        const char *defaultBluetoothPassword = "1234"; // 设置默认蓝牙密码
+        ESP_LOGW("initBluetoothSettings", "NVS中未找到'password', 将写入默认值 %s", defaultBluetoothPassword);
+        err = nvs_set_str(nvs_handle, "password", defaultBluetoothPassword);
+        if (err != ESP_OK)
+        {
+            ESP_LOGE("initBluetoothSettings", "Failed to set default password in NVS: %s", esp_err_to_name(err));
+        }
+        else
+        {
+            nvs_commit(nvs_handle);
+        }
+        prevBluetoothPassword = strdup(defaultBluetoothPassword);
+        lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
+        lv_label_set_text(ui_Bluetooth_Password_Value, prevBluetoothPassword);
+    }
+    else if (err != ESP_OK)
     {
         ESP_LOGE("initBluetoothSettings", "Failed to get size for password from NVS: %s", esp_err_to_name(err));
         nvs_close(nvs_handle);
         return;
     }
-
-    if (required_size > 0)
+    else
     {
         char *tempBluetoothPassword = malloc(required_size);
         if (tempBluetoothPassword == NULL)
@@ -734,16 +770,11 @@ void initBluetoothSettings(lv_event_t *e)
 
         if (prevBluetoothPassword != NULL)
         {
-            ESP_LOGE("initBluetoothSettings", "这应该不会发生, 运行这部分的时候prevBluetoothPassword不可能不是NULL");
             free(prevBluetoothPassword);
         }
         prevBluetoothPassword = tempBluetoothPassword;
         lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
         lv_label_set_text(ui_Bluetooth_Password_Value, prevBluetoothPassword);
-    }
-    else
-    {
-        ESP_LOGI("initBluetoothSettings", "Bluetooth password not set in NVS");
     }
 
     nvs_close(nvs_handle);
@@ -825,6 +856,7 @@ void cancelSaveBluetoothSetting(lv_event_t *e)
 void leaveBlutoothWindow(lv_event_t *e)
 {
     xTaskCreate(cleanBluetoothTask, "cleanBluetoothTask", 4096, NULL, 5, NULL);
+    lv_scr_load(ui_Main_Window);
 }
 
 // ******************** 时间相关 ********************
@@ -833,7 +865,7 @@ void leaveBlutoothWindow(lv_event_t *e)
 void initDateTimeSettings(lv_event_t *e)
 {
     // nvs_handle_t nvs_handle;
-    // esp_err_t err = nvs_open("TimeSettings", NVS_READONLY, &nvs_handle);
+    // esp_err_t err = nvs_open("TimeSettings", NVS_READWRITE, &nvs_handle);
     // if (err != ESP_OK) {
     //     ESP_LOGE("initDateTimeSettings", "Failed to open NVS: %s", esp_err_to_name(err));
     //     return;
@@ -980,30 +1012,48 @@ void cancelSaveTimeSettings(lv_event_t *e)
 void initVolumeSettings(lv_event_t *e)
 {
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("VolumeCfg", NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open("VolumeCfg", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
     {
         ESP_LOGE("initVolumeSettings", "Failed to open NVS");
         return;
     }
-
+    // 读取 defaultVolume
     err = nvs_get_u32(nvs_handle, "defaultVolume", &prevDefaultVolume);
+    if (err == ESP_ERR_NVS_NOT_FOUND)
+    {
+        ESP_LOGW("initVolumeSettings", "NVS中未找到'defaultVolume', 将写入默认值 %d", prevDefaultVolume);
+        err = nvs_set_u32(nvs_handle, "defaultVolume", prevDefaultVolume);
+        if (err != ESP_OK) {
+            ESP_LOGE("initVolumeSettings", "Failed to set defaultVolume in NVS: %s", esp_err_to_name(err));
+        } else {
+            nvs_commit(nvs_handle);
+        }
+    }
+    else if (err != ESP_OK)
+    {
+        ESP_LOGE("initVolumeSettings", "Failed to get defaultVolume from NVS: %s", esp_err_to_name(err));
+    }
     lv_label_set_text_fmt(ui_Default_Volume_Value, "%ld", prevDefaultVolume);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE("backlightSettings", "Failed to get defaultVolume from NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
 
+    // 读取 maxVolume
     err = nvs_get_u32(nvs_handle, "maxVolume", &prevMaxVolume);
-    lv_label_set_text_fmt(ui_Max_Volume_Value, "%ld", prevMaxVolume);
-    if (err != ESP_OK)
+    if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGE("backlightSettings", "Failed to get prevMaxVolume from NVS");
-        nvs_close(nvs_handle);
-        return;
+        ESP_LOGW("initVolumeSettings", "NVS中未找到'maxVolume', 将写入默认值 %d", prevMaxVolume);
+        err = nvs_set_u32(nvs_handle, "maxVolume", prevMaxVolume);
+        if (err != ESP_OK) {
+            ESP_LOGE("initVolumeSettings", "Failed to set maxVolume in NVS: %s", esp_err_to_name(err));
+        } else {
+            nvs_commit(nvs_handle);
+        }
     }
+    else if (err != ESP_OK)
+    {
+        ESP_LOGE("initVolumeSettings", "Failed to get maxVolume from NVS: %s", esp_err_to_name(err));
+    }
+    lv_label_set_text_fmt(ui_Max_Volume_Value, "%ld", prevMaxVolume);
+
     nvs_close(nvs_handle);
 }
 // 增加默认音量
@@ -1098,20 +1148,32 @@ void initIDSettings(lv_event_t *e)
     esp_err_t err = nvs_open("IDSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
     {
-        ESP_LOGE("initIDSettings", "Failed to open NVS");
+        ESP_LOGE("initIDSettings", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
     err = nvs_get_u32(nvs_handle, "ID", &id);
-    if (err != ESP_OK)
+    if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGE("initIDSettings", "Failed to get ID in NVS");
+        id = 1;
+        ESP_LOGW("initIDSettings", "NVS中未找到'ID', 将写入默认值 %d", id);
+        err = nvs_set_u32(nvs_handle, "ID", id);
+        if (err != ESP_OK) {
+            ESP_LOGE("initIDSettings", "Failed to set default ID in NVS: %s", esp_err_to_name(err));
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_commit(nvs_handle);
+        if (err != ESP_OK) {
+            ESP_LOGE("initIDSettings", "Failed to commit NVS changes: %s", esp_err_to_name(err));
+            nvs_close(nvs_handle);
+            return;
+        }
+    }
+    else if (err != ESP_OK)
+    {
+        ESP_LOGE("initIDSettings", "Failed to get ID from NVS: %s", esp_err_to_name(err));
         nvs_close(nvs_handle);
         return;
-    }
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE("initIDSettings", "Failed to commit NVS changes");
     }
     // 将 uint32_t 转换为字符串
     char id_str[12]; // uint32_t 最大值为 4294967295，需要 11 个字符的空间加上 null 终止符, 谁知道哪会来那么大ID
@@ -1152,7 +1214,7 @@ void saveIDSetting(lv_event_t *e)
 void initWifiSettings(lv_event_t *e)
 {
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("WifiCfg", NVS_READONLY, &nvs_handle);
+    esp_err_t err = nvs_open("WifiCfg", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK)
     {
         ESP_LOGE("initWifiSettings", "Failed to open NVS: %s", esp_err_to_name(err));
@@ -1161,9 +1223,23 @@ void initWifiSettings(lv_event_t *e)
     // 读取wifi开关状态
     uint8_t wifi_enabled = 0;
     err = nvs_get_u8(nvs_handle, "enabled", &wifi_enabled);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE("initWifiSettings", "Failed to get enabled from NVS: %s", esp_err_to_name(err));
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        wifi_enabled = 0;
+        ESP_LOGW("initWifiSettings", "NVS中未找到'enabled', 将写入默认值 %d", wifi_enabled);
+        err = nvs_set_u8(nvs_handle, "enabled", wifi_enabled);
+        if (err != ESP_OK) {
+            ESP_LOGE("initWifiSettings", "Failed to set default value for 'enabled': %s", esp_err_to_name(err));
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_commit(nvs_handle);
+        if (err != ESP_OK) {
+            ESP_LOGE("initWifiSettings", "Failed to commit 'enabled' to NVS: %s", esp_err_to_name(err));
+            nvs_close(nvs_handle);
+            return;
+        }
+    } else if (err != ESP_OK) {
+        ESP_LOGE("initWifiSettings", "Failed to get 'wifi_enabled' from NVS: %s", esp_err_to_name(err));
     }
     if (wifi_enabled)
     {

@@ -45,7 +45,12 @@
         "bitset": "c",
         "regex": "c",
         "ui_comp_music_item.h": "c",
-        "timesync.h": "c"
+        "timesync.h": "c",
+        "esp_lcd_touch_gt911.h": "c",
+        "esp_rom_sys.h": "c",
+        "atomic": "c",
+        "memory_resource": "c",
+        "stop_token": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

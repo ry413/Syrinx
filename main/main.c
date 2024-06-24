@@ -60,6 +60,7 @@ lv_indev_t * indev_touch = NULL;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if	defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_UR)
 #define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (18 * 1000 * 1000)
+// #define EXAMPLE_LCD_PIXEL_CLOCK_HZ     (12 * 1000 * 1000)
 #define EXAMPLE_LCD_BK_LIGHT_ON_LEVEL  1
 #define EXAMPLE_LCD_BK_LIGHT_OFF_LEVEL !EXAMPLE_LCD_BK_LIGHT_ON_LEVEL
 
@@ -168,14 +169,17 @@ static void example_lvgl_touch_cb(lv_indev_drv_t * drv, lv_indev_data_t * data)
     // 防止触摸时持续重置定时器
     static bool is_touching = false;
     if (touchpad_pressed && touchpad_cnt > 0) {
-        data->point.x = touchpad_x[0];
-        data->point.y = touchpad_y[0];
+        // data->point.x = touchpad_x[0];
+        // data->point.y = touchpad_y[0];
+        // 翻转触摸坐标
+        data->point.x = 480 - touchpad_x[0];
+        data->point.y = 480 - touchpad_y[0];
         data->state = LV_INDEV_STATE_PR;
         ESP_LOGI(TAG, "X=%u Y=%u", data->point.x, data->point.y);
         // 仅在状态变化时重置定时器
         if (!is_touching) {
-            reset_backlight_timer();    // 背光待机定时器
-            resetInactiveTimer(NULL); // 也重置蓝牙界面无操作就返回主界面的定时器
+            resetInactiveTimer(NULL);   // 重置无操作就返回主界面的定时器
+            reset_backlight_timer();    // 重置待机定时器
             is_touching = true;
         }
     } else {
@@ -348,6 +352,7 @@ static void lvgl_task(void *pvParameter)
 #endif // CONFIG_EXAMPLE_DOUBLE_FB
     };
     ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &panel_handle));
+    esp_lcd_panel_mirror(panel_handle, true, true); // 翻转x与y
 
     ESP_LOGI(TAG, "Register event callbacks");
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
@@ -564,6 +569,13 @@ void enable_touch(void) {
  *   APPLICATION MAIN
  **********************/
 void app_main() {
+    // esp_err_t err = nvs_flash_erase();
+    // if (err != ESP_OK) {
+    //     ESP_LOGE("eraseNVS", "Failed to erase NVS: %s", esp_err_to_name(err));
+    // } else {
+    //     ESP_LOGI("eraseNVS", "NVS erased successfully");
+    // }
+    
     // 初始化NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
