@@ -67,7 +67,7 @@ lv_indev_t * indev_touch = NULL;
 #define EXAMPLE_PIN_NUM_BK_LIGHT       (1)
 
 #define EXAMPLE_PIN_NUM_PCLK     (41)
-#define EXAMPLE_PIN_NUM_DE       (-1)
+#define EXAMPLE_PIN_NUM_DE       (40)
 #define EXAMPLE_PIN_NUM_VSYNC    (39)
 #define EXAMPLE_PIN_NUM_HSYNC    (38)
 
@@ -341,8 +341,8 @@ static void lvgl_task(void *pvParameter)
             .hsync_front_porch = 4,
             .hsync_pulse_width = 1,
             .vsync_back_porch = 10,
-            .vsync_front_porch = 4,
-            .vsync_pulse_width = 1,
+            .vsync_front_porch = 10,
+            .vsync_pulse_width = 2,
 
             .flags.pclk_active_neg = false,
         },

@@ -461,7 +461,7 @@ void initBacklightSettings(lv_event_t *e)
     err = nvs_get_u32(nvs_handle, "level", &backlight_level);
     if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGW("backlightSettings", "NVS中未找到'level', 将写入默认值 %d", backlight_level);
+        ESP_LOGW("backlightSettings", "NVS中未找到'level', 将写入默认值 %ld", backlight_level);
         err = nvs_set_u32(nvs_handle, "level", backlight_level);
         if (err != ESP_OK) {
             ESP_LOGE("backlightSettings", "Failed to set default value for 'level': %s", esp_err_to_name(err));
@@ -477,7 +477,7 @@ void initBacklightSettings(lv_event_t *e)
     err = nvs_get_u32(nvs_handle, "time", &backlight_time_level);
     if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGW("backlightSettings", "NVS中未找到'time'，将写入默认值 %d", backlight_time_level);
+        ESP_LOGW("backlightSettings", "NVS中未找到'time'，将写入默认值 %ld", backlight_time_level);
         err = nvs_set_u32(nvs_handle, "time", backlight_time_level);
         if (err != ESP_OK) {
             ESP_LOGE("backlightSettings", "Failed to set default value for 'time': %s", esp_err_to_name(err));
@@ -1022,7 +1022,7 @@ void initVolumeSettings(lv_event_t *e)
     err = nvs_get_u32(nvs_handle, "defaultVolume", &prevDefaultVolume);
     if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGW("initVolumeSettings", "NVS中未找到'defaultVolume', 将写入默认值 %d", prevDefaultVolume);
+        ESP_LOGW("initVolumeSettings", "NVS中未找到'defaultVolume', 将写入默认值 %ld", prevDefaultVolume);
         err = nvs_set_u32(nvs_handle, "defaultVolume", prevDefaultVolume);
         if (err != ESP_OK) {
             ESP_LOGE("initVolumeSettings", "Failed to set defaultVolume in NVS: %s", esp_err_to_name(err));
@@ -1040,7 +1040,7 @@ void initVolumeSettings(lv_event_t *e)
     err = nvs_get_u32(nvs_handle, "maxVolume", &prevMaxVolume);
     if (err == ESP_ERR_NVS_NOT_FOUND)
     {
-        ESP_LOGW("initVolumeSettings", "NVS中未找到'maxVolume', 将写入默认值 %d", prevMaxVolume);
+        ESP_LOGW("initVolumeSettings", "NVS中未找到'maxVolume', 将写入默认值 %ld", prevMaxVolume);
         err = nvs_set_u32(nvs_handle, "maxVolume", prevMaxVolume);
         if (err != ESP_OK) {
             ESP_LOGE("initVolumeSettings", "Failed to set maxVolume in NVS: %s", esp_err_to_name(err));
@@ -1155,7 +1155,7 @@ void initIDSettings(lv_event_t *e)
     if (err == ESP_ERR_NVS_NOT_FOUND)
     {
         id = 1;
-        ESP_LOGW("initIDSettings", "NVS中未找到'ID', 将写入默认值 %d", id);
+        ESP_LOGW("initIDSettings", "NVS中未找到'ID', 将写入默认值 %ld", id);
         err = nvs_set_u32(nvs_handle, "ID", id);
         if (err != ESP_OK) {
             ESP_LOGE("initIDSettings", "Failed to set default ID in NVS: %s", esp_err_to_name(err));

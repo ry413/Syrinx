@@ -23,7 +23,7 @@ typedef struct {
 esp_err_t rs485_init(void) {
     const uart_config_t uart_config = {
         .baud_rate = RS485_BAUD_RATE,
-        .data_bits = UART_DATA_8_BITS,
+        .data_bits = UART_DATA_8_BITS, 
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
@@ -32,6 +32,8 @@ esp_err_t rs485_init(void) {
     ESP_ERROR_CHECK(uart_param_config(RS485_UART_PORT, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(RS485_UART_PORT, RS485_TX_GPIO_NUM, RS485_RX_GPIO_NUM, RS485_DE_GPIO_NUM, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_driver_install(RS485_UART_PORT, 1024 * 2, 0, 0, NULL, 0));
+
+
 
     ESP_ERROR_CHECK(uart_set_mode(RS485_UART_PORT, UART_MODE_RS485_HALF_DUPLEX));
 
@@ -49,6 +51,7 @@ uint8_t calculate_checksum(rs485_packet_t *packet) {
 }
 // 判断指令类型并处理
 void process_command(rs485_packet_t *packet, size_t len) {
+    
     // 确保包长度正确
     if (len != PACKET_SIZE) {
         ESP_LOGE(TAG, "Invalid packet length: %d", len);
@@ -75,23 +78,24 @@ void process_command(rs485_packet_t *packet, size_t len) {
     // 插卡指令
     if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x01}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 插卡");
-        set_backlight(backlight_level);                                  // 1.打开背光
+        set_backlight(backlight_level);                                     // 1.打开背光
         enable_touch();                                                     // 2.启用触摸
+        
     }
     // 拔卡指令
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x00}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 拔卡");
-        set_backlight(0);                                                   // 1.关闭背光
+        offScreen(NULL);                                                    // 1.关闭背光
         disabled_touch();                                                   // 2.禁用触摸
         if (is_music_mode) {
             bluetooth_send_at_command("AT+AA0", CMD_STOP_STATE);            // 3.停止播放
-            bits = xEventGroupWaitBits(event_group, EVENT_STOP_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
+            bits = xEventGroupWaitBits(event_group, EVENT_STOP_STATE, pdTRUE, pdFALSE, 5000 / portTICK_PERIOD_MS);
             if (bits & EVENT_STOP_STATE) {
                 bluetooth_send_at_command("AT+CU1", CMD_ON_MUTE);           // 4.静音
             }
         } else {
             bluetooth_send_at_command("AT+BA1", CMD_DISCONNECT_BLUETOOTH);  // 3.断开蓝牙
-            bits = xEventGroupWaitBits(event_group, EVENT_DISCONNECT_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);
+            bits = xEventGroupWaitBits(event_group, EVENT_DISCONNECT_BLUETOOTH, pdTRUE, pdFALSE, 5000 / portTICK_PERIOD_MS);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             if (bits & EVENT_DISCONNECT_BLUETOOTH) {
                 bluetooth_send_at_command("AT+CU1", CMD_ON_MUTE);           // 4.静音
@@ -161,12 +165,24 @@ void process_command(rs485_packet_t *packet, size_t len) {
     else {
         // ESP_LOGE(TAG, "Unknown command");
     }
+    uart_write_bytes(RS485_UART_PORT, (const char *)packet, sizeof(rs485_packet_t));
+}
+void print_rs485_packet(const rs485_packet_t *packet) {
+    printf("RS485 Packet:\n");
+    printf("Header: 0x%02X\n", packet->header);
+    printf("Command: ");
+    for (int i = 0; i < 5; ++i) {
+        printf("0x%02X ", packet->command[i]);
+    }
+    printf("\n");
+    printf("Checksum: 0x%02X\n", packet->checksum);
+    printf("Footer: 0x%02X\n", packet->footer);
 }
 void rs485_monitor_task(void *pvParameter) {
     rs485_packet_t packet;
     while (1) {
         int len = uart_read_bytes(RS485_UART_PORT, (uint8_t*)&packet, PACKET_SIZE, portMAX_DELAY);
-        
+        print_rs485_packet(&packet);
         if (len > 0) {
             process_command(&packet, len);
         } else if (len < 0) {

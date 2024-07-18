@@ -7,7 +7,7 @@
 #if	defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_UR)
 #define LCD_PIN_MOSI        40  /*!< for 1-line SPI, this also refered as MOSI */
 #define LCD_PIN_SCLK		39
-#define LCD_PIN_CS          -1
+#define LCD_PIN_CS          38
 #elif defined(CONFIG_EXAMPLE_PANEL_ZX3D95CE01S_AR)
 #define LCD_PIN_MOSI        9  /*!< for 1-line SPI, this also refered as MOSI */
 #define LCD_PIN_SCLK		10
