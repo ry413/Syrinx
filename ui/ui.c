@@ -52,8 +52,6 @@ lv_obj_t * ui_Wifi_States_Icon;
 lv_obj_t * ui_Wifi_Img_Placeholder;
 lv_obj_t * ui_Music_Note_Img_Placeholder1;
 lv_obj_t * ui_Paused_Img_Placeholder;
-void ui_event_Disconnect_Wifi(lv_event_t * e);
-lv_obj_t * ui_Disconnect_Wifi;
 lv_obj_t * ui_Label1;
 void ui_event_Button5(lv_event_t * e);
 lv_obj_t * ui_Button5;
@@ -596,14 +594,6 @@ void ui_event_Guide_Btn(lv_event_t * e)
         _ui_screen_change(&ui_Guide_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Guide_Window_screen_init);
     }
 }
-void ui_event_Disconnect_Wifi(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_SHORT_CLICKED) {
-        disconnectWifi(e);
-    }
-}
 void ui_event_Button5(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -634,6 +624,9 @@ void ui_event_Music_Window(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         musicScrLoaded(e);
+    }
+    if(event_code == LV_EVENT_SCREEN_UNLOADED) {
+        leaveMusicWindow(e);
     }
 }
 void ui_event_BackToMainWindowBtn1(lv_event_t * e)
@@ -666,6 +659,9 @@ void ui_event_Nature_Sound_Window(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         natureSoundScrLoaded(e);
+    }
+    if(event_code == LV_EVENT_SCREEN_UNLOADED) {
+        leaveNatureSoundWindow(e);
     }
 }
 void ui_event_Bird_Sound_Btn(lv_event_t * e)
@@ -706,7 +702,6 @@ void ui_event_BackToMainWindowBtn7(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_screen_change(&ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
-        leaveNatureSoundWindow(e);
     }
 }
 void ui_event_Bluetooth_WIndow(lv_event_t * e)
@@ -716,13 +711,16 @@ void ui_event_Bluetooth_WIndow(lv_event_t * e)
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         bluetoothScrLoaded(e);
     }
+    if(event_code == LV_EVENT_SCREEN_UNLOAD_START) {
+        leaveBlutoothWindow(e);
+    }
 }
 void ui_event_BackToMainWindowBtn3(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        leaveBlutoothWindow(e);
+        _ui_screen_change(&ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
     }
 }
 void ui_event_Mode_WIndow(lv_event_t * e)
@@ -1218,6 +1216,14 @@ void ui_event_BackToMainWindowBtn9(lv_event_t * e)
         _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Music_Window_screen_init);
     }
 }
+void ui_event_Play_Mode_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        changePlayMode(e);
+    }
+}
 void ui_event_Prev_Track_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -1262,9 +1268,6 @@ void ui_event_Progress_Slider(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_RELEASED) {
-        releasedProgressSlider(e);
-    }
 }
 void ui_event_Idle_Window(lv_event_t * e)
 {
@@ -1298,7 +1301,6 @@ void ui_event____initial_actions0(lv_event_t * e)
         initWifiSettings(e);
         initBacklightSettings(e);
         initBluetoothSettings(e);
-        initDateTimeSettings(e);
         initIDSettings(e);
         initVolumeSettings(e);
         initActions(e);

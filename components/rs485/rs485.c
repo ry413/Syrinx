@@ -87,20 +87,20 @@ void process_command(rs485_packet_t *packet, size_t len) {
         ESP_LOGI(TAG, "Command: 拔卡");
         offScreen(NULL);                                                    // 1.关闭背光
         disabled_touch();                                                   // 2.禁用触摸
-        if (is_music_mode) {
-            bluetooth_send_at_command("AT+AA0", CMD_STOP_STATE);            // 3.停止播放
-            bits = xEventGroupWaitBits(event_group, EVENT_STOP_STATE, pdTRUE, pdFALSE, 5000 / portTICK_PERIOD_MS);
-            if (bits & EVENT_STOP_STATE) {
-                bluetooth_send_at_command("AT+CU1", CMD_ON_MUTE);           // 4.静音
-            }
-        } else {
-            bluetooth_send_at_command("AT+BA1", CMD_DISCONNECT_BLUETOOTH);  // 3.断开蓝牙
-            bits = xEventGroupWaitBits(event_group, EVENT_DISCONNECT_BLUETOOTH, pdTRUE, pdFALSE, 5000 / portTICK_PERIOD_MS);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-            if (bits & EVENT_DISCONNECT_BLUETOOTH) {
-                bluetooth_send_at_command("AT+CU1", CMD_ON_MUTE);           // 4.静音
-            }
-        }
+        // if (is_music_mode) {
+        //     bluetooth_send_at_command("AT+AA0", CMD_STOP_STATE);            // 3.停止播放
+        //     bits = xEventGroupWaitBits(event_group, EVENT_STOP_STATE, pdTRUE, pdFALSE, 5000 / portTICK_PERIOD_MS);
+        //     if (bits & EVENT_STOP_STATE) {
+        //         bluetooth_send_at_command("AT+CU1", CMD_ON_MUTE);           // 4.静音
+        //     }
+        // } else {
+        //     // bluetooth_send_at_command("AT+BA1", CMD_DISCONNECT_BLUETOOTH);  // 3.断开蓝牙
+        //     // bits = xEventGroupWaitBits(event_group, EVENT_DISCONNECT_BLUETOOTH, pdTRUE, pdFALSE, 5000 / portTICK_PERIOD_MS);
+        //     vTaskDelay(1000 / portTICK_PERIOD_MS);
+        //     // if (bits & EVENT_DISCONNECT_BLUETOOTH) {
+        //         bluetooth_send_at_command("AT+CU1", CMD_ON_MUTE);           // 4.静音
+        //     // }
+        // }
     }
     // 睡眠模式
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x1E, 0x01, 0x0A, 0x00}, (size_t)5) == 0) {

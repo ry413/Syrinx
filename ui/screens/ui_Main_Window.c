@@ -69,7 +69,7 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_flex_flow(ui_Music_Btn, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_Music_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(ui_Music_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_Music_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_Music_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);      /// Flags
     lv_obj_set_style_radius(ui_Music_Btn, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_Music_Btn, lv_color_hex(0xFFB768), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Music_Btn, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -343,21 +343,6 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_flag(ui_Paused_Img_Placeholder, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Paused_Img_Placeholder, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Disconnect_Wifi = lv_btn_create(ui_Main_Window);
-    lv_obj_set_width(ui_Disconnect_Wifi, 129);
-    lv_obj_set_height(ui_Disconnect_Wifi, 50);
-    lv_obj_set_x(ui_Disconnect_Wifi, -151);
-    lv_obj_set_y(ui_Disconnect_Wifi, -114);
-    lv_obj_set_align(ui_Disconnect_Wifi, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Disconnect_Wifi, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_Disconnect_Wifi, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-
-    ui_Label1 = lv_label_create(ui_Disconnect_Wifi);
-    lv_obj_set_width(ui_Label1, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label1, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label1, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label1, "disconnect wifi");
-
     ui_Button5 = lv_btn_create(ui_Main_Window);
     lv_obj_set_width(ui_Button5, 80);
     lv_obj_set_height(ui_Button5, 80);
@@ -401,7 +386,6 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Mode_Btn, ui_event_Mode_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wake_up_Btn, ui_event_Wake_up_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Guide_Btn, ui_event_Guide_Btn, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_Disconnect_Wifi, ui_event_Disconnect_Wifi, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button5, ui_event_Button5, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_On_Screen_Range, ui_event_On_Screen_Range, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_placeadeasdasd, ui_event_placeadeasdasd, LV_EVENT_ALL, NULL);

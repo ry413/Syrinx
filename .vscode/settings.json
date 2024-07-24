@@ -51,7 +51,8 @@
         "atomic": "c",
         "memory_resource": "c",
         "stop_token": "c",
-        "esp_lcd_touch.h": "c"
+        "esp_lcd_touch.h": "c",
+        "ctype.h": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

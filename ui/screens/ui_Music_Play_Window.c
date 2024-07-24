@@ -99,13 +99,13 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_style_text_font(ui_Track_Artist, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Play_Mode_Btn = lv_img_create(ui_Music_Play_Window);
-    lv_img_set_src(ui_Play_Mode_Btn, &ui_img_1311962515);
+    lv_img_set_src(ui_Play_Mode_Btn, &ui_img_260357382);
     lv_obj_set_width(ui_Play_Mode_Btn, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Play_Mode_Btn, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Play_Mode_Btn, 32);
     lv_obj_set_y(ui_Play_Mode_Btn, -48);
     lv_obj_set_align(ui_Play_Mode_Btn, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Play_Mode_Btn, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_add_flag(ui_Play_Mode_Btn, LV_OBJ_FLAG_ADV_HITTEST | LV_OBJ_FLAG_CLICKABLE);     /// Flags
     lv_obj_clear_flag(ui_Play_Mode_Btn, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     ui_Play_Style_Text = lv_label_create(ui_Music_Play_Window);
@@ -238,6 +238,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_x(ui_Progress_Slider, 0);
     lv_obj_set_y(ui_Progress_Slider, 80);
     lv_obj_set_align(ui_Progress_Slider, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Progress_Slider, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_bg_color(ui_Progress_Slider, lv_color_hex(0xE2AFAF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Progress_Slider, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -251,6 +252,7 @@ void ui_Music_Play_Window_screen_init(void)
 
 
     lv_obj_add_event_cb(ui_BackToMainWindowBtn9, ui_event_BackToMainWindowBtn9, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Play_Mode_Btn, ui_event_Play_Mode_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Prev_Track_Icon, ui_event_Prev_Track_Icon, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Prev_Track_Btn, ui_event_Prev_Track_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Play_Pause_Btn, ui_event_Play_Pause_Btn, LV_EVENT_ALL, NULL);

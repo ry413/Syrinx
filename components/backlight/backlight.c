@@ -67,15 +67,13 @@ void init_backlight(void) {
         ESP_LOGE("initBacklight", "Failed to get backlightLevel from NVS");
         nvs_close(nvs_handle);
         backlightLevel = 3;
-        // return;
     }
     nvs_close(nvs_handle);
-
     ledc_timer_config_t timer_conf = {
         .speed_mode = LEDC_MODE,
         .duty_resolution = LEDC_RESOLUTION,
         .timer_num = LEDC_TIMER_0,
-        .freq_hz = 5000,
+        .freq_hz = 20000,
         .clk_cfg = LEDC_USE_APB_CLK
     };
     ledc_channel_config_t ledc_conf = {

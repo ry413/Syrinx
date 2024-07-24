@@ -3,6 +3,8 @@
 // LVGL version: 8.3.6
 // Project name: SquareLine_Project
 
+// 很明显, 有许多鬼命名, 多亏了s[]uareline导出的代码的格式与我代码风格的冲突
+
 #include "ui.h"
 #include <stdio.h>
 #include <time.h>
@@ -22,7 +24,7 @@
 #include "ui_comp_music_item.h"
 
 //////////////////// DEFINITIONS ////////////////////
-#define WIFI_CONNECTION_TIMEOUT pdMS_TO_TICKS(30000) // 30秒超时时间
+#define WIFI_CONNECTION_TIMEOUT pdMS_TO_TICKS(30000) // wifi30秒超时时间
 #define MAX_ITEMS_PER_LIST 5
 #define MAX_LISTS 10                  // 假设最多有 10 个 MusicList
 #define INACTIVE_TIME 0.2 * 60 * 1000 // 无操作几分钟就返回主界面的几
@@ -37,9 +39,8 @@ static bool playing = false;            // 播放状态
 static lv_timer_t *progressTimer = NULL;   // 音频进度条定时器
 static int currentPlayTime = 0;            // 音频进度条的当前值
 static int updateInterval = 0;             // 进度条每次更新的间隔, 因为进度条上限固定为100
-static lv_timer_t *taskCreateTimer = NULL; // 防止一直点[下一首]这种按钮, 会一直创建getDurationTask
 
-static lv_timer_t *inactiveTimer; // 进入蓝牙界面多久时间不操作就返回主界面, 的定时器
+static lv_timer_t *inactiveTimer;       // 不活动就返回主界面, 的定时器
 
 // prev开头的都是为了在修改值后没有点击[确认]而是[取消]的情况下, 将原来的值放回去
 // 不过它们实际上也是那些值的真实拥有者
@@ -54,10 +55,13 @@ uint32_t prevMaxVolume = 100;
 char *prevWifiName = NULL;
 char *prevWifiPassword = NULL;
 
-static TaskHandle_t durationTaskHandle = NULL;
-static TaskHandle_t bluetooth_connection_task_handle = NULL;
 
-bool isMusicMode = true;
+static TaskHandle_t durationTaskHandle = NULL;
+static TaskHandle_t music_play_mode_task_handle = NULL;
+static TaskHandle_t bluetooth_monitor_state_task_handle = NULL;
+static TaskHandle_t nature_play_task_handle = NULL;
+
+
 
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
 
@@ -67,12 +71,15 @@ static void format_time(int seconds, char *buffer, size_t buffer_size);
 static void update_progress(lv_timer_t *timer);
 static void initProgressBar(void);
 static void getDurationTask(void *pvParameter);
-static void createDurationTimer(lv_timer_t *timer);
-static void playCurrentIndexMusic(void);
-static void bluetoothRebootTask(void *pvParameter);
+static void playMusicWithId(int id);
+static void bluetooth_cfg_task(void *pvParameter);
 static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min);
 static void inactiveCallback(lv_timer_t *timer);
 static void delInactiveTimer(void);
+static void bluetooth_monitor_state_task(void *pvParameter);
+static void music_play_mode_task(void *pvParameter);
+static void changeMusicUpdateUI(void);
+
 //////////////////// 不给lvgl事件直接调用的静态函数 ////////////////////
 
 // 联网获取时间的任务
@@ -85,6 +92,7 @@ static void wifiGetTimeTask(void *param)
         ESP_LOGI("wifiGetTimeTask", "Wi-Fi 已连接");
         lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
         obtain_time();
+        srand(global_time);
     }
     else
     {
@@ -132,6 +140,10 @@ static void createMusicItemTask(void *pvParameters)
     currentListIndex = 0;
     // 顺便初始化一下进度条
     initProgressBar();
+
+    // 开放音乐库按钮的点击
+    lv_obj_add_flag(ui_Music_Btn, LV_OBJ_FLAG_CLICKABLE);
+
     vTaskDelete(NULL);
 }
 // 将秒转为hh:mm:ss的函数
@@ -193,66 +205,33 @@ static void getDurationTask(void *pvParameter)
 {
     EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_PLAY_MUSIC | EVENT_NEXT_TRACK | EVENT_PREV_TRACK, pdTRUE, pdFALSE, portMAX_DELAY);
 
-    if (bits & (EVENT_PLAY_MUSIC | EVENT_NEXT_TRACK | EVENT_PREV_TRACK))
-    {
-        bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
-        uart_flush(UART_NUM_0);
-        xEventGroupClearBits(get_bluetooth_event_group(), EVENT_DURATION); // 这行令人良心不安, 防止上一次的事件给这次接收到, 说多了不都是怕用户不正常乱点
-        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_DURATION, pdTRUE, pdFALSE, portMAX_DELAY);
-        if (bits & EVENT_DURATION)
-        {
-            char time_str[12];
-            format_time(current_music_duration, time_str, sizeof(time_str));
-            ESP_LOGI("WTF", "Total time: %s", time_str);
-            // printf("Total time: %s\n", time_str);
-            lv_label_set_text_static(ui_Total_Time, time_str);
+    vTaskDelay(100 / portTICK_PERIOD_MS);   // 换歌后得等一下才能拿到总时长, 否则会拿到65535
+    bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);   // 这里MT之后必须立刻flush和clearBits, 否则进不到下面的if里, 总之都是为了快速乱换歌时可以稳定获得进度条
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_DURATION, pdTRUE, pdFALSE, portMAX_DELAY);
 
-            updateInterval = (current_music_duration / 100); // 进度条更新间隔
-            currentPlayTime = 0;
-            lv_timer_resume(progressTimer); // 启动进度条更新定时器
-        }
-    }
+    char time_str[12];
+    format_time(current_music_duration, time_str, sizeof(time_str));
+    ESP_LOGI("getDurationTask", "Total time: %s", time_str);
+    lv_label_set_text_static(ui_Total_Time, time_str);
+
+    // 计算进度条
+    updateInterval = (current_music_duration / 100); // 进度条更新间隔
+    currentPlayTime = 0;
+    lv_timer_resume(progressTimer); // 启动进度条更新定时器
 
     durationTaskHandle = NULL;
     vTaskDelete(NULL);
 }
-// 如果把这个timer跟getDurationTask写成一个函数, 不知道为什么会无限阻塞, 先不管
-static void createDurationTimer(lv_timer_t *timer)
-{
-    playCurrentIndexMusic();
-    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
-    lv_timer_del(taskCreateTimer);
-    taskCreateTimer = NULL;
-}
-// 播放当前index的音乐
-static void playCurrentIndexMusic(void)
+
+// 播放指定id的音乐(从01开始)
+void playMusicWithId(int id)
 {
     char command[50];
-    // index从0开始, id是从001开始的
-    snprintf(command, sizeof(command), "AT+AF/music/%03d*.???", current_playing_index + 1);
+    // index从0开始, 文件id从01开始
+    snprintf(command, sizeof(command), "AT+AF%02d", id);
     bluetooth_send_at_command(command, CMD_PLAY_MUSIC);
 }
-// 更改蓝牙设置而需要的重启任务
-static void bluetoothRebootTask(void *pvParameter)
-{
-    char command[50];
-    snprintf(command, sizeof(command), "AT+BD%s", prevBluetoothName);
-    bluetooth_send_at_command(command, CMD_BLUETOOTH_NAME);
-    // 更改蓝牙名称与密码得一个个来
-    EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_NAME, pdTRUE, pdFALSE, 3000);
-    if (bits & EVENT_BLUETOOTH_NAME)
-    {
-        snprintf(command, sizeof(command), "AT+BE%s", prevBluetoothPassword);
-        bluetooth_send_at_command(command, CMD_BLUETOOTH_PASSWORD);
 
-        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_PASSWORD, pdTRUE, pdFALSE, 3000);
-        if (bits & EVENT_BLUETOOTH_PASSWORD)
-        {
-            bluetooth_send_at_command("AT+CZ", CMD_REBOOT);
-        }
-    }
-    vTaskDelete(NULL);
-}
 // 时间转为时间戳
 static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min)
 {
@@ -273,55 +252,69 @@ static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, ui
     // 返回时间戳
     return timestamp;
 }
-// 当退出蓝牙界面时, 需要做的处理工作, 因为有延时所以写成了task
+// 当退出蓝牙界面时, 需要关闭一堆东西
 static void cleanBluetoothTask(void *pvParameter)
 {
     // 回到音乐模式
-    bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC); // AT+CM无响应
-    vTaskDelay(2000);                                         // 连着发的话AA2就无效了, 谁让CM不响应OK, 不然就等待事件组了
-    bluetooth_send_at_command("AT+AA2", CMD_PAUSE_STATE);     // 回到音乐模式会自动播放, 所以这里暂停
-    isMusicMode = true;
+    bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);  // 等待"蓝牙已断开"播放, 也可能会是"TF卡模式"
+    bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
+    bluetooth_send_at_command("AT+CB", CMD_PAUSE_STATE);     // 回到音乐模式会自动播放, 所以这里暂停
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_PAUSE_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
     // 删除蓝牙状态监听任务
-    if (bluetooth_connection_task_handle != NULL)
+    if (bluetooth_monitor_state_task_handle != NULL)
     {
-        vTaskDelete(bluetooth_connection_task_handle);
-        bluetooth_connection_task_handle = NULL;
+        vTaskDelete(bluetooth_monitor_state_task_handle);
+        bluetooth_monitor_state_task_handle = NULL;
     }
     vTaskDelete(NULL);
 }
 
-// 在非主界面无操作一定时间后的回调
+// 在非main界面无操作一定时间后, 从xx界面回到main界面的回调
 static void inactiveCallback(lv_timer_t *timer)
 {
     // 记录当前screen
     lv_obj_t *prevScreen = lv_scr_act();
     lv_scr_load(ui_Main_Window);
 
-    // 如果之前处于蓝牙界面
+    // 如果之前处于蓝牙界面, clean蓝牙相关
     if (prevScreen == ui_Bluetooth_WIndow)
     {
         xTaskCreate(cleanBluetoothTask, "cleanBluetoothTask", 4096, NULL, 5, NULL);
     }
     // 如果之前处于...
 
-    delInactiveTimer();
+
+    // delInactiveTimer();  不在这写这个, 而是放在主界面loaded后, 因为要考虑主动返回主界面的状况
 }
 // 创建inactive定时器
 static void createInactiveTimer(void)
 {
+    printf("试图创建inactive: ");
     if (inactiveTimer == NULL)
     {
         inactiveTimer = lv_timer_create(inactiveCallback, INACTIVE_TIME, NULL);
+        printf("成功");
+    } else {
+        printf("失败");
     }
+    printf("\n");
 }
 // 删除inactive定时器
 static void delInactiveTimer(void)
 {
+    printf("试图删除inactive: ");   // 常常被重复调用, 所以在许多地方都会失败, 正常的
     if (inactiveTimer != NULL)
     {
         lv_timer_del(inactiveTimer);
         inactiveTimer = NULL;
+        printf("成功");
+    } else {
+        printf("失败");
     }
+    printf("\n");
 }
 
 // 暴露给main.c中的触摸屏回调使用
@@ -332,33 +325,23 @@ void resetInactiveTimer(lv_event_t *e)
         lv_timer_reset(inactiveTimer);
     }
 }
-// 持续监听蓝牙是否连接的任务
-void bluetooth_connection_task(void *pvParameter)
+
+// 实际上不是很必要, 但是为了规范
+static void bluetooth_monitor_state_task(void *pvParameter)
 {
     while (1)
     {
-        // 在蓝牙界面时永远每10秒检查一次状态, 因为时间很多. 如果检测到已连接就停止timer, 在那之后如果有一次检测到蓝牙断开, 就重新开始timer
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
-        // 持续检查蓝牙状态
-        bluetooth_send_at_command("AT+TS", CMD_BLUETOOTH_STATE);
-        EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_WAIT_FOR_CONNET | EVENT_BLUETOOTH_CONNECTED, pdTRUE, pdFALSE, portMAX_DELAY);
-        if (bits & EVENT_BLUETOOTH_CONNECTED)
-        {
-            printf("蓝牙处于连接状态\n");
-            // 既然已经连接成功, 则删除定时器
-            delInactiveTimer();
-        }
-        else if (bits & EVENT_BLUETOOTH_WAIT_FOR_CONNET)
-        {
-            printf("蓝牙处于等待连接状态\n");
-            // 查看createInactiveTimer定义
-            // 如果此时timer为NULL, 说明现在的场景是"蓝牙已连接后又回到等待连接的状态(被断开)", 所以直接调用这个函数创建新的timer
-            createInactiveTimer();
-        }
+        EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_CONNECTED, pdTRUE, pdFALSE, portMAX_DELAY);
+        printf("蓝牙已连接\n");
+        delInactiveTimer();
+        // 不是, 这哪里规范了?
+
+        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_DISCONNECTED, pdTRUE, pdFALSE, portMAX_DELAY);
+        printf("蓝牙已断开\n");
+        createInactiveTimer();
     }
-    bluetooth_connection_task_handle = NULL;
-    vTaskDelete(NULL);
 }
+
 //////////////////// 给lvgl的事件用的回调 ////////////////////
 
 // ******************** initial actions ********************
@@ -380,19 +363,21 @@ void initActions(lv_event_t *e)
 void mainScrLoaded(lv_event_t *e)
 {
     set_time_label(ui_Header_Main_Time);
-    // 本来只有主界面要加这个防止时间未初始化就更新值, 但是用户有可能会在时间未初始化时乱点点到别的界面, 所以每个界面都加上了
     if (global_time > 0)
-        // 每个screen loaded时立即更新一次, 否则就要等到1秒的timeout才更新了
         update_current_time_label();
 
     // 每次到主界面时, 重建一个背光定时器, 因为只有在主界面时才会进入待机模式
     init_backlight_timer(backlight_time_level_to_second(backlight_time_level));
+
+    delInactiveTimer(); // 只有从idle回到主界面时才会失败
 }
 void musicScrLoaded(lv_event_t *e)
 {
     set_time_label(ui_Header_Music_Time);
     if (global_time > 0)
         update_current_time_label();
+    
+    // 许多东西都不能写这里, 因为play界面也能进入music界面, 不止是main, 要写在leaveMainWindow里
 }
 void natureSoundScrLoaded(lv_event_t *e)
 {
@@ -405,14 +390,19 @@ void bluetoothScrLoaded(lv_event_t *e)
     set_time_label(ui_Header_Bluetooth_Time);
     if (global_time > 0)
         update_current_time_label();
+    
+    bluetooth_send_at_command("AT+CL3", CMD_OFF_MUTE);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_OFF_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
     // 进入蓝牙模式
-    bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH); // AT+CM不响应OK, 什么都不响应
-    isMusicMode = false;
+    bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);
 
-    // 开启任务, 持续监听蓝牙连接状态
-    if (bluetooth_connection_task_handle == NULL)
+    // 开启任务, 监听蓝牙
+    if (bluetooth_monitor_state_task_handle == NULL)
     {
-        xTaskCreate(bluetooth_connection_task, "bluetooth_connection_task", 4096, NULL, 5, &bluetooth_connection_task_handle);
+        xTaskCreate(bluetooth_monitor_state_task, "bluetooth_monitor_state_task", 4096, NULL, 5, &bluetooth_monitor_state_task_handle);
+    } else {
+        ESP_LOGE("bluetoothScrLoaded", "这不可能");
     }
 }
 void modeScrLoaded(lv_event_t *e)
@@ -426,17 +416,16 @@ void wakeupScrLoaded(lv_event_t *e)
     set_time_label(ui_Header_Wake_up_Time);
     if (global_time > 0)
         update_current_time_label();
+    
 }
 void guideScrLoaded(lv_event_t *e)
 {
     set_time_label(ui_Header_Guide_Time);
     if (global_time > 0)
         update_current_time_label();
+    
     // 指南界面时, 不进入待机状态, 所以停止定时器
-}
-void guideScrUnloaded(lv_event_t *e)
-{
-    // 离开指南界面时恢复待机定时器
+    // ...
 }
 void idleScrLoaded(lv_event_t *e)
 {
@@ -445,6 +434,83 @@ void idleScrLoaded(lv_event_t *e)
         update_current_time_label();
 }
 
+// ******************** 离开各界面后的回调 ********************
+
+void leaveMainWindow(lv_event_t *e)
+{
+    printf("Leave Main\n");
+    // 关闭背光定时器, 因为只有处于主界面时才会试图定时以进入待机界面
+    stop_backlight_timer();
+    // 处理特殊界面
+    lv_obj_t *currentScreen = lv_scr_act();
+    // 进入Idle即正常待机
+    if (currentScreen == ui_Idle_Window)
+    {
+        printf("is Idle\n");
+    }
+    // 只有从main进入music界面才打开某些东西(因为play界面也能进入music界面)
+    else if (currentScreen == ui_Music_Window)
+    {
+        bluetooth_send_at_command("AT+CL3", CMD_OFF_MUTE);
+        xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_OFF_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
+
+        xTaskCreate(music_play_mode_task, "music_play_mode_task", 4096, NULL, 5, &music_play_mode_task_handle);
+    }
+    // 自然之音自然要打开功放
+    else if (currentScreen == ui_Nature_Sound_Window)
+    {
+        bluetooth_send_at_command("AT+CL3", CMD_OFF_MUTE);
+        xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_OFF_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
+    }
+    // 通常都重建定时器, 无操作一定时间后回到主界面
+    else
+    {
+        printf("ohter\n");
+        createInactiveTimer();
+    }
+}
+void leaveMusicWindow(lv_event_t *e)
+{
+    printf("Leave Music\n");
+    lv_obj_t *currentScreen = lv_scr_act();
+    // 只有从music界面进入main界面才关闭功放与停止音乐(因为music界面也能进入play界面)
+    if (currentScreen == ui_Main_Window) {
+        bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
+        EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
+        bluetooth_send_at_command("AT+CB", CMD_STOP_STATE);
+        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_STOP_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
+
+        // clear监听循环播放
+        if(music_play_mode_task_handle != NULL) {
+            vTaskDelete(music_play_mode_task_handle);
+            music_play_mode_task_handle = NULL;
+        }
+    }
+}
+void leaveNatureSoundWindow(lv_event_t *e)
+{
+    printf("Leave Nature\n");
+    
+    bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
+    bluetooth_send_at_command("AT+CB", CMD_PAUSE_STATE);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_PAUSE_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
+
+    if (nature_play_task_handle != NULL) {
+        vTaskDelete(nature_play_task_handle);
+        nature_play_task_handle = NULL;
+    }
+
+    // 图标恢复
+    lv_obj_clear_state(ui_Bird_Sound_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Bug_Sound_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
+}
+void leaveBlutoothWindow(lv_event_t *e)
+{
+    xTaskCreate(cleanBluetoothTask, "cleanBluetoothTask", 4096, NULL, 5, NULL);
+}
 // ******************** 背光相关 ********************
 
 // 初始化背光亮度与时间, 以及创建进入待机的定时器
@@ -609,29 +675,6 @@ void decBacklightTime(lv_event_t *e)
 
     set_backlight_time_to_label(ui_Backlight_Time_Value2, backlightTimeLevel);
 }
-// screen unloaded, 即离开主界面, 已经抵达别的界面后的回调
-void leaveMainWindow(lv_event_t *e)
-{
-    printf("Leave Main!\n");
-    // 关闭背光定时器, 因为只有处于主界面时才会试图定时以进入待机界面
-    stop_backlight_timer();
-    // 处理特殊界面
-    lv_obj_t *currentScreen = lv_scr_act();
-    // 进入Idle即正常待机, 直接返回
-    if (currentScreen == ui_Idle_Window)
-    {
-        printf("is Idle\n");
-        delInactiveTimer();
-        return;
-    }
-    else
-    {
-        printf("ohter\n");
-        // 一般都开启定时器, 无操作一定时间后回到主界面
-        delInactiveTimer();
-        createInactiveTimer();
-    }
-}
 // 进入熄屏
 void offScreen(lv_event_t *e)
 {
@@ -659,191 +702,62 @@ void idleBackToMainWindow(lv_event_t *e)
 
 // ******************** 蓝牙相关 ********************
 
-// 初始化蓝牙名称与密码
+static void bluetooth_sync_cfg(void)
+{
+    bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);
+    bluetooth_send_at_command("AT+TD", CMD_BLUETOOTH_GET_NAME);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_GET_NAME, pdTRUE, pdFALSE, portMAX_DELAY);
+    bluetooth_send_at_command("AT+TE", CMD_BLUETOOTH_GET_PASSWORD);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_GET_PASSWORD, pdTRUE, pdFALSE, portMAX_DELAY);
+    bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+    prevBluetoothName = bluetooth_name;
+    lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
+    lv_label_set_text(ui_Bluetooth_Name_Value, prevBluetoothName);
+
+    
+    prevBluetoothPassword = bluetooth_password;
+    lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
+    lv_label_set_text(ui_Bluetooth_Password_Value, prevBluetoothPassword);
+}
+
+
+static void init_bluetooth_settings_task(void *pvParameter)
+{
+    // 等待音乐列表初始化那边用完蓝牙模块
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_FILE_LIST_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+    bluetooth_sync_cfg();
+    vTaskDelete(NULL);
+}
+// 这个会在lvgl的初始化阶段被调用, 而这里有阻塞, 所以写成任务
 void initBluetoothSettings(lv_event_t *e)
 {
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("BluetoothCfg", NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE("initBluetoothSettings", "Failed to open NVS: %s", esp_err_to_name(err));
-        return;
-    }
+    xTaskCreate(init_bluetooth_settings_task, "init_bluetooth_settings_task", 4096, NULL, 5, NULL);
+}
+// 更改蓝牙设置
+static void bluetooth_cfg_task(void *pvParameter)
+{
+    char command[50];
+    snprintf(command, sizeof(command), "AT+BE%s", prevBluetoothPassword);
+    bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_PASSWORD);
+    EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_BLUETOOTH_SET_PASSWORD, pdTRUE, pdFALSE, 3000);
 
-    // 读取蓝牙名称
-    size_t required_size = 0;
-    err = nvs_get_str(nvs_handle, "name", NULL, &required_size);
-    if (err == ESP_ERR_NVS_NOT_FOUND)
-    {
-        const char *defaultBluetoothName = "Default_BT_Name";
-        ESP_LOGW("initBluetoothSettings", "NVS中未找到'name', 将写入默认值 %s", defaultBluetoothName);
-        err = nvs_set_str(nvs_handle, "name", defaultBluetoothName);
-        if (err != ESP_OK)
-        {
-            ESP_LOGE("initBluetoothSettings", "Failed to set default name in NVS: %s", esp_err_to_name(err));
-        }
-        else
-        {
-            nvs_commit(nvs_handle);
-        }
-        prevBluetoothName = strdup(defaultBluetoothName);
-        lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
-        lv_label_set_text(ui_Bluetooth_Name_Value, prevBluetoothName);
-    }
-    else if (err != ESP_OK)
-    {
-        ESP_LOGE("initBluetoothSettings", "Failed to get size for name from NVS: %s", esp_err_to_name(err));
-        nvs_close(nvs_handle);
-        return;
-    }
-    else
-    {
-        char *tempBluetoothName = malloc(required_size);
-        if (tempBluetoothName == NULL)
-        {
-            ESP_LOGE("initBluetoothSettings", "Failed to allocate memory for Bluetooth name");
-            nvs_close(nvs_handle);
-            return;
-        }
-
-        err = nvs_get_str(nvs_handle, "name", tempBluetoothName, &required_size);
-        if (err != ESP_OK)
-        {
-            ESP_LOGE("initBluetoothSettings", "Failed to get name from NVS: %s", esp_err_to_name(err));
-            free(tempBluetoothName);
-            nvs_close(nvs_handle);
-            return;
-        }
-        if (prevBluetoothName != NULL)
-        {
-            free(prevBluetoothName);
-        }
-        prevBluetoothName = tempBluetoothName;
-        lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
-        lv_label_set_text(ui_Bluetooth_Name_Value, prevBluetoothName);
-    }
-
-    // 读取蓝牙密码
-    required_size = 0;
-    err = nvs_get_str(nvs_handle, "password", NULL, &required_size);
-    if (err == ESP_ERR_NVS_NOT_FOUND)
-    {
-        const char *defaultBluetoothPassword = "1234"; // 设置默认蓝牙密码
-        ESP_LOGW("initBluetoothSettings", "NVS中未找到'password', 将写入默认值 %s", defaultBluetoothPassword);
-        err = nvs_set_str(nvs_handle, "password", defaultBluetoothPassword);
-        if (err != ESP_OK)
-        {
-            ESP_LOGE("initBluetoothSettings", "Failed to set default password in NVS: %s", esp_err_to_name(err));
-        }
-        else
-        {
-            nvs_commit(nvs_handle);
-        }
-        prevBluetoothPassword = strdup(defaultBluetoothPassword);
-        lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
-        lv_label_set_text(ui_Bluetooth_Password_Value, prevBluetoothPassword);
-    }
-    else if (err != ESP_OK)
-    {
-        ESP_LOGE("initBluetoothSettings", "Failed to get size for password from NVS: %s", esp_err_to_name(err));
-        nvs_close(nvs_handle);
-        return;
-    }
-    else
-    {
-        char *tempBluetoothPassword = malloc(required_size);
-        if (tempBluetoothPassword == NULL)
-        {
-            ESP_LOGE("initBluetoothSettings", "Failed to allocate memory for Bluetooth password");
-            nvs_close(nvs_handle);
-            return;
-        }
-
-        err = nvs_get_str(nvs_handle, "password", tempBluetoothPassword, &required_size);
-        if (err != ESP_OK)
-        {
-            ESP_LOGE("initBluetoothSettings", "Failed to get password from NVS: %s", esp_err_to_name(err));
-            free(tempBluetoothPassword);
-            nvs_close(nvs_handle);
-            return;
-        }
-
-        if (prevBluetoothPassword != NULL)
-        {
-            free(prevBluetoothPassword);
-        }
-        prevBluetoothPassword = tempBluetoothPassword;
-        lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
-        lv_label_set_text(ui_Bluetooth_Password_Value, prevBluetoothPassword);
-    }
-
-    nvs_close(nvs_handle);
+    snprintf(command, sizeof(command), "AT+BD%s", prevBluetoothName);
+    bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_NAME);
+    // 等待模块重启
+    xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
+    bluetooth_sync_cfg();
+    vTaskDelete(NULL);
 }
 // 确认保存蓝牙设置
 void saveBluetoothSetting(lv_event_t *e)
 {
-    // 获取蓝牙名称与密码
     const char *name = lv_textarea_get_text(ui_Bluetooth_Name_Input2);
-    if (name != NULL)
-    {
-        if (prevBluetoothName != NULL)
-        {
-            free(prevBluetoothName); // 释放之前分配的内存
-        }
-        prevBluetoothName = strdup(name); // 复制字符串到全局变量
-    }
-    else
-    {
-        ESP_LOGE("saveBluetoothSetting", "Failed to get name from text area");
-    }
+    prevBluetoothName = strdup(name);
     const char *password = lv_textarea_get_text(ui_Bluetooth_Password_Input2);
-    if (password != NULL)
-    {
-        if (prevBluetoothPassword != NULL)
-        {
-            free(prevBluetoothPassword); // 释放之前分配的内存
-        }
-        prevBluetoothPassword = strdup(password); // 复制字符串到全局变量
-    }
-    else
-    {
-        ESP_LOGE("saveBluetoothSetting", "Failed to get password from text area");
-    }
-
-    // 保存蓝牙名称与密码
-    nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("BluetoothCfg", NVS_READWRITE, &nvs_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE("saveBluetoothSetting", "Failed to open NVS");
-        return;
-    }
-    err = nvs_set_str(nvs_handle, "name", prevBluetoothName);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE("saveBluetoothSetting", "Failed to set name in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    err = nvs_set_str(nvs_handle, "password", prevBluetoothPassword);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE("saveBluetoothSetting", "Failed to set password in NVS");
-        nvs_close(nvs_handle);
-        return;
-    }
-    // 更新用户界面的信息
-    lv_label_set_text(ui_Bluetooth_Name_Value, prevBluetoothName);
-    lv_label_set_text(ui_Bluetooth_Password_Value, prevBluetoothPassword);
-
-    err = nvs_commit(nvs_handle);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE("saveBluetoothSetting", "Failed to commit NVS changes");
-    }
-    nvs_close(nvs_handle);
-
-    xTaskCreate(bluetoothRebootTask, "bluetoothRebootTask", 4096, NULL, 5, NULL);
+    prevBluetoothPassword = strdup(password);
+    xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
 }
 // 取消保存蓝牙设置
 void cancelSaveBluetoothSetting(lv_event_t *e)
@@ -852,81 +766,10 @@ void cancelSaveBluetoothSetting(lv_event_t *e)
     lv_textarea_set_text(ui_Bluetooth_Name_Input2, prevBluetoothName);
     lv_textarea_set_text(ui_Bluetooth_Password_Input2, prevBluetoothPassword);
 }
-// 点击返回按钮离开蓝牙界面
-void leaveBlutoothWindow(lv_event_t *e)
-{
-    xTaskCreate(cleanBluetoothTask, "cleanBluetoothTask", 4096, NULL, 5, NULL);
-    lv_scr_load(ui_Main_Window);
-}
+
 
 // ******************** 时间相关 ********************
 
-// 初始化时间与日期
-void initDateTimeSettings(lv_event_t *e)
-{
-    // nvs_handle_t nvs_handle;
-    // esp_err_t err = nvs_open("TimeSettings", NVS_READWRITE, &nvs_handle);
-    // if (err != ESP_OK) {
-    //     ESP_LOGE("initDateTimeSettings", "Failed to open NVS: %s", esp_err_to_name(err));
-    //     return;
-    // }
-    // err = nvs_get_u32(nvs_handle, "year", &prevdate_year);
-    // if (err != ESP_OK) {
-    //     ESP_LOGE("initDateTimeSettings", "Failed to get year from NVS: %s", esp_err_to_name(err));
-    //     nvs_close(nvs_handle);
-    //     return;
-    // }
-    // err = nvs_get_u32(nvs_handle, "month", &prevdate_month);
-    // if (err != ESP_OK) {
-    //     ESP_LOGE("initDateTimeSettings", "Failed to get month from NVS");
-    //     nvs_close(nvs_handle);
-    //     return;
-    // }
-    // err = nvs_get_u32(nvs_handle, "day", &prevdate_day);
-    // if (err != ESP_OK) {
-    //     ESP_LOGE("initDateTimeSettings", "Failed to get day from NVS");
-    //     nvs_close(nvs_handle);
-    //     return;
-    // }
-    // err = nvs_get_u32(nvs_handle, "hour", &prevtime_hour);
-    // if (err != ESP_OK) {
-    //     ESP_LOGE("initDateTimeSettings", "Failed to get hour from NVS");
-    //     nvs_close(nvs_handle);
-    //     return;
-    // }
-    // err = nvs_get_u32(nvs_handle, "minute", &prevtime_min);
-    // if (err != ESP_OK) {
-    //     ESP_LOGE("initDateTimeSettings", "Failed to get minute from NVS");
-    //     nvs_close(nvs_handle);
-    //     return;
-    // }
-    // nvs_close(nvs_handle);
-
-    // char year_text[5], month_text[3], day_text[3], hour_text[3], min_text[3];
-    // snprintf(year_text, sizeof(year_text), "%ld", prevdate_year);
-    // snprintf(month_text, sizeof(month_text), "%02ld", prevdate_month);
-    // snprintf(day_text, sizeof(day_text), "%02ld", prevdate_day);
-    // snprintf(hour_text, sizeof(hour_text), "%02ld", prevtime_hour);
-    // snprintf(min_text, sizeof(min_text), "%02ld", prevtime_min);
-    // lv_textarea_set_text(ui_Date_Setting_Year2, year_text);
-    // lv_textarea_set_text(ui_Date_Setting_Month2, month_text);
-    // lv_textarea_set_text(ui_Date_Setting_Day2, day_text);
-    // lv_textarea_set_text(ui_Time_Setting_Hour2, hour_text);
-    // lv_textarea_set_text(ui_Time_Setting_Min2, min_text);
-
-    // // 设置时间, 加8个时区
-    // global_time = convertToTimestamp(prevdate_year, prevdate_month, prevdate_day, prevtime_hour, prevtime_min);
-    // // 更新待机界面的日期
-    // struct tm timeinfo;
-    // char dateStr[50];
-    // localtime_r(&global_time, &timeinfo);
-    // snprintf(dateStr, sizeof(dateStr), "%s/%02d月%02d日", get_chinese_weekday(timeinfo.tm_wday), timeinfo.tm_mon + 1, timeinfo.tm_mday);
-    // lv_label_set_text(ui_Idle_Window_Date, dateStr);
-    // // 初始化时间Label
-    // currentTimeLabel = ui_Header_Main_Time;
-    // // 启动定时器
-    // xTaskCreate(updateTimeTask, "updateTimeTask", 2048, NULL, 5, NULL);
-}
 // 确认保存时间与日期
 void saveTimeSetting(lv_event_t *e)
 {
@@ -1136,6 +979,7 @@ void cancelSaveVolumeSettings(lv_event_t *e)
 void changeVolume(lv_event_t *e)
 {
     // Your code here
+    ESP_LOGE("HEL", "HELLOWORLD!");
 }
 
 // ******************** ID相关 ********************
@@ -1325,7 +1169,7 @@ void initWifiSettings(lv_event_t *e)
             nvs_close(nvs_handle);
             return;
         }
-        if (prevBluetoothPassword != NULL)
+        if (prevWifiPassword != NULL)
         {
             ESP_LOGE("initWifiSettings", "运行到这时prevWifiPassword不可能不为NULL");
             free(prevWifiPassword);
@@ -1409,16 +1253,73 @@ void saveWifiSetting(lv_event_t *e)
     nvs_close(nvs_handle);
 }
 
-// 断开Wifi
-void disconnectWifi(lv_event_t *e)
-{
-    wifi_disconnect();
-    lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
-}
-
 // ******************** 音乐相关 ********************
 
-// 上一页音乐
+int shuffle_list_index = 0;    // 当前播放的歌曲的index, 在洗牌数组里的索引
+typedef enum {
+    PLAY_MODE_LOOP,
+    PLAY_MODE_SINGLE,
+    PLAY_MODE_SHUFFLE,
+} play_mode_t;
+
+play_mode_t play_mode = PLAY_MODE_LOOP; // 默认循环播放模式
+int * shuffle_order;        // 用于随机播放模式的洗牌数组
+
+typedef enum {
+    EQ_MODE_NATURE,     // 自然
+    EQ_MODE_JAZZ,       // 爵士
+    EQ_MODE_ROCK,       // 摇滚
+    EQ_MODE_POP,        // 流行
+    EQ_MODE_CLASSICAL,  // 古典
+    EQ_MODE_OPERA       // 歌剧
+} equalizer_t;
+
+equalizer_t equalizer_mode = EQ_MODE_POP;
+
+// 洗牌
+static void shufflePlaylist(void)
+{
+    if (shuffle_order == NULL) {
+        shuffle_order = malloc(total_files_count * sizeof(int));
+    }
+
+    for (int i = 0; i < total_files_count; i++) {
+        shuffle_order[i] = i;
+    }
+    for (int i = total_files_count - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int temp = shuffle_order[i];
+        shuffle_order[i] = shuffle_order[j];
+        shuffle_order[j] = temp;
+    }
+    printf("shuffle: ");
+    for (int i = 0; i < total_files_count; i++) {
+        printf("%d, ", shuffle_order[i]);
+    }
+    printf("\n");
+}
+// 下一首, 上一首, 点击列表播放之类的, 同样需要做的UI更新
+static void changeMusicUpdateUI(void)
+{
+    // 暂停定时器
+    lv_timer_pause(progressTimer);
+    // 重置进度条
+    lv_bar_set_value(ui_Progress_Slider, 0, LV_ANIM_OFF);
+    lv_label_set_text(ui_Current_Time, "00:00:00");
+    lv_label_set_text(ui_Total_Time, "00:00:00");
+
+    playing = true;
+    lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
+}
+// 当播放完毕后下一首的任务
+static void music_play_mode_task(void *pvParameter)
+{
+    while(1) {
+        xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_END_PLAY, pdTRUE, pdFALSE, portMAX_DELAY);
+        nextTrack(NULL);
+    }
+}
+// 上一页音乐列表
 void prevMusicList(lv_event_t *e)
 {
     if (numMusicLists == 0)
@@ -1433,10 +1334,10 @@ void prevMusicList(lv_event_t *e)
         currentListIndex = numMusicLists - 1; // 循环到最后一个列表
     }
 
-    // 显示上一个列表
+    // 显示这个列表
     lv_obj_clear_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
 }
-// 下一页音乐
+// 下一页音乐列表
 void nextMusicList(lv_event_t *e)
 {
     if (numMusicLists == 0)
@@ -1451,27 +1352,20 @@ void nextMusicList(lv_event_t *e)
         currentListIndex = 0; // 循环到第一个列表
     }
 
-    // 显示下一个列表
+    // 显示这个列表
     lv_obj_clear_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
 }
 // 播放Music List中被点击的音乐
 void playSelectedMusic(lv_event_t *e)
 {
-    // 暂停定时器
-    lv_timer_pause(progressTimer);
-    // 重置进度条
-    lv_bar_set_value(ui_Progress_Slider, 0, LV_ANIM_OFF);
-    lv_label_set_text(ui_Current_Time, "00:00:00");
-    lv_label_set_text(ui_Total_Time, "00:00:00");
-
-    playing = true;
-    lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
+    changeMusicUpdateUI();
 
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *label = lv_obj_get_child(obj, 0);
 
     char *track_title = lv_label_get_text(label);
-    lv_label_set_text(ui_Track_Title, track_title + 3);
+    // lv_label_set_text(ui_Track_Title, track_title + 2);
+    lv_label_set_text(ui_Track_Title, track_title);
     lv_label_set_text(ui_Track_Artist, "null");
     lv_label_set_text(ui_Total_Time, "00:00:00");
 
@@ -1482,110 +1376,94 @@ void playSelectedMusic(lv_event_t *e)
     sscanf(track_title, "%3[0-9]", temp);
     current_playing_index = atoi(temp) - 1;
 
-    // 杀掉旧任务, 这里面也会刷新串口
-    if (durationTaskHandle != NULL)
-    {
-        vTaskDelete(durationTaskHandle);
-        durationTaskHandle = NULL;
+    // 重置随机播放的索引
+    shufflePlaylist();
+    shuffle_list_index = -1;
+    for (int i = 0; i < total_files_count; i++) {
+        if (shuffle_order[i] == current_playing_index) {
+            shuffle_list_index = i;
+            break;
+        }
     }
-    // 恢复CMD
-    current_command = CMD_NONE;
-    // 创建创建进度条的定时器
-    if (taskCreateTimer != NULL)
-    {
-        lv_timer_reset(taskCreateTimer);
+    if (shuffle_list_index == -1) {
+        ESP_LOGE("shuffle", "错误索引");
     }
-    else
-    {
-        taskCreateTimer = lv_timer_create(createDurationTimer, 1000, NULL);
-    }
+
+    playMusicWithId(current_playing_index + 1);
+    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
+
 }
 // 下一首音乐
 void nextTrack(lv_event_t *e)
 {
-    // 暂停定时器
-    lv_timer_pause(progressTimer);
-    // 重置进度条
-    lv_bar_set_value(ui_Progress_Slider, 0, LV_ANIM_OFF);
-    lv_label_set_text(ui_Current_Time, "00:00:00");
-    lv_label_set_text(ui_Total_Time, "00:00:00");
+    changeMusicUpdateUI();
+    char *track_title;
 
-    playing = true;
-    lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
-
-    if (current_playing_index < total_files_count - 1)
-    {
-        current_playing_index++;
+    switch (play_mode) {
+        case PLAY_MODE_LOOP:
+            if (current_playing_index < total_files_count - 1) {
+                current_playing_index++;
+            } else {
+                current_playing_index = 0;
+            }
+            break;
+        case PLAY_MODE_SINGLE:
+            // 不增加current_playing_index就行了
+            break;
+        case PLAY_MODE_SHUFFLE:
+            if (shuffle_list_index < total_files_count - 1) {
+                shuffle_list_index++;
+            } else {
+                shuffle_list_index = 0;
+            }
+            current_playing_index = shuffle_order[shuffle_list_index];
+            break;
+        default:
+            ESP_LOGE("music_play_mode_task", "我干什么要写这种东西?");
+            break;
     }
-    else
-    {
-        current_playing_index = 0;
-    }
-    char *track_title = utf8_file_names[current_playing_index];
-    // 设置标题, 跳过编号
-    lv_label_set_text(ui_Track_Title, track_title + 3);
+    track_title = utf8_file_names[current_playing_index];
+    // lv_label_set_text(ui_Track_Title, track_title + 2);
+    lv_label_set_text(ui_Track_Title, track_title);
     lv_label_set_text(ui_Track_Artist, "null");
-
-    // 杀掉旧任务
-    if (durationTaskHandle != NULL)
-    {
-        vTaskDelete(durationTaskHandle);
-        durationTaskHandle = NULL;
-    }
-    current_command = CMD_NONE;
-
-    if (taskCreateTimer != NULL)
-    {
-        lv_timer_reset(taskCreateTimer);
-    }
-    else
-    {
-        taskCreateTimer = lv_timer_create(createDurationTimer, 1000, NULL);
-    }
+    playMusicWithId(current_playing_index + 1);
+    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
 }
 // 上一首音乐
 void prevTrack(lv_event_t *e)
 {
-    // 暂停定时器
-    lv_timer_pause(progressTimer);
-    // 重置进度条
-    lv_bar_set_value(ui_Progress_Slider, 0, LV_ANIM_OFF);
-    lv_label_set_text(ui_Current_Time, "00:00:00");
-    lv_label_set_text(ui_Total_Time, "00:00:00");
+    changeMusicUpdateUI();
+    char *track_title;
 
-    playing = true;
-    lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
-
-    if (current_playing_index > 0)
-    {
-        current_playing_index--;
+    switch (play_mode) {
+        case PLAY_MODE_LOOP:
+            if (current_playing_index > 0) {
+                current_playing_index--;
+            } else {
+                current_playing_index = total_files_count - 1;
+            }
+            break;
+        case PLAY_MODE_SINGLE:
+            // 不增加current_playing_index
+            break;
+        case PLAY_MODE_SHUFFLE:
+            if (shuffle_list_index > 0) {
+                shuffle_list_index--;
+            } else {
+                shuffle_list_index = total_files_count - 1;
+            }
+            current_playing_index = shuffle_order[shuffle_list_index];
+            break;
+        default:
+            ESP_LOGE("music_play_mode_task", "我干什么要写这种东西?");
+            break;
     }
-    else
-    {
-        current_playing_index = total_files_count - 1;
-    }
-    char *track_title = utf8_file_names[current_playing_index];
-    // 跳过编号
-    lv_label_set_text(ui_Track_Title, track_title + 3);
+    track_title = utf8_file_names[current_playing_index];
+    // lv_label_set_text(ui_Track_Title, track_title + 2);
+    lv_label_set_text(ui_Track_Title, track_title);
     lv_label_set_text(ui_Track_Artist, "null");
-
-    // 杀掉旧任务
-    if (durationTaskHandle != NULL)
-    {
-        vTaskDelete(durationTaskHandle);
-        durationTaskHandle = NULL;
-    }
-    // 恢复CMD
-    current_command = CMD_NONE;
-
-    if (taskCreateTimer != NULL)
-    {
-        lv_timer_reset(taskCreateTimer);
-    }
-    else
-    {
-        taskCreateTimer = lv_timer_create(createDurationTimer, 100, NULL);
-    }
+    playMusicWithId(current_playing_index + 1);
+    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
 }
 // 播放/暂停
 void playPause(lv_event_t *e)
@@ -1604,17 +1482,39 @@ void playPause(lv_event_t *e)
         playing = true;
     }
 }
-// 拖动进度条并释放后的回调, 跳转至目标进度
-void releasedProgressSlider(lv_event_t *e)
+// 切换播放模式
+void changePlayMode(lv_event_t * e)
 {
-    int percentage = lv_slider_get_value(ui_Progress_Slider);
-    currentPlayTime = (percentage * current_music_duration) / 100;
-
-    char time_str[9]; // hh:mm:ss
-    format_time(currentPlayTime, time_str, sizeof(time_str));
-    lv_label_set_text(ui_Current_Time, time_str);
-
-    // 跳转
+    switch (play_mode) {
+        case PLAY_MODE_LOOP:
+            play_mode = PLAY_MODE_SINGLE;
+            lv_img_set_src(ui_Play_Mode_Btn, &ui_img_1071321554);
+            break;
+        case PLAY_MODE_SINGLE:
+            play_mode = PLAY_MODE_SHUFFLE;
+            lv_img_set_src(ui_Play_Mode_Btn, &ui_img_1311962515);
+            // 洗完牌后设置很难描述的索引
+            shufflePlaylist();
+            shuffle_list_index = -1;
+            for (int i = 0; i < total_files_count; i++) {
+                if (shuffle_order[i] == current_playing_index) {
+                    shuffle_list_index = i;
+                    break;
+                }
+            }
+            if (shuffle_list_index == -1) {
+                ESP_LOGE("shuffle", "错误索引");
+            }
+            break;
+        case PLAY_MODE_SHUFFLE:
+            play_mode = PLAY_MODE_LOOP;
+            lv_img_set_src(ui_Play_Mode_Btn, &ui_img_260357382);
+            break;
+        default:
+            play_mode = PLAY_MODE_LOOP;
+            ESP_LOGE("changePlayMode", "我为什么又要写这种东西");
+            break;
+    }
 }
 
 // ******************** 自然之音相关 ********************
@@ -1627,22 +1527,14 @@ static void selectNatureSoundTask(void *pvParameter)
 
     int soundId = *(int *)pvParameter;
     char command[32];
-    snprintf(command, sizeof(command), "AT+AF/theme/%03d*.???", soundId);
+    snprintf(command, sizeof(command), "AT+AF%02d", soundId);
 
-    bluetooth_send_at_command(command, CMD_PLAY_MUSIC);
-    EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_PLAY_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
-    if (bits & EVENT_PLAY_MUSIC)
-    {
-        // AC和CJ都要改到单曲循环模式
-        bluetooth_send_at_command("AT+AC1", CMD_MODE_CHANGE);
-        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_MODE_CHANGED, pdTRUE, pdFALSE, portMAX_DELAY);
-        if (bits & EVENT_MODE_CHANGED)
-        {
-            bluetooth_send_at_command("AT+CJ0", CMD_SINGLE_CYCLE_MODE_CHANGE);
-        }
+
+    while(1) {
+        bluetooth_send_at_command(command, CMD_PLAY_MUSIC);
+        xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_PLAY_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+        xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_END_PLAY, pdTRUE, pdFALSE, portMAX_DELAY);
     }
-
-    vTaskDelete(NULL); // 删除任务
 }
 void selectBirdSound(lv_event_t *e)
 {
@@ -1651,8 +1543,12 @@ void selectBirdSound(lv_event_t *e)
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    int soundId = 1;
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, NULL);
+    int soundId = 32;
+    if (nature_play_task_handle != NULL) {
+        vTaskDelete(nature_play_task_handle);
+        nature_play_task_handle = NULL;
+    }
+    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
 }
 void selectBugSound(lv_event_t *e)
 {
@@ -1661,8 +1557,12 @@ void selectBugSound(lv_event_t *e)
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    int soundId = 2;
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, NULL);
+    int soundId = 33;
+    if (nature_play_task_handle != NULL) {
+        vTaskDelete(nature_play_task_handle);
+        nature_play_task_handle = NULL;
+    }
+    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
 }
 void selectForestSound(lv_event_t *e)
 {
@@ -1671,8 +1571,12 @@ void selectForestSound(lv_event_t *e)
     lv_obj_add_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    int soundId = 3;
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, NULL);
+    int soundId = 34;
+    if (nature_play_task_handle != NULL) {
+        vTaskDelete(nature_play_task_handle);
+        nature_play_task_handle = NULL;
+    }
+    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
 }
 void selectSeaSound(lv_event_t *e)
 {
@@ -1681,35 +1585,10 @@ void selectSeaSound(lv_event_t *e)
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_add_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    int soundId = 4;
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, NULL);
-}
-
-// 点击返回按钮, 主动返回主界面, 退出自然之音界面, 这是个task
-static void leaveNatureSoundTask(void *pvParameter)
-{
-    // 停止播放
-    bluetooth_send_at_command("AT+AA0", CMD_STOP_STATE);
-    EventBits_t bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_STOP_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
-    if (bits & EVENT_STOP_STATE)
-    {
-        // 退出的时候只要改回CJ就好了, 因为在用AT+AF时会自动改变AC
-        bluetooth_send_at_command("AT+CJ1", CMD_SINGLE_CYCLE_MODE_CHANGE);
-        bits = xEventGroupWaitBits(get_bluetooth_event_group(), EVENT_SINGLE_CYCLE_MODE_CHANGED, pdTRUE, pdFALSE, portMAX_DELAY);
-        if (bits & EVENT_SINGLE_CYCLE_MODE_CHANGED)
-        {
-            printf("已彻底退出自然之音\n");
-        }
+    int soundId = 35;
+    if (nature_play_task_handle != NULL) {
+        vTaskDelete(nature_play_task_handle);
+        nature_play_task_handle = NULL;
     }
-    // 图标恢复
-    lv_obj_clear_state(ui_Bird_Sound_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Bug_Sound_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
-
-    vTaskDelete(NULL);
-}
-void leaveNatureSoundWindow(lv_event_t *e)
-{
-    xTaskCreate(leaveNatureSoundTask, "leaveNatureSoundTask", 4096, NULL, 5, NULL);
+    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
 }

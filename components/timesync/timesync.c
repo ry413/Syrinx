@@ -60,7 +60,6 @@ void update_time_task(void *pvParameter)
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         global_time += 1;
     }
-    vTaskDelete(NULL);  // 哪可能到这
 }
 
 // 从NTP获取时间
@@ -112,7 +111,6 @@ void obtain_time(void) {
             xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
         }
     }
-    vTaskDelete(NULL);
 }
 
 

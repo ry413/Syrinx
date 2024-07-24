@@ -36,6 +36,8 @@ SET(SOURCES components/ui_comp_header_volume.c
     images/ui_img_861711258.c
     images/ui_img_348826415.c
     images/ui_img_12669592.c
+    images/ui_img_260357382.c
+    images/ui_img_1071321554.c
     images/ui_img_2034599484.c
     images/ui_img_304460963.c
     images/ui_img_1893023884.c

@@ -11,6 +11,7 @@
 #include <iconv.h>
 #include <locale.h>
 #include <wchar.h>
+#include "ctype.h"
 
 
 #define UART_PORT_NUM      UART_NUM_0
@@ -25,13 +26,13 @@ static const char *TAG = "Bluetooth";
 static QueueHandle_t uart_queue;
 static EventGroupHandle_t event_group;
 
-bool is_music_mode = true;
 
 char **utf8_file_names = NULL;  // 储存文件名的数组
 int total_files_count = 0;      // 这两个都是在初始化时获取全部文件名用的
-int current_file_index = 0; 
 int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在utf8_file_names中的索引, 我也不知道为什么要定义在这里
 int current_music_duration = 0;
+char bluetooth_name[13];
+char bluetooth_password[5];
 
 
 command_type_t current_command = CMD_NONE;
@@ -137,256 +138,137 @@ esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type
         ESP_LOGE(TAG, "UART 0 write error");
         return ESP_FAIL;
     } else {
-        ESP_LOGI(TAG, "Send AT command: %s", command);
+        ESP_LOGI(TAG, "已发送指令: %s", command);
         return ESP_OK;
     }
 }
 
-// // 获取音量的处理任务
-// void handle_volume_response_task(void *pvParameters) {
-//     // 等待事件组中的事件
-//     EventBits_t bits = xEventGroupWaitBits(event_group, EVENT_VOLUME_RESPONSE, pdTRUE, pdFALSE, portMAX_DELAY);
-
-//     if (bits & EVENT_VOLUME_RESPONSE) {
-//         // 处理响应
-//         ESP_LOGI(TAG, "Volume info: %s", volume_response);
-//     } else {
-//         ESP_LOGE(TAG, "Failed to get volume info");
-//     }
-
-//     // 删除任务
-//     vTaskDelete(NULL);
-// }
-
-// void send_get_volume_command(void) {
-//     bluetooth_send_at_command("AT+QA");
-//     xTaskCreate(handle_volume_response_task, "Volume Response Task", 4096, NULL, 5, NULL);
-// }
-
 // 添加文件名到列表
-void add_file_name(char **utf8_file_names, int index, const char *file_name) {
-    // 确保 file_name 以 "MF+" 开头并以 ".mp3" 结尾
-    if (strncmp(file_name, "MF+", 3) != 0 || strcmp(file_name + strlen(file_name) - 4, ".mp3") != 0) {
+void add_file_name(char **utf8_file_names, const char *file_name) {
+    // 确保 file_name 以 2位数字 开头并以 ".mp3" 结尾
+    if (!isdigit((unsigned char)file_name[0]) || !isdigit((unsigned char)file_name[1]) || strcmp(file_name + strlen(file_name) - 4, ".mp3") != 0) {
         ESP_LOGE(TAG, "Invalid file name format: %s", file_name);
         return;
     }
 
-    // 跳过 "MF+" 前缀
-    const char *name_start = file_name + 3;
+    int index;
+    sscanf(file_name, "%2d", &index);
 
     // 计算新的文件名长度（去除 ".mp3" 的长度）
-    size_t name_length = strlen(name_start) - 4;
+    size_t name_length = strlen(file_name) - 4;
     
-    // 检查 name_length 是否合理
+    // 检查 name_length 是否合理, 极端案例是"00.mp3"
     if (name_length <= 0) {
         ESP_LOGE(TAG, "Invalid file name length after processing: %s", file_name);
         return;
     }
-
-    // 动态分配内存以存储处理后的文件名
-    char *temp_name = (char *)malloc(name_length + 1);
-    if (temp_name == NULL) {
-        ESP_LOGE(TAG, "Failed to allocate memory for temp_name");
+    static int idx = 0;
+    // 动态分配并复制处理后的文件名到 utf8_file_names 列表中
+    utf8_file_names[idx] = strndup(file_name, name_length);
+    if (utf8_file_names[idx] == NULL) {
+        ESP_LOGE(TAG, "Failed to duplicate string for utf8_file_names[%d]", idx);
         return;
     }
-
-    // 复制处理后的文件名到临时缓冲区
-    strncpy(temp_name, name_start, name_length);
-    temp_name[name_length] = '\0';
-
-    // 将处理后的文件名复制到 utf8_file_names 列表中
-    utf8_file_names[index] = strdup(temp_name);
-    free(temp_name);  // 释放临时缓冲区
-    if (utf8_file_names[index] == NULL) {
-        ESP_LOGE(TAG, "Failed to duplicate string for utf8_file_names[%d]", index);
-        return;
-    }
+    idx++;
 }
 void get_all_file_names(void) {
-    // 开机时会收到一个ERR+1, 所以这里延迟一秒等那个ERR+1被读掉
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    // 发送获取总文件数的命令
-    // bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
-    // EventBits_t bits = xEventGroupWaitBits(event_group, EVENT_TOTAL_FILES, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 等待上电返回值被丢掉
+    xEventGroupWaitBits(event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
 
-    // // 总文件数
-    // if (bits & EVENT_TOTAL_FILES) {
+    ESP_LOGW(TAG, "这条日志应该在打印蓝牙模块上电返回值之后出现");
 
-    bluetooth_send_at_command("AT+AJ/music/001*.???", CMD_PLAY_MUSIC);
-    EventBits_t bits = xEventGroupWaitBits(event_group, EVENT_PLAY_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 切换到音乐模式
+    bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
+    xEventGroupWaitBits(event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 切换到音乐模式之后, 似乎需要等待两秒, M2才能得到数值
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
-    // 总文件数
-    if (bits & EVENT_PLAY_MUSIC) {
+    // 必须进入目录才能保证得到对的M2数值
+    bluetooth_send_at_command("AT+M601", CMD_CHANGE_DIR);
+    xEventGroupWaitBits(event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
 
-        total_files_count = 2;         // 临时
-        
-        ESP_LOGI(TAG, "Total files: %d", total_files_count);
-        
-        utf8_file_names = (char **)malloc(total_files_count * sizeof(char *));
+    // 获取文件数量
+    bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
+    xEventGroupWaitBits(event_group, EVENT_TOTAL_FILES_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
 
-        if ((utf8_file_names == NULL)) {
-            ESP_LOGE(TAG, "Failed to allocate memory for file_namess");
-            return;
-        }
-        for (int i = 0; i < total_files_count; i++) {
-            utf8_file_names[i] = (char *)malloc(100 * sizeof(char));
-            // 如果有哪个分配失败, 把之前已分配的释放掉
-            if (utf8_file_names[i] == NULL) {
-                ESP_LOGE(TAG, "Failed to allocate memory for utf8_file_names[%d]", i);
-                for (int j = 0; j < i; j++) {
-                    free(utf8_file_names[j]);
-                }
-                free(utf8_file_names);
-                return;
-            }
-        }
-    } else {
-        ESP_LOGE(TAG, "Failed to get total file count");
+    printf("Files Count: %d\n", total_files_count);
+
+    utf8_file_names = (char **)malloc(total_files_count * sizeof(char *));
+    if ((utf8_file_names == NULL)) {
+        ESP_LOGE(TAG, "Failed to allocate memory for file_namess");
         return;
     }
-    
-    // 遍历所有文件
-    for (int i = 1; i <= total_files_count; ++i) {
-        // 发送获取当前文件序号的命令
-        bluetooth_send_at_command("AT+M1", CMD_GET_FILE_INDEX);
-        bits = xEventGroupWaitBits(event_group, EVENT_FILE_INDEX, pdTRUE, pdFALSE, portMAX_DELAY);
-
-        if (bits & EVENT_FILE_INDEX) {
-            // 解析当前文件序号
-            ESP_LOGI(TAG, "Current file index: %d", current_file_index);
-
-            // 发送获取当前文件名的命令
-            bluetooth_send_at_command("AT+MF", CMD_GET_FILE_NAME);
-            bits = xEventGroupWaitBits(event_group, EVENT_FILE_NAME, pdTRUE, pdFALSE, portMAX_DELAY);
-
-            if (bits & EVENT_FILE_NAME) {
-                // 大耦合了, 读取文件名后储存到file_names的逻辑在bluetooth_wait_for_response里
-
-
-                // char* utf8_str = NULL;
-                // utf16_to_utf8(utf16_file_names[current_file_index], &utf8_str);
-                // printf("UTF8编码的字符串: %s\n", utf8_str);
-                // add_file_name(utf8_file_names, current_file_index - 1, utf8_str);
-                // free(utf8_str);
-
-                // sscanf(response_buffer, "MF+%s", file_names[current_file_index - 1]);
-                // add_file_name()
-                // ESP_LOGI(TAG, "File name: %s", file_names[current_file_index - 1]);
-            } else {
-                ESP_LOGE(TAG, "Failed to get file name for file index %d", current_file_index);
-                return;
+    for (int i = 0; i < total_files_count; i++) {
+        utf8_file_names[i] = (char *)malloc(100 * sizeof(char));
+        if (utf8_file_names[i] == NULL) {
+            ESP_LOGE(TAG, "Failed to allocate memory for utf8_file_names[%d]", i);
+            for (int j = 0; j < i; j++) {
+                free(utf8_file_names[j]);
             }
-        } else {
-            ESP_LOGE(TAG, "Failed to get file index %d", i);
+            free(utf8_file_names);
             return;
         }
-
-        // 如果不是最后一个文件，发送下一曲命令
-        if (i < total_files_count) {
-            bluetooth_send_at_command("AT+CC", CMD_NEXT_TRACK);
-            bits = xEventGroupWaitBits(event_group, EVENT_NEXT_TRACK, pdTRUE, pdFALSE, portMAX_DELAY);
-            if (!(bits & EVENT_NEXT_TRACK)) {
-                ESP_LOGE(TAG, "Failed to move to next track");
-                return;
-            }
-
-        }
     }
+    
+    // 获取music目录(01)里的文件名列表
+    bluetooth_send_at_command("AT+M401", CMD_GET_ALL_FILE_NAME);
 
-    // 打印所有文件名
-    for (int i = 0; i < total_files_count; ++i) {
-        ESP_LOGI(TAG, "File %d: %s", i + 1, utf8_file_names[i]);
-    }
+    // M4每返回一个文件名大概会间隔400毫秒, 这边给它每个500毫秒, 再额外多一次500毫秒
+    vTaskDelay((total_files_count + 1) * 500 / portTICK_PERIOD_MS);
 
-    bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE);
+    xEventGroupSetBits(event_group, EVENT_FILE_LIST_COMPLETE);
+    printf("\n GET FILE NAME LIST END\n");
 }
 esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
     uart_event_t event;
+    memset(response, 0, max_len); // 初始化响应缓冲区
 
     while (1) {
-        // 等待 UART 事件
+        // 等待UART事件
         if (xQueueReceive(uart_queue, (void *)&event, portMAX_DELAY)) {
-            if (event.type == UART_DATA) {
-                int total_len = 0;
-                int len;
-
-                while (total_len < max_len - 1) {
-                    len = uart_read_bytes(UART_PORT_NUM, (uint8_t *)(response + total_len), max_len - 1 - total_len, 1000 / portTICK_PERIOD_MS);
+            switch (event.type) {
+                case UART_DATA:
+                    int len = uart_read_bytes(UART_PORT_NUM, response, event.size, portTICK_PERIOD_MS);
                     if (len > 0) {
-                        // AT+MF会返回utf16, 需要特殊处理, 希望其他指令不用
-                        if (strstr(response, "MF+") != NULL) {
-                            // 更新总长度
-                            total_len += len;
-                            unsigned short utf16_str[max_len / 2]; // 用于存储UTF-16编码的字符串
-                            // 处理前三个单字节 MF+
-                            utf16_str[0] = response[0];
-                            utf16_str[1] = response[1];
-                            utf16_str[2] = response[2];
-
-                            // 处理剩余的字节
-                            for (int i = 3, j = 3; i < len / 2 + 1; i++, j+=2) {
-                                // 大端转小端
-                                utf16_str[i] = response[j] | (response[j + 1] << 8);
+                        printf("UART_DATA.length: %d, response: ", len);
+                        for (int i = 0; i < len; i++) {
+                            // 打印每个字符，对于不可打印字符打印一个点
+                            char c = response[i];
+                            if (c >= 32 && c <= 126) {  // 可打印ASCII范围
+                                putchar(c);
+                            } else {
+                                putchar('.');  // 对于控制字符等，打印点
                             }
-                            utf16_str[len / 2 + 1] = '\0'; // 确保数组末尾有终止符
-
-                            char *utf8 = NULL;
-                            utf16_to_utf8(utf16_str, &utf8);
-                            printf("UTF8编码的字符串: %s\n", utf8);
-                            add_file_name(utf8_file_names, current_file_index - 1, utf8);
-                            free(utf8);
-                            // 这里直接return了, 因为MF+的处理太过特殊, 就不让后面的继续处理了
-                            return ESP_OK;
-                        } else {
-                            // 消除空字节
-                            int valid_len = 0;
-                            for (int i = 0; i < len; i++) {
-                                if (response[total_len + i] != '\0') {
-                                    response[total_len + valid_len] = response[total_len + i];
-                                    valid_len++;
-                                }
-                            }
-                            total_len += valid_len;
-                            response[total_len] = '\0';
-
-                            // for (int i = 0; i < valid_len; i++) {
-                            //     ESP_LOGI(TAG, "Received byte: 0x%02X", response[total_len - valid_len + i]);
-                            // }
                         }
-
-                        // Check for end of response (assuming newline character marks the end)
-                        if (strchr(response, '\n') != NULL) {
-                            break;
-                        }
+                        printf("\n");
+                        ESP_LOGI(TAG, "Received full response: %s", response);
+                        return ESP_OK; // 成功接收到完整响应
                     } else {
-                        break;
+                        // 如果读取超时或未读到数据
+                        ESP_LOGE(TAG, "WTFF?");
                     }
-                }
-
-                if (total_len > 0) {
-                    response[total_len] = '\0';
-                    ESP_LOGI(TAG, "Received full response: %s", response);
-                    return ESP_OK;
-                } else {
-                    ESP_LOGE(TAG, "No data received");
+                case UART_FIFO_OVF:
+                    ESP_LOGW(TAG, "UART FIFO Overflow");
+                    uart_flush_input(UART_PORT_NUM);
+                    xQueueReset(uart_queue);
+                    break;
+                case UART_BUFFER_FULL:
+                    ESP_LOGW(TAG, "UART Buffer Full");
+                    uart_flush_input(UART_PORT_NUM);
+                    xQueueReset(uart_queue);
+                    break;
+                case UART_BREAK:
+                    ESP_LOGW(TAG, "UART Break");
                     return ESP_FAIL;
-                }
-            } else if (event.type == UART_FIFO_OVF) {
-                ESP_LOGW(TAG, "UART FIFO Overflow");
-                uart_flush_input(UART_PORT_NUM);
-                xQueueReset(uart_queue);
-            } else if (event.type == UART_BUFFER_FULL) {
-                ESP_LOGW(TAG, "UART Buffer Full");
-                uart_flush_input(UART_PORT_NUM);
-                xQueueReset(uart_queue);
-            } else if (event.type == UART_BREAK) {
-                ESP_LOGW(TAG, "UART Break");
-            } else if (event.type == UART_PARITY_ERR) {
-                ESP_LOGW(TAG, "UART Parity Error");
-            } else if (event.type == UART_FRAME_ERR) {
-                ESP_LOGW(TAG, "UART Frame Error");
-            } else {
-                ESP_LOGW(TAG, "UART Other??");
+                case UART_PARITY_ERR:
+                    ESP_LOGW(TAG, "UART Parity Error");
+                    return ESP_FAIL;
+                case UART_FRAME_ERR:
+                    ESP_LOGW(TAG, "UART Frame Error");
+                    return ESP_FAIL;
+                default:
+                    ESP_LOGW(TAG, "Unhandled UART event type: %d", event.type);
+                    return ESP_FAIL;
             }
         }
     }
@@ -397,17 +279,17 @@ void bluetooth_monitor_task(void *pvParameters) {
     while (1) {
         // 等待并接收响应
         if (bluetooth_wait_for_response(response, sizeof(response)) == ESP_OK) {
-            ESP_LOGI(TAG, "Received response: cmd: %d, %s\n", current_command, response);
+            ESP_LOGI(TAG, "命令: %d, 接收到: %s\n", current_command, response);
             // 只有响应OK才需要判断是给谁的OK
             if (strncmp(response, "OK", 2) == 0) {
-                printf("OK!!: %d\n", current_command);
+                ESP_LOGI(TAG, "接收到OK: %d\n", current_command);
                 // 暂时没用的就不设置事件组了
                 switch (current_command) {
                     case CMD_NEXT_TRACK:
                         xEventGroupSetBits(event_group, EVENT_NEXT_TRACK);
                         break;
                     case CMD_PREV_TRACK:
-                        // xEventGroupSetBits(event_group, EVENT_PREV_TRACK);
+                        xEventGroupSetBits(event_group, EVENT_PREV_TRACK);
                         break;
                     case CMD_PLAY_PAUSE:
                         xEventGroupSetBits(event_group, EVENT_PLAY_PAUSE);
@@ -416,73 +298,102 @@ void bluetooth_monitor_task(void *pvParameters) {
                         xEventGroupSetBits(event_group, EVENT_STOP_STATE);
                         break;
                     case CMD_PLAY_STATE:
-                        // xEventGroupSetBits(event_group, EVENT_PLAY_STATE);
+                        xEventGroupSetBits(event_group, EVENT_PLAY_STATE);
                         break;
                     case CMD_PAUSE_STATE:
-                        // xEventGroupSetBits(event_group, EVENT_PAUSE_STATE);
+                        xEventGroupSetBits(event_group, EVENT_PAUSE_STATE);
                         break;
                     case CMD_PLAY_MUSIC:
                         xEventGroupSetBits(event_group, EVENT_PLAY_MUSIC);
                         break;
                     case CMD_SET_VOLUME:
-                        xEventGroupSetBits(event_group, EVENT_SET_VOLUME);
+                        // xEventGroupSetBits(event_group, EVENT_SET_VOLUME);
                         break;
-                    case CMD_BLUETOOTH_NAME:
-                        xEventGroupSetBits(event_group, EVENT_BLUETOOTH_NAME);
+                    case CMD_BLUETOOTH_SET_NAME:
+                        // xEventGroupSetBits(event_group, EVENT_BLUETOOTH_SET_NAME);
+                        // 不可能收到的, 设置完蓝牙名称会复位
                         break;
-                    case CMD_BLUETOOTH_PASSWORD:
-                        xEventGroupSetBits(event_group, EVENT_BLUETOOTH_PASSWORD);
+                    case CMD_BLUETOOTH_SET_PASSWORD:
+                        xEventGroupSetBits(event_group, EVENT_BLUETOOTH_SET_PASSWORD);
                         break;
-                    case CMD_DISCONNECT_BLUETOOTH:
-                        xEventGroupSetBits(event_group, EVENT_DISCONNECT_BLUETOOTH);
-                        break;
+                    // case CMD_DISCONNECT_BLUETOOTH:
+                        // xEventGroupSetBits(event_group, EVENT_DISCONNECT_BLUETOOTH);
+                        // break;
                     case CMD_ON_MUTE:
                         xEventGroupSetBits(event_group, EVENT_ON_MUTE);
                         break;
                     case CMD_OFF_MUTE:
                         xEventGroupSetBits(event_group, EVENT_OFF_MUTE);
                         break;
-                    case CMD_MODE_CHANGE:
-                        xEventGroupSetBits(event_group, EVENT_MODE_CHANGED);
+                    case CMD_CHANGE_TO_BLUETOOTH:
+                        xEventGroupSetBits(event_group, EVENT_CHANGE_TO_BLUETOOTH);
                         break;
-                    case CMD_SINGLE_CYCLE_MODE_CHANGE:
-                        printf("WTF\n");
-                        xEventGroupSetBits(event_group, EVENT_SINGLE_CYCLE_MODE_CHANGED);
+                    case CMD_CHANGE_TO_MUSIC:
+                        xEventGroupSetBits(event_group, EVENT_CHANGE_TO_MUSIC);
                         break;
+                    // case CMD_CHANGE_DIR:
+                    //     xEventGroupSetBits(event_group, EVENT_CHANGE_DIR);
+                    //     break;
                     default:
                         ESP_LOGI(TAG, "Other CMD: %d", current_command);
                 }
+            } else if (strncmp(response, "M6", 2) == 0) {
+                xEventGroupSetBits(event_group, EVENT_CHANGE_DIR);
             } else if (strncmp(response, "QA+", 3) == 0) {
                 ESP_LOGI(TAG, "Volume: %s", response);
                 // strncpy(volume_response, response, BUF_SIZE);
                 // xEventGroupSetBits(event_group, EVENT_VOLUME_RESPONSE);
             } else if (strncmp(response, "M2+", 3) == 0) {
                 sscanf(response, "M2+%d", &total_files_count);
-                xEventGroupSetBits(event_group, EVENT_TOTAL_FILES);
-            } else if (strncmp(response, "M1+", 3) == 0) {
-                sscanf(response, "M1+%d", &current_file_index);
-                xEventGroupSetBits(event_group, EVENT_FILE_INDEX);
-            } else if (strncmp(response, "MF+", 3) == 0) {
-                // 另一个耦合, 那边传来文件名后, 直接在wait_for_response那当场处理完储存了
-                xEventGroupSetBits(event_group, EVENT_FILE_NAME);
+                xEventGroupSetBits(event_group, EVENT_TOTAL_FILES_COUNT);
             } else if (strncmp(response, "MT+", 3) == 0) {
                 sscanf(response, "MT+%d", &current_music_duration);
                 xEventGroupSetBits(event_group, EVENT_DURATION);
-            } else if (strncmp(response, "TS+", 3) == 0) {
-                int bl_state;
-                sscanf(response, "TS+%d", &bl_state);
-                // 1是等待连接
-                if (bl_state == 1) {
-                    xEventGroupSetBits(event_group, EVENT_BLUETOOTH_WAIT_FOR_CONNET);
-                }
-                // 0表示处于音乐模式, TS指令只在蓝牙模式发, 所以应该不可能出现(所以丢掉了), 如果是剩下的就表示已接通
-                else if (bl_state != 0) {
-                    xEventGroupSetBits(event_group, EVENT_BLUETOOTH_CONNECTED);
-                }
+            } else if (strncmp(response, "btlink", 6) == 0) {
+                xEventGroupSetBits(event_group, EVENT_BLUETOOTH_CONNECTED);
+            } else if (strncmp(response, "btunlink", 8) == 0) {
+                xEventGroupSetBits(event_group, EVENT_BLUETOOTH_DISCONNECTED);
+            } else if (strncmp(response, "END", 3) == 0) {
+                xEventGroupSetBits(event_group, EVENT_END_PLAY);
+            } else if (strncmp(response, "TD+", 3) == 0) {
+                sscanf(response, "TD+%[^\n]", bluetooth_name);
+                xEventGroupSetBits(event_group, EVENT_BLUETOOTH_GET_NAME);
+            } else if (strncmp(response, "TE+", 3) == 0) {
+                sscanf(response, "TE+%s", bluetooth_password);
+                xEventGroupSetBits(event_group, EVENT_BLUETOOTH_GET_PASSWORD);
+            } else if (strncmp(response, "QV+", 3) == 0) {
+                // 版本号
+            } else if (strncmp(response, "QT+", 3) == 0) {
+                // 这什么啊, 反正没用
             }
-            // AT+CZ复位芯片时会发个0xF0
-            else if (response[0] == 0xF0) {
-                printf("REBOOTED\n");
+            // QN是提示音相关的查询结果, 不过这里并没有在乎它的正经用法.
+            // 上电后主动返回的四条返回值, 这个QN是最后一条, 所以这里拿来当作开机结束的事件
+            else if (strncmp(response, "QN+", 3) == 0) {
+                xEventGroupSetBits(event_group, EVENT_STARTUP_SUCCESS);
+            }
+            // 这个是M4响应的一堆文件名的处理
+            else if (strncmp(response + 2, "\x5C\x55", 2) == 0) { // 鬼知道这两个字节是什么东西, 拿来当识别头了
+                unsigned short utf16_str[BUF_SIZE / 2]; // 用于存储UTF-16编码的字符串
+                // 前两个单字节是序号
+                utf16_str[0] = response[0];
+                utf16_str[1] = response[1];
+
+                int i, j;
+                // 丢掉第三四个字节, 处理剩余的字节
+                for (i = 2, j = 4; i < (BUF_SIZE - 4) / 2; i++, j+=2) {
+                    // 大端转小端
+                    utf16_str[i] = response[j] | (response[j + 1] << 8);
+                }
+                utf16_str[i] = '\0'; // 确保数组末尾有终止符
+                // 转为utf8
+                char *utf8 = NULL;
+                utf16_to_utf8(utf16_str, &utf8);
+                printf("UTF8编码的字符串: %s\n", utf8);
+                add_file_name(utf8_file_names, utf8);
+                free(utf8);
+            }
+            else {
+                ESP_LOGE(TAG, "未知返回值");
             }
             
         } else {

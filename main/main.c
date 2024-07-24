@@ -569,6 +569,7 @@ void enable_touch(void) {
  *   APPLICATION MAIN
  **********************/
 void app_main() {
+    // 擦除nvs
     // esp_err_t err = nvs_flash_erase();
     // if (err != ESP_OK) {
     //     ESP_LOGE("eraseNVS", "Failed to erase NVS: %s", esp_err_to_name(err));
@@ -582,19 +583,18 @@ void app_main() {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
-    
     if (ret == ESP_OK) {
         ESP_LOGI(TAG, "NVS初始化成功");
     } else {
         ESP_LOGE(TAG, "NVS初始化失败: %s", esp_err_to_name(ret));
     }
-    // xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096*2, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096, NULL, 2, NULL, 1);
-    // xTaskCreate(lvgl_task, "lvgl_task", 4096, NULL, 3, NULL);
     xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
-    xTaskCreate(init_wifi_task, "init_wifi_task", 4096, NULL, 5, NULL);     // 异步初始化wifi
+    xTaskCreate(init_wifi_task, "init_wifi_task", 4096, NULL, 5, NULL);
+    // 蓝牙
     bluetooth_init();
-    xTaskCreate(bluetooth_monitor_task, "bluetooth_monitor_task", 8192, NULL, 3, NULL); // 创建蓝牙任务
+    xTaskCreate(bluetooth_monitor_task, "bluetooth_monitor_task", 8192, NULL, 3, NULL);
+    // rs485
     rs485_init();
     xTaskCreate(rs485_monitor_task, "rs485_monitor_task", 4096, NULL, 5, NULL);
 }
