@@ -24,7 +24,7 @@
 
 static const char *TAG = "Bluetooth";
 static QueueHandle_t uart_queue;
-static EventGroupHandle_t event_group;
+EventGroupHandle_t bt_event_group = NULL;
 
 
 char **utf8_file_names = NULL;  // 储存文件名的数组
@@ -36,10 +36,6 @@ char bluetooth_password[5];
 
 
 command_type_t current_command = CMD_NONE;
-
-EventGroupHandle_t get_bluetooth_event_group(void) {
-    return event_group;
-}
 
 int utf16_to_utf8(const unsigned short* utf16_str, char** utf8_str) {
     if (utf16_str == NULL || utf8_str == NULL) return 0;
@@ -118,7 +114,7 @@ esp_err_t bluetooth_init(void) {
     ESP_ERROR_CHECK(uart_set_pin(UART_PORT_NUM, UART_TX_PIN, UART_RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_driver_install(UART_PORT_NUM, BUF_SIZE * 2, BUF_SIZE * 2, QUEUE_SIZE, &uart_queue, intr_alloc_flags));
 
-    event_group = xEventGroupCreate();
+    bt_event_group = xEventGroupCreate();
     
     ESP_LOGI(TAG, "UART 0 初始化成功");
     return ESP_OK;
@@ -173,23 +169,23 @@ void add_file_name(char **utf8_file_names, const char *file_name) {
 }
 void get_all_file_names(void) {
     // 等待上电返回值被丢掉
-    xEventGroupWaitBits(event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
+    xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
 
     ESP_LOGW(TAG, "这条日志应该在打印蓝牙模块上电返回值之后出现");
 
     // 切换到音乐模式
     bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
-    xEventGroupWaitBits(event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
     // 切换到音乐模式之后, 似乎需要等待两秒, M2才能得到数值
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     // 必须进入目录才能保证得到对的M2数值
     bluetooth_send_at_command("AT+M601", CMD_CHANGE_DIR);
-    xEventGroupWaitBits(event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
 
     // 获取文件数量
     bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
-    xEventGroupWaitBits(event_group, EVENT_TOTAL_FILES_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
+    xEventGroupWaitBits(bt_event_group, EVENT_TOTAL_FILES_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
 
     printf("Files Count: %d\n", total_files_count);
 
@@ -216,7 +212,7 @@ void get_all_file_names(void) {
     // M4每返回一个文件名大概会间隔400毫秒, 这边给它每个500毫秒, 再额外多一次500毫秒
     vTaskDelay((total_files_count + 1) * 500 / portTICK_PERIOD_MS);
 
-    xEventGroupSetBits(event_group, EVENT_FILE_LIST_COMPLETE);
+    xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
     printf("\n GET FILE NAME LIST END\n");
 }
 esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
@@ -286,81 +282,85 @@ void bluetooth_monitor_task(void *pvParameters) {
                 // 暂时没用的就不设置事件组了
                 switch (current_command) {
                     case CMD_NEXT_TRACK:
-                        xEventGroupSetBits(event_group, EVENT_NEXT_TRACK);
+                        xEventGroupSetBits(bt_event_group, EVENT_NEXT_TRACK);
                         break;
                     case CMD_PREV_TRACK:
-                        xEventGroupSetBits(event_group, EVENT_PREV_TRACK);
+                        xEventGroupSetBits(bt_event_group, EVENT_PREV_TRACK);
                         break;
                     case CMD_PLAY_PAUSE:
-                        xEventGroupSetBits(event_group, EVENT_PLAY_PAUSE);
+                        xEventGroupSetBits(bt_event_group, EVENT_PLAY_PAUSE);
                         break;
                     case CMD_STOP_STATE:
-                        xEventGroupSetBits(event_group, EVENT_STOP_STATE);
+                        xEventGroupSetBits(bt_event_group, EVENT_STOP_STATE);
                         break;
                     case CMD_PLAY_STATE:
-                        xEventGroupSetBits(event_group, EVENT_PLAY_STATE);
+                        xEventGroupSetBits(bt_event_group, EVENT_PLAY_STATE);
                         break;
                     case CMD_PAUSE_STATE:
-                        xEventGroupSetBits(event_group, EVENT_PAUSE_STATE);
+                        xEventGroupSetBits(bt_event_group, EVENT_PAUSE_STATE);
                         break;
                     case CMD_PLAY_MUSIC:
-                        xEventGroupSetBits(event_group, EVENT_PLAY_MUSIC);
+                        xEventGroupSetBits(bt_event_group, EVENT_PLAY_MUSIC);
                         break;
                     case CMD_SET_VOLUME:
-                        // xEventGroupSetBits(event_group, EVENT_SET_VOLUME);
+                        // xEventGroupSetBits(bt_event_group, EVENT_SET_VOLUME);
                         break;
                     case CMD_BLUETOOTH_SET_NAME:
-                        // xEventGroupSetBits(event_group, EVENT_BLUETOOTH_SET_NAME);
+                        // xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_SET_NAME);
                         // 不可能收到的, 设置完蓝牙名称会复位
                         break;
                     case CMD_BLUETOOTH_SET_PASSWORD:
-                        xEventGroupSetBits(event_group, EVENT_BLUETOOTH_SET_PASSWORD);
+                        xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_SET_PASSWORD);
                         break;
                     // case CMD_DISCONNECT_BLUETOOTH:
-                        // xEventGroupSetBits(event_group, EVENT_DISCONNECT_BLUETOOTH);
+                        // xEventGroupSetBits(bt_event_group, EVENT_DISCONNECT_BLUETOOTH);
                         // break;
                     case CMD_ON_MUTE:
-                        xEventGroupSetBits(event_group, EVENT_ON_MUTE);
+                        xEventGroupSetBits(bt_event_group, EVENT_ON_MUTE);
                         break;
                     case CMD_OFF_MUTE:
-                        xEventGroupSetBits(event_group, EVENT_OFF_MUTE);
+                        xEventGroupSetBits(bt_event_group, EVENT_OFF_MUTE);
                         break;
                     case CMD_CHANGE_TO_BLUETOOTH:
-                        xEventGroupSetBits(event_group, EVENT_CHANGE_TO_BLUETOOTH);
+                        xEventGroupSetBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH);
                         break;
                     case CMD_CHANGE_TO_MUSIC:
-                        xEventGroupSetBits(event_group, EVENT_CHANGE_TO_MUSIC);
+                        xEventGroupSetBits(bt_event_group, EVENT_CHANGE_TO_MUSIC);
                         break;
+                    case CMD_EQUALIZER_SET:
+                        xEventGroupSetBits(bt_event_group, EVENT_EQUALIZER_SET);
+                        break;
+                    // 等待M6响应修复
                     // case CMD_CHANGE_DIR:
-                    //     xEventGroupSetBits(event_group, EVENT_CHANGE_DIR);
+                    //     xEventGroupSetBits(bt_event_group, EVENT_CHANGE_DIR);
                     //     break;
                     default:
                         ESP_LOGI(TAG, "Other CMD: %d", current_command);
                 }
             } else if (strncmp(response, "M6", 2) == 0) {
-                xEventGroupSetBits(event_group, EVENT_CHANGE_DIR);
+                xEventGroupSetBits(bt_event_group, EVENT_CHANGE_DIR);
             } else if (strncmp(response, "QA+", 3) == 0) {
                 ESP_LOGI(TAG, "Volume: %s", response);
                 // strncpy(volume_response, response, BUF_SIZE);
-                // xEventGroupSetBits(event_group, EVENT_VOLUME_RESPONSE);
+                // xEventGroupSetBits(bt_event_group, EVENT_VOLUME_RESPONSE);
             } else if (strncmp(response, "M2+", 3) == 0) {
                 sscanf(response, "M2+%d", &total_files_count);
-                xEventGroupSetBits(event_group, EVENT_TOTAL_FILES_COUNT);
+                xEventGroupSetBits(bt_event_group, EVENT_TOTAL_FILES_COUNT);
             } else if (strncmp(response, "MT+", 3) == 0) {
                 sscanf(response, "MT+%d", &current_music_duration);
-                xEventGroupSetBits(event_group, EVENT_DURATION);
+                xEventGroupSetBits(bt_event_group, EVENT_DURATION);
             } else if (strncmp(response, "btlink", 6) == 0) {
-                xEventGroupSetBits(event_group, EVENT_BLUETOOTH_CONNECTED);
+                xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_CONNECTED);
             } else if (strncmp(response, "btunlink", 8) == 0) {
-                xEventGroupSetBits(event_group, EVENT_BLUETOOTH_DISCONNECTED);
+                xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_DISCONNECTED);
             } else if (strncmp(response, "END", 3) == 0) {
-                xEventGroupSetBits(event_group, EVENT_END_PLAY);
+                xEventGroupSetBits(bt_event_group, EVENT_END_PLAY);
             } else if (strncmp(response, "TD+", 3) == 0) {
                 sscanf(response, "TD+%[^\n]", bluetooth_name);
-                xEventGroupSetBits(event_group, EVENT_BLUETOOTH_GET_NAME);
+                xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_GET_NAME);
             } else if (strncmp(response, "TE+", 3) == 0) {
                 sscanf(response, "TE+%s", bluetooth_password);
-                xEventGroupSetBits(event_group, EVENT_BLUETOOTH_GET_PASSWORD);
+                xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_GET_PASSWORD);
             } else if (strncmp(response, "QV+", 3) == 0) {
                 // 版本号
             } else if (strncmp(response, "QT+", 3) == 0) {
@@ -369,7 +369,7 @@ void bluetooth_monitor_task(void *pvParameters) {
             // QN是提示音相关的查询结果, 不过这里并没有在乎它的正经用法.
             // 上电后主动返回的四条返回值, 这个QN是最后一条, 所以这里拿来当作开机结束的事件
             else if (strncmp(response, "QN+", 3) == 0) {
-                xEventGroupSetBits(event_group, EVENT_STARTUP_SUCCESS);
+                xEventGroupSetBits(bt_event_group, EVENT_STARTUP_SUCCESS);
             }
             // 这个是M4响应的一堆文件名的处理
             else if (strncmp(response + 2, "\x5C\x55", 2) == 0) { // 鬼知道这两个字节是什么东西, 拿来当识别头了

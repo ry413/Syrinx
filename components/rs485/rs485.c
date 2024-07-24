@@ -72,8 +72,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
     }
 
     // ******************** 指令 ********************
-    EventGroupHandle_t event_group = get_bluetooth_event_group();
-    EventBits_t bits;
+    // EventGroupHandle_t event_group = get_bluetooth_event_group();
+    // EventBits_t bits;
 
     // 插卡指令
     if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x01}, (size_t)5) == 0) {

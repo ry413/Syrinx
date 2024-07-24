@@ -56,6 +56,7 @@ void ui_event_Guide_Btn(lv_event_t * e);
 extern lv_obj_t * ui_Guide_Btn;
 extern lv_obj_t * ui_Guide_Icon;
 extern lv_obj_t * ui_Guide_Text;
+extern lv_obj_t * ui_tfcard_States_Icon;
 extern lv_obj_t * ui_Wifi_States_Icon;
 extern lv_obj_t * ui_Wifi_Img_Placeholder;
 extern lv_obj_t * ui_Music_Note_Img_Placeholder1;
@@ -448,8 +449,10 @@ void ui_event_BackToMainWindowBtn9(lv_event_t * e);
 extern lv_obj_t * ui_BackToMainWindowBtn9;
 extern lv_obj_t * ui_Track_Title;
 extern lv_obj_t * ui_Track_Artist;
-extern lv_obj_t * ui_Play_Mode_Btn;
 void ui_event_Play_Mode_Btn(lv_event_t * e);
+extern lv_obj_t * ui_Play_Mode_Btn;
+void ui_event_Play_Style_Btn(lv_event_t * e);
+extern lv_obj_t * ui_Play_Style_Btn;
 extern lv_obj_t * ui_Play_Style_Text;
 extern lv_obj_t * ui_Current_Time;
 extern lv_obj_t * ui_Total_Time;
@@ -521,6 +524,7 @@ LV_IMG_DECLARE(ui_img_1071321554);  // assets/丽枫/单曲循环.png
 LV_IMG_DECLARE(ui_img_542920328);    // assets/丽枫UI/上一首.png
 LV_IMG_DECLARE(ui_img_899744137);    // assets/丽枫UI/播放.png
 LV_IMG_DECLARE(ui_img_542960551);    // assets/丽枫UI/下一首.png
+LV_IMG_DECLARE(ui_img_607840074);    // assets/丽枫UI/tfcard.png
 
 
 

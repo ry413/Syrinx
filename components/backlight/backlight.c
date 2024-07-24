@@ -2,6 +2,7 @@
 #include <esp_log.h>
 #include "nvs.h"
 #include "stdio.h"
+#include "driver/gpio.h"
 
 
 // 背光定时器是为了进入待机界面, 并不是黑屏
@@ -51,6 +52,11 @@ static void backlight_timer_callback(lv_timer_t * timer) {
     lv_scr_load(idle_window);
 }
 
+// 初始化背光控制（使用GPIO电平控制）
+// void init_backlight(void) {
+//     gpio_set_direction(LEDC_PIN, GPIO_MODE_OUTPUT);
+//     gpio_set_level(LEDC_PIN, 1);
+// }
 
 // 初始化背光, 硬件层面的
 void init_backlight(void) {

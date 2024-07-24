@@ -32,6 +32,7 @@ typedef enum {
     CMD_ON_MUTE,                // AT+CL0   关闭功放
     CMD_OFF_MUTE,               // AT+CL3   打开功放
     // CMD_BLUETOOTH_STATE,         // AT+TS    获取蓝牙状态
+    CMD_EQUALIZER_SET,          // AT+CQx   设置均衡器
 } command_type_t;
 
 #define EVENT_TOTAL_FILES_COUNT (1 << 0)            // 已获得文件数量
@@ -56,12 +57,13 @@ typedef enum {
 #define EVENT_BLUETOOTH_CONNECTED (1 << 19)         // 蓝牙已连接
 #define EVENT_BLUETOOTH_DISCONNECTED (1 << 20)      // 蓝牙已断开
 #define EVENT_END_PLAY (1 << 21)                    // 播放已结束
-// #define EVENT_SINGLE_CYCLE_MODE_CHANGED (1 << 22)   // 已更改到循环模式
+#define EVENT_EQUALIZER_SET (1 << 22)               // 已设置均衡器
 #define EVENT_STARTUP_SUCCESS (1 << 23)             // 模块已上电并丢掉了返回值
 
 
 
 extern command_type_t current_command;
+extern EventGroupHandle_t bt_event_group;
 
 // 很诡异
 extern char **utf8_file_names;
@@ -72,7 +74,6 @@ extern char bluetooth_name[13];
 extern char bluetooth_password[5];
 
 
-EventGroupHandle_t get_bluetooth_event_group(void);
 void get_all_file_names(void);
 
 esp_err_t bluetooth_init(void);

@@ -303,6 +303,16 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Guide_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Guide_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_tfcard_States_Icon = lv_img_create(ui_Main_Window);
+    lv_img_set_src(ui_tfcard_States_Icon, &ui_img_607840074);
+    lv_obj_set_width(ui_tfcard_States_Icon, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_tfcard_States_Icon, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_tfcard_States_Icon, -127);
+    lv_obj_set_y(ui_tfcard_States_Icon, -224);
+    lv_obj_set_align(ui_tfcard_States_Icon, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_tfcard_States_Icon, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_tfcard_States_Icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
     ui_Wifi_States_Icon = lv_img_create(ui_Main_Window);
     lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
     lv_obj_set_width(ui_Wifi_States_Icon, LV_SIZE_CONTENT);   /// 1

@@ -48,6 +48,7 @@ void ui_event_Guide_Btn(lv_event_t * e);
 lv_obj_t * ui_Guide_Btn;
 lv_obj_t * ui_Guide_Icon;
 lv_obj_t * ui_Guide_Text;
+lv_obj_t * ui_tfcard_States_Icon;
 lv_obj_t * ui_Wifi_States_Icon;
 lv_obj_t * ui_Wifi_Img_Placeholder;
 lv_obj_t * ui_Music_Note_Img_Placeholder1;
@@ -144,34 +145,34 @@ lv_obj_t * ui_Header_Mode_Text;
 lv_obj_t * ui_Header_Mode_Time;
 lv_obj_t * ui_Mode_Items;
 lv_obj_t * ui_Mode_Nature;
-lv_obj_t * ui_Mode_Nature_Icon;
 void ui_event_Mode_Nature_Btn(lv_event_t * e);
 lv_obj_t * ui_Mode_Nature_Btn;
+lv_obj_t * ui_Mode_Nature_Icon;
 lv_obj_t * ui_Mode_Nature_text;
 lv_obj_t * ui_Mode_Jazz;
-lv_obj_t * ui_Mode_Jazz_Icon;
 void ui_event_Mode_Jazz_Btn(lv_event_t * e);
 lv_obj_t * ui_Mode_Jazz_Btn;
+lv_obj_t * ui_Mode_Jazz_Icon;
 lv_obj_t * ui_Mode_Jazz_Text;
 lv_obj_t * ui_Mode_Rock;
-lv_obj_t * ui_Mode_Rock_Icon;
 void ui_event_Mode_Rock_Btn(lv_event_t * e);
 lv_obj_t * ui_Mode_Rock_Btn;
+lv_obj_t * ui_Mode_Rock_Icon;
 lv_obj_t * ui_Mode_Rock_Text;
 lv_obj_t * ui_Mode_Pop;
-lv_obj_t * ui_Mode_Pop_Icon;
 void ui_event_Mode_Pop_Btn(lv_event_t * e);
 lv_obj_t * ui_Mode_Pop_Btn;
+lv_obj_t * ui_Mode_Pop_Icon;
 lv_obj_t * ui_Mode_Pop_Text;
 lv_obj_t * ui_Mode_Classical;
-lv_obj_t * ui_Mode_Classical_Icon;
 void ui_event_Mode_Classical_Btn(lv_event_t * e);
 lv_obj_t * ui_Mode_Classical_Btn;
+lv_obj_t * ui_Mode_Classical_Icon;
 lv_obj_t * ui_Mode_Classical_Text;
 lv_obj_t * ui_Mode_Opera;
-lv_obj_t * ui_Mode_Opera_Icon;
 void ui_event_Mode_Opera_Btn(lv_event_t * e);
 lv_obj_t * ui_Mode_Opera_Btn;
+lv_obj_t * ui_Mode_Opera_Icon;
 lv_obj_t * ui_Mode_Opera_Text;
 void ui_event_BackToMainWindowBtn4(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn4;
@@ -464,7 +465,10 @@ void ui_event_BackToMainWindowBtn9(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn9;
 lv_obj_t * ui_Track_Title;
 lv_obj_t * ui_Track_Artist;
+void ui_event_Play_Mode_Btn(lv_event_t * e);
 lv_obj_t * ui_Play_Mode_Btn;
+void ui_event_Play_Style_Btn(lv_event_t * e);
+lv_obj_t * ui_Play_Style_Btn;
 lv_obj_t * ui_Play_Style_Text;
 lv_obj_t * ui_Current_Time;
 lv_obj_t * ui_Total_Time;
@@ -735,48 +739,48 @@ void ui_event_Mode_Nature_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_RELEASED) {
-        _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_nature(e);
     }
 }
 void ui_event_Mode_Jazz_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_RELEASED) {
-        _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_jazz(e);
     }
 }
 void ui_event_Mode_Rock_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_RELEASED) {
-        _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_rock(e);
     }
 }
 void ui_event_Mode_Pop_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_RELEASED) {
-        _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_pop(e);
     }
 }
 void ui_event_Mode_Classical_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_RELEASED) {
-        _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_classical(e);
     }
 }
 void ui_event_Mode_Opera_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_RELEASED) {
-        _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_FADE_ON, 100, 0, &ui_Music_Window_screen_init);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_opera(e);
     }
 }
 void ui_event_BackToMainWindowBtn4(lv_event_t * e)
@@ -1222,6 +1226,14 @@ void ui_event_Play_Mode_Btn(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         changePlayMode(e);
+    }
+}
+void ui_event_Play_Style_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        changePlayStyle(e);
     }
 }
 void ui_event_Prev_Track_Btn(lv_event_t * e)
