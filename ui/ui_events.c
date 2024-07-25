@@ -37,7 +37,6 @@ static bool playing = false;             // 播放状态
 
 static lv_timer_t *progressTimer = NULL;  // 音频进度条定时器
 static int currentPlayTime = 0;           // 音频进度条的当前值
-static int updateInterval = 0;            // 进度条每次更新的间隔, 因为进度条上限固定为100
 
 static lv_timer_t *inactiveTimer;  // 不活动就返回主界面, 的定时器
 
@@ -81,16 +80,11 @@ static void changeMusicUpdateUI(void);
 // 联网获取时间的任务
 static void wifiGetTimeTask(void *param) {
     EventGroupHandle_t wifi_event_group = get_wifi_event_group();
-    EventBits_t bits =
-        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdTRUE, WIFI_CONNECTION_TIMEOUT);
-    if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI("wifiGetTimeTask", "Wi-Fi 已连接");
-        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
-        obtain_time();
-        srand(global_time);
-    } else {
-        ESP_LOGE("wifiGetTimeTask", "Wi-Fi 未连接");
-    }
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, pdFALSE, pdTRUE, WIFI_CONNECTION_TIMEOUT);
+    ESP_LOGI("wifiGetTimeTask", "Wi-Fi 已连接");
+    lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
+    obtain_time();
+    srand(global_time);
     vTaskDelete(NULL);  // 删除任务
 }
 // 创建Music List及item的任务, 由这里发起get_all_file_names
@@ -162,8 +156,8 @@ static void update_progress(lv_timer_t *timer) {
         format_time(currentPlayTime, time_str, sizeof(time_str));
         lv_label_set_text(ui_Current_Time, time_str);
 
-        // 直接计算进度条应该在的位置
-        int progressValue = (int)((currentPlayTime * 100) / (float)current_music_duration);
+        // 把总时长当作减2秒的状况, 好让进度条动得快一点, 消除与实际播放进度的误差)
+        int progressValue = (currentPlayTime * 100) / (current_music_duration - 2);
         lv_slider_set_value(ui_Progress_Slider, progressValue, LV_ANIM_OFF);
     } else {
         lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
@@ -191,9 +185,8 @@ static void getDurationTask(void *pvParameter) {
     ESP_LOGI("getDurationTask", "Total time: %s", time_str);
     lv_label_set_text_static(ui_Total_Time, time_str);
 
-    // 计算进度条
-    updateInterval = (current_music_duration / 100);  // 进度条更新间隔
     currentPlayTime = 0;
+    update_progress(NULL);
     lv_timer_reset(progressTimer);  // 重置进度条
     lv_timer_resume(progressTimer); // 然后启动
 
@@ -252,13 +245,16 @@ static void inactiveCallback(lv_timer_t *timer) {
     lv_obj_t *prevScreen = lv_scr_act();
     lv_scr_load(ui_Main_Window);
 
-    // 如果之前处于蓝牙界面, clean蓝牙相关
     if (prevScreen == ui_Bluetooth_WIndow) {
         xTaskCreate(cleanBluetoothTask, "cleanBluetoothTask", 4096, NULL, 5, NULL);
+    } else if (prevScreen == ui_Settings_Window) {
+        lv_obj_add_flag(ui_Volume_Settings_Panel, LV_OBJ_FLAG_HIDDEN);
+    } else if (prevScreen == ui_Settings_Backlight_Window) {
+        lv_obj_add_flag(ui_Backlight_Brightness_Panel2, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_Backlight_Time_Panel2, LV_OBJ_FLAG_HIDDEN);
     }
-    // 如果之前处于...
 
-    // delInactiveTimer();  不在这写这个, 而是放在主界面loaded后, 因为要考虑主动返回主界面的状况
+    // delInactiveTimer();  不在这写这个, 而是放在主界面loaded, 因为要考虑主动返回主界面的状况
 }
 // 创建inactive定时器
 static void createInactiveTimer(void) {
@@ -284,13 +280,14 @@ void resetInactiveTimer(lv_event_t *e) {
 // 实际上不是很必要, 但是为了规范
 static void bluetooth_monitor_state_task(void *pvParameter) {
     while (1) {
-        EventBits_t bits =
-            xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_CONNECTED, pdTRUE, pdFALSE, portMAX_DELAY);
+        xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_CONNECTED, pdTRUE, pdFALSE, portMAX_DELAY);
         printf("蓝牙已连接\n");
         delInactiveTimer();
-        // 不是, 这哪里规范了?
 
-        bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_DISCONNECTED, pdTRUE, pdFALSE,
+        // 不是, 这哪里规范了?
+        // 这里写的也太危险了
+
+        xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_DISCONNECTED, pdTRUE, pdFALSE,
                                    portMAX_DELAY);
         printf("蓝牙已断开\n");
         createInactiveTimer();
@@ -321,7 +318,7 @@ void mainScrLoaded(lv_event_t *e) {
     // 每次到主界面时, 重建一个背光定时器, 因为只有在主界面时才会进入待机模式
     init_backlight_timer(backlight_time_level_to_second(backlight_time_level));
 
-    delInactiveTimer();  // 只有从idle回到主界面时才会失败
+    delInactiveTimer();
 }
 void musicScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Music_Time);
@@ -407,10 +404,9 @@ void leaveMusicWindow(lv_event_t *e) {
     // 只有从music界面进入main界面才关闭功放与停止音乐(因为music界面也能进入play界面)
     if (currentScreen == ui_Main_Window) {
         bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
-        EventBits_t bits =
-            xEventGroupWaitBits(bt_event_group, EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
+        xEventGroupWaitBits(bt_event_group, EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
         bluetooth_send_at_command("AT+CB", CMD_STOP_STATE);
-        bits = xEventGroupWaitBits(bt_event_group, EVENT_STOP_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
+        xEventGroupWaitBits(bt_event_group, EVENT_STOP_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
         
         lv_timer_pause(progressTimer);
         if (music_play_mode_task_handle != NULL) {
@@ -418,6 +414,10 @@ void leaveMusicWindow(lv_event_t *e) {
             music_play_mode_task_handle = NULL;
         }
     }
+}
+void leaveMusicPlayWindow(lv_event_t * e) {
+    printf("NO\n");
+    // close_music_EQ_Panel(NULL);      // 应该不可能需要这个
 }
 void leaveNatureSoundWindow(lv_event_t *e) {
     printf("Leave Nature\n");
@@ -635,8 +635,7 @@ static void bluetooth_cfg_task(void *pvParameter) {
     char command[50];
     snprintf(command, sizeof(command), "AT+BE%s", prevBluetoothPassword);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_PASSWORD);
-    EventBits_t bits =
-        xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_SET_PASSWORD, pdTRUE, pdFALSE, 3000);
+    xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_SET_PASSWORD, pdTRUE, pdFALSE, 3000);
 
     snprintf(command, sizeof(command), "AT+BD%s", prevBluetoothName);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_NAME);
@@ -1315,11 +1314,155 @@ void changePlayMode(lv_event_t *e) {
             break;
     }
 }
+
+// ******************** 均衡器相关 ********************
+
+typedef enum {
+    EQ_MODE_NATURE,     // 自然
+    EQ_MODE_JAZZ,       // 爵士
+    EQ_MODE_ROCK,       // 摇滚
+    EQ_MODE_POP,        // 流行
+    EQ_MODE_CLASSICAL,  // 古典
+    EQ_MODE_OPERA       // 歌剧
+} equalizer_t;
+
+equalizer_t equalizer_mode = EQ_MODE_POP;
+
+void select_eq_nature(lv_event_t *e) {
+    lv_obj_add_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn1, lv_color_hex(0x228B22), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn2, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn3, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn4, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn5, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn6, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    
+    equalizer_mode = EQ_MODE_NATURE;
+    lv_label_set_text(ui_Play_Style_Text, "自然");
+    close_music_EQ_Panel(NULL);
+    bluetooth_send_at_command("AT+CQ5", CMD_EQUALIZER_SET);
+    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
+}
+void select_eq_jazz(lv_event_t *e) {
+    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
+    lv_obj_add_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn1, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn2, lv_color_hex(0x6A5ACD), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn3, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn4, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn5, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn6, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    equalizer_mode = EQ_MODE_JAZZ;
+    lv_label_set_text(ui_Play_Style_Text, "爵士");
+    close_music_EQ_Panel(NULL);
+    bluetooth_send_at_command("AT+CQ4", CMD_EQUALIZER_SET);
+    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
+
+}
+void select_eq_rock(lv_event_t *e) {
+    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
+    lv_obj_add_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn1, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn2, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn3, lv_color_hex(0xDC143C), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn4, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn5, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn6, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    equalizer_mode = EQ_MODE_ROCK;
+    lv_label_set_text(ui_Play_Style_Text, "摇滚");
+    close_music_EQ_Panel(NULL);
+    bluetooth_send_at_command("AT+CQ1", CMD_EQUALIZER_SET);
+    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
+
+}
+void select_eq_pop(lv_event_t *e) {
+    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
+    lv_obj_add_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn1, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn2, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn3, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn4, lv_color_hex(0xFF1493), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn5, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn6, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    equalizer_mode = EQ_MODE_POP;
+    lv_label_set_text(ui_Play_Style_Text, "流行");
+    close_music_EQ_Panel(NULL);
+    bluetooth_send_at_command("AT+CQ2", CMD_EQUALIZER_SET);
+    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
+
+}
+void select_eq_classical(lv_event_t *e) {
+    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
+    lv_obj_add_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn1, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn2, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn3, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn4, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn5, lv_color_hex(0xFFD700), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn6, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    equalizer_mode = EQ_MODE_CLASSICAL;
+    lv_label_set_text(ui_Play_Style_Text, "古典");
+    close_music_EQ_Panel(NULL);
+    bluetooth_send_at_command("AT+CQ3", CMD_EQUALIZER_SET);
+    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
+
+}
+void select_eq_opera(lv_event_t *e) {
+    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
+    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
+    lv_obj_add_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn1, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn2, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn3, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn4, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn5, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn6, lv_color_hex(0x8B0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    equalizer_mode = EQ_MODE_OPERA;
+    lv_label_set_text(ui_Play_Style_Text, "歌剧");
+    close_music_EQ_Panel(NULL);
+    bluetooth_send_at_command("AT+CQ0", CMD_EQUALIZER_SET);
+    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
+}
+// 打开切换均衡器的窗口
 void changePlayStyle(lv_event_t * e)
 {
-    printf("Hello\n");
+    lv_obj_clear_flag(ui_Music_Window_EQ_Panel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_CloseMusicEQPanelRange, LV_OBJ_FLAG_HIDDEN);
 }
-
+// 关闭切换均衡器的窗口
+void close_music_EQ_Panel(lv_event_t * e) {
+    lv_obj_add_flag(ui_Music_Window_EQ_Panel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_CloseMusicEQPanelRange, LV_OBJ_FLAG_HIDDEN);
+}
 // ******************** 自然之音相关 ********************
 
 // 播放指定自然之音并换到单曲循环模式
@@ -1388,94 +1531,4 @@ void selectSeaSound(lv_event_t *e) {
         nature_play_task_handle = NULL;
     }
     xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
-}
-
-// ******************** 均衡器相关 ********************
-
-typedef enum {
-    EQ_MODE_NATURE,     // 自然
-    EQ_MODE_JAZZ,       // 爵士
-    EQ_MODE_ROCK,       // 摇滚
-    EQ_MODE_POP,        // 流行
-    EQ_MODE_CLASSICAL,  // 古典
-    EQ_MODE_OPERA       // 歌剧
-} equalizer_t;
-
-equalizer_t equalizer_mode = EQ_MODE_POP;
-
-void select_eq_nature(lv_event_t *e) {
-    lv_obj_add_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
-    equalizer_mode = EQ_MODE_NATURE;
-    lv_label_set_text(ui_Play_Style_Text, "自然");
-    bluetooth_send_at_command("AT+CQ5", CMD_EQUALIZER_SET);
-    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
-}
-void select_eq_jazz(lv_event_t *e) {
-    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
-    lv_obj_add_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
-    equalizer_mode = EQ_MODE_JAZZ;
-    lv_label_set_text(ui_Play_Style_Text, "爵士");
-    bluetooth_send_at_command("AT+CQ4", CMD_EQUALIZER_SET);
-    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
-
-}
-void select_eq_rock(lv_event_t *e) {
-    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
-    lv_obj_add_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
-    equalizer_mode = EQ_MODE_ROCK;
-    lv_label_set_text(ui_Play_Style_Text, "摇滚");
-    bluetooth_send_at_command("AT+CQ1", CMD_EQUALIZER_SET);
-    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
-
-}
-void select_eq_pop(lv_event_t *e) {
-    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
-    lv_obj_add_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
-    equalizer_mode = EQ_MODE_POP;
-    lv_label_set_text(ui_Play_Style_Text, "流行");
-    bluetooth_send_at_command("AT+CQ2", CMD_EQUALIZER_SET);
-    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
-
-}
-void select_eq_classical(lv_event_t *e) {
-    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
-    lv_obj_add_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
-    equalizer_mode = EQ_MODE_CLASSICAL;
-    lv_label_set_text(ui_Play_Style_Text, "古典");
-    bluetooth_send_at_command("AT+CQ3", CMD_EQUALIZER_SET);
-    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
-
-}
-void select_eq_opera(lv_event_t *e) {
-    lv_obj_clear_state(ui_Mode_Nature_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Jazz_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Rock_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Pop_Btn, LV_STATE_CHECKED);
-    lv_obj_clear_state(ui_Mode_Classical_Btn, LV_STATE_CHECKED);
-    lv_obj_add_state(ui_Mode_Opera_Btn, LV_STATE_CHECKED);
-    equalizer_mode = EQ_MODE_OPERA;
-    lv_label_set_text(ui_Play_Style_Text, "歌剧");
-    bluetooth_send_at_command("AT+CQ0", CMD_EQUALIZER_SET);
-    xEventGroupWaitBits(bt_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, portMAX_DELAY);
 }

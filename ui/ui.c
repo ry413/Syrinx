@@ -79,6 +79,7 @@ lv_obj_t * ui_Prev_Music_List_Btn_Text;
 void ui_event_Next_Music_List_Btn(lv_event_t * e);
 lv_obj_t * ui_Next_Music_List_Btn;
 lv_obj_t * ui_Next_Music_List_Btn_Text;
+void ui_event_Music_Play_Window(lv_event_t * e);
 lv_obj_t * ui_Header_Volume1;
 
 
@@ -461,8 +462,8 @@ lv_obj_t * ui_Header_Music_Text2;
 lv_obj_t * ui_Header_Music_Time2;
 lv_obj_t * ui_Player_Image;
 lv_obj_t * ui_Player_Icon;
-void ui_event_BackToMainWindowBtn9(lv_event_t * e);
-lv_obj_t * ui_BackToMainWindowBtn9;
+void ui_event_BackToMusicWindowBtn9(lv_event_t * e);
+lv_obj_t * ui_BackToMusicWindowBtn9;
 lv_obj_t * ui_Track_Title;
 lv_obj_t * ui_Track_Artist;
 void ui_event_Play_Mode_Btn(lv_event_t * e);
@@ -470,6 +471,33 @@ lv_obj_t * ui_Play_Mode_Btn;
 void ui_event_Play_Style_Btn(lv_event_t * e);
 lv_obj_t * ui_Play_Style_Btn;
 lv_obj_t * ui_Play_Style_Text;
+void ui_event_CloseMusicEQPanelRange(lv_event_t * e);
+lv_obj_t * ui_CloseMusicEQPanelRange;
+lv_obj_t * ui_Music_Window_EQ_Panel;
+lv_obj_t * ui_MusicWindowEQ1;
+lv_obj_t * ui_MusicWindowEQBtn1;
+lv_obj_t * ui_MusicWindowEQImg1;
+lv_obj_t * ui_MusicWindowEQText1;
+lv_obj_t * ui_MusicWindowEQ2;
+lv_obj_t * ui_MusicWindowEQBtn2;
+lv_obj_t * ui_MusicWindowEQImg2;
+lv_obj_t * ui_MusicWindowEQText2;
+lv_obj_t * ui_MusicWindowEQ3;
+lv_obj_t * ui_MusicWindowEQBtn3;
+lv_obj_t * ui_MusicWindowEQImg3;
+lv_obj_t * ui_MusicWindowEQText3;
+lv_obj_t * ui_MusicWindowEQ4;
+lv_obj_t * ui_MusicWindowEQBtn4;
+lv_obj_t * ui_MusicWindowEQImg4;
+lv_obj_t * ui_MusicWindowEQText4;
+lv_obj_t * ui_MusicWindowEQ5;
+lv_obj_t * ui_MusicWindowEQBtn5;
+lv_obj_t * ui_MusicWindowEQImg5;
+lv_obj_t * ui_MusicWindowEQText5;
+lv_obj_t * ui_MusicWindowEQ6;
+lv_obj_t * ui_MusicWindowEQBtn6;
+lv_obj_t * ui_MusicWindowEQImg6;
+lv_obj_t * ui_MusicWindowEQText6;
 lv_obj_t * ui_Current_Time;
 lv_obj_t * ui_Total_Time;
 void ui_event_Prev_Track_Btn(lv_event_t * e);
@@ -655,6 +683,14 @@ void ui_event_Next_Music_List_Btn(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         nextMusicList(e);
+    }
+}
+void ui_event_Music_Play_Window(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SCREEN_UNLOADED) {
+        leaveMusicPlayWindow(e);
     }
 }
 void ui_event_Nature_Sound_Window(lv_event_t * e)
@@ -1212,7 +1248,7 @@ void ui_event_Wifi_Enter_Btn(lv_event_t * e)
         saveWifiSetting(e);
     }
 }
-void ui_event_BackToMainWindowBtn9(lv_event_t * e)
+void ui_event_BackToMusicWindowBtn9(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
@@ -1234,6 +1270,62 @@ void ui_event_Play_Style_Btn(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         changePlayStyle(e);
+    }
+}
+void ui_event_CloseMusicEQPanelRange(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        close_music_EQ_Panel(e);
+    }
+}
+void ui_event_Music_Window_EQ_Btn1(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_nature(e);
+    }
+}
+void ui_event_Music_Window_EQ_Btn2(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_jazz(e);
+    }
+}
+void ui_event_Music_Window_EQ_Btn3(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_rock(e);
+    }
+}
+void ui_event_Music_Window_EQ_Btn4(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_pop(e);
+    }
+}
+void ui_event_Music_Window_EQ_Btn5(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_classical(e);
+    }
+}
+void ui_event_Music_Window_EQ_Btn6(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        select_eq_opera(e);
     }
 }
 void ui_event_Prev_Track_Btn(lv_event_t * e)
