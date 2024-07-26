@@ -157,10 +157,6 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_obj_set_style_img_recolor(ui_BackToSettingsWindow1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
     lv_obj_set_style_img_recolor_opa(ui_BackToSettingsWindow1, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_Header_Volume11 = ui_Header_Volume_create(ui_Settings_Bluetooth_Window);
-    lv_obj_set_x(ui_Header_Volume11, 187);
-    lv_obj_set_y(ui_Header_Volume11, -216);
-
 
 
     lv_obj_add_event_cb(ui_Bluetooth_Name_Input2, ui_event_Bluetooth_Name_Input2, LV_EVENT_ALL, NULL);

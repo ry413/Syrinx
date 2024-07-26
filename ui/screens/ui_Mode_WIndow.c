@@ -383,11 +383,14 @@ void ui_Mode_WIndow_screen_init(void)
     lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn4, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
     lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn4, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_Header_Volume4 = ui_Header_Volume_create(ui_Mode_WIndow);
-    lv_obj_set_x(ui_Header_Volume4, 187);
-    lv_obj_set_y(ui_Header_Volume4, -216);
+    ui_Mode_Header_Volume = ui_Header_Volume_create(ui_Mode_WIndow);
+    lv_obj_set_x(ui_Mode_Header_Volume, 187);
+    lv_obj_set_y(ui_Mode_Header_Volume, -216);
 
-
+    ui_Mode_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Mode_WIndow);
+    lv_obj_set_x(ui_Mode_Window_Volume_adjust, 0);
+    lv_obj_set_y(ui_Mode_Window_Volume_adjust, 0);
+    lv_obj_add_flag(ui_Mode_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_add_event_cb(ui_Mode_Nature_Btn, ui_event_Mode_Nature_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Mode_Jazz_Btn, ui_event_Mode_Jazz_Btn, LV_EVENT_ALL, NULL);

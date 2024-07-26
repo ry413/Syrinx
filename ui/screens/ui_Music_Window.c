@@ -109,11 +109,14 @@ void ui_Music_Window_screen_init(void)
     lv_label_set_text(ui_Next_Music_List_Btn_Text, "下一页");
     lv_obj_set_style_text_font(ui_Next_Music_List_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Header_Volume1 = ui_Header_Volume_create(ui_Music_Window);
-    lv_obj_set_x(ui_Header_Volume1, 187);
-    lv_obj_set_y(ui_Header_Volume1, -216);
+    ui_Music_Header_Volume = ui_Header_Volume_create(ui_Music_Window);
+    lv_obj_set_x(ui_Music_Header_Volume, 187);
+    lv_obj_set_y(ui_Music_Header_Volume, -216);
 
-
+    ui_Music_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Music_Window);
+    lv_obj_set_x(ui_Music_Window_Volume_adjust, 0);
+    lv_obj_set_y(ui_Music_Window_Volume_adjust, 0);
+    lv_obj_add_flag(ui_Music_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_add_event_cb(ui_BackToMainWindowBtn1, ui_event_BackToMainWindowBtn1, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Prev_Music_List_Btn, ui_event_Prev_Music_List_Btn, LV_EVENT_ALL, NULL);

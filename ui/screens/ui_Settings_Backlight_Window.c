@@ -448,11 +448,6 @@ void ui_Settings_Backlight_Window_screen_init(void)
     lv_obj_clear_flag(ui_Backlight_Time_Add_Icon2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_zoom(ui_Backlight_Time_Add_Icon2, 300);
 
-    ui_Header_Volume12 = ui_Header_Volume_create(ui_Settings_Backlight_Window);
-    lv_obj_set_x(ui_Header_Volume12, 187);
-    lv_obj_set_y(ui_Header_Volume12, -216);
-
-
 
     lv_obj_add_event_cb(ui_BackToSettingsWindow, ui_event_BackToSettingsWindow, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Brightness_Btn2, ui_event_Backlight_Brightness_Btn2, LV_EVENT_ALL, NULL);

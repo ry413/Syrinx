@@ -18,8 +18,11 @@ void initVolumeSettings(lv_event_t * e);
 void initActions(lv_event_t * e);
 void mainScrLoaded(lv_event_t * e);
 void leaveMainWindow(lv_event_t * e);
-void disconnectWifi(lv_event_t * e);
+// void disconnectWifi(lv_event_t * e);
 void changeVolume(lv_event_t * e);
+void closeVolumeAdjust(lv_event_t * e);
+void decVolume(lv_event_t * e);
+void addVolume(lv_event_t * e);
 void onScreen(lv_event_t * e);
 void resetInactiveTimer(lv_event_t * e);
 void musicScrLoaded(lv_event_t * e);
@@ -35,6 +38,9 @@ void selectSeaSound(lv_event_t * e);
 void leaveNatureSoundWindow(lv_event_t * e);
 void bluetoothScrLoaded(lv_event_t * e);
 void leaveBlutoothWindow(lv_event_t * e);
+void leaveModeWindow(lv_event_t * e);
+void leaveWakeupWindow(lv_event_t * e);
+void leaveGuideWindow(lv_event_t * e);
 void modeScrLoaded(lv_event_t * e);
 void close_music_EQ_Panel(lv_event_t * e);
 void select_eq_nature(lv_event_t * e);
@@ -75,6 +81,7 @@ void idleScrLoaded(lv_event_t * e);
 void idleBackToMainWindow(lv_event_t * e);
 void offScreen(lv_event_t * e);
 void playSelectedMusic(lv_event_t * e);
+void musicPlayScrLoaded(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

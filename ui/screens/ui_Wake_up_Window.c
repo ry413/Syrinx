@@ -156,11 +156,14 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn5, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
     lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn5, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_Header_Volume6 = ui_Header_Volume_create(ui_Wake_up_Window);
-    lv_obj_set_x(ui_Header_Volume6, 187);
-    lv_obj_set_y(ui_Header_Volume6, -216);
+    ui_Wakeup_Header_Volume = ui_Header_Volume_create(ui_Wake_up_Window);
+    lv_obj_set_x(ui_Wakeup_Header_Volume, 187);
+    lv_obj_set_y(ui_Wakeup_Header_Volume, -216);
 
-
+    ui_Wakeup_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Wake_up_Window);
+    lv_obj_set_x(ui_Wakeup_Window_Volume_adjust, 0);
+    lv_obj_set_y(ui_Wakeup_Window_Volume_adjust, 0);
+    lv_obj_add_flag(ui_Wakeup_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_add_event_cb(ui_Custom_Ringtone_Btn, ui_event_Custom_Ringtone_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wakeup_Time_Btn, ui_event_Wakeup_Time_Btn, LV_EVENT_ALL, NULL);

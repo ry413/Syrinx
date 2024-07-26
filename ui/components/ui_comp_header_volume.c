@@ -29,7 +29,6 @@ lv_obj_t * ui_Header_Volume_create(lv_obj_t * comp_parent)
     lv_obj_set_x(cui_Header_Volume, 187);
     lv_obj_set_y(cui_Header_Volume, -216);
     lv_obj_set_align(cui_Header_Volume, LV_ALIGN_CENTER);
-    lv_obj_add_flag(cui_Header_Volume, LV_OBJ_FLAG_CHECKABLE);
     lv_obj_clear_flag(cui_Header_Volume, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     lv_obj_t * cui_Header_Volume_Icon;

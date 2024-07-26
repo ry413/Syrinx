@@ -46,7 +46,7 @@ typedef enum {
 #define EVENT_PAUSE_STATE (1 << 8)                  // 已暂停
 #define EVENT_PLAY_MUSIC (1 << 9)                   // 已播放指定序号的歌
 #define EVENT_DURATION (1 << 10)                    // 已获得总时长
-// #define EVENT_BLUETOOTH_SET_NAME (1 << 11)          // 已设置蓝牙名称
+#define EVENT_SET_VOLUME (1 << 11)                  // 已设置音量
 #define EVENT_BLUETOOTH_SET_PASSWORD (1 << 12)      // 已设置蓝牙密码
 #define EVENT_BLUETOOTH_GET_NAME (1 << 13)          // 已获取蓝牙名称
 #define EVENT_BLUETOOTH_GET_PASSWORD (1 << 14)      // 已获取蓝牙密码

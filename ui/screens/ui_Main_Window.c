@@ -368,11 +368,14 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_shadow_color(ui_Button5, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_shadow_opa(ui_Button5, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Header_Volume = ui_Header_Volume_create(ui_Main_Window);
-    lv_obj_set_x(ui_Header_Volume, 187);
-    lv_obj_set_y(ui_Header_Volume, -216);
+    ui_Main_Header_Volume = ui_Header_Volume_create(ui_Main_Window);
+    lv_obj_set_x(ui_Main_Header_Volume, 187);
+    lv_obj_set_y(ui_Main_Header_Volume, -216);
 
-
+    ui_Main_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Main_Window);
+    lv_obj_set_x(ui_Main_Window_Volume_adjust, 0);
+    lv_obj_set_y(ui_Main_Window_Volume_adjust, 0);
+    lv_obj_add_flag(ui_Main_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
     ui_On_Screen_Range = lv_obj_create(ui_Main_Window);
     lv_obj_remove_style_all(ui_On_Screen_Range);

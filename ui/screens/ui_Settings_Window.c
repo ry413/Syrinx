@@ -683,11 +683,6 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn8, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
     lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn8, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_Header_Volume13 = ui_Header_Volume_create(ui_Settings_Window);
-    lv_obj_set_x(ui_Header_Volume13, 187);
-    lv_obj_set_y(ui_Header_Volume13, -216);
-
-
 
     lv_obj_add_event_cb(ui_Settings_Backlight_Btn2, ui_event_Settings_Backlight_Btn2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Settings_Bluetooth_Btn2, ui_event_Settings_Bluetooth_Btn2, LV_EVENT_ALL, NULL);

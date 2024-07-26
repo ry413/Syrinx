@@ -143,11 +143,14 @@ void ui_Bluetooth_WIndow_screen_init(void)
     lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn3, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
     lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn3, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_Header_Volume3 = ui_Header_Volume_create(ui_Bluetooth_WIndow);
-    lv_obj_set_x(ui_Header_Volume3, 187);
-    lv_obj_set_y(ui_Header_Volume3, -216);
+    ui_Bluetooth_Header_Volume = ui_Header_Volume_create(ui_Bluetooth_WIndow);
+    lv_obj_set_x(ui_Bluetooth_Header_Volume, 187);
+    lv_obj_set_y(ui_Bluetooth_Header_Volume, -216);
 
-
+    ui_Bluetooth_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Bluetooth_WIndow);
+    lv_obj_set_x(ui_Bluetooth_Window_Volume_adjust, 0);
+    lv_obj_set_y(ui_Bluetooth_Window_Volume_adjust, 0);
+    lv_obj_add_flag(ui_Bluetooth_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_add_event_cb(ui_BackToMainWindowBtn3, ui_event_BackToMainWindowBtn3, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Bluetooth_WIndow, ui_event_Bluetooth_WIndow, LV_EVENT_ALL, NULL);

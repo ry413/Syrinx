@@ -125,7 +125,7 @@ esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type
     current_command = cmd_type;
 
     // 创建带有换行符的命令
-    char command_with_newline[128];
+    char command_with_newline[20];
     snprintf(command_with_newline, sizeof(command_with_newline), "%s\r\n", command);
 
     // 发送命令
@@ -180,7 +180,7 @@ void get_all_file_names(void) {
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     // 必须进入目录才能保证得到对的M2数值
-    bluetooth_send_at_command("AT+M601", CMD_CHANGE_DIR);
+    bluetooth_send_at_command("AT+M602", CMD_CHANGE_DIR);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
 
     // 获取文件数量
@@ -206,8 +206,8 @@ void get_all_file_names(void) {
         }
     }
     
-    // 获取music目录(01)里的文件名列表
-    bluetooth_send_at_command("AT+M401", CMD_GET_ALL_FILE_NAME);
+    // 获取music目录(02)里的文件名列表
+    bluetooth_send_at_command("AT+M402", CMD_GET_ALL_FILE_NAME);
 
     // M4每返回一个文件名大概会间隔400毫秒, 这边给它每个500毫秒, 再额外多一次500毫秒
     vTaskDelay((total_files_count + 1) * 500 / portTICK_PERIOD_MS);
@@ -303,7 +303,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                         xEventGroupSetBits(bt_event_group, EVENT_PLAY_MUSIC);
                         break;
                     case CMD_SET_VOLUME:
-                        // xEventGroupSetBits(bt_event_group, EVENT_SET_VOLUME);
+                        xEventGroupSetBits(bt_event_group, EVENT_SET_VOLUME);
                         break;
                     case CMD_BLUETOOTH_SET_NAME:
                         // xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_SET_NAME);

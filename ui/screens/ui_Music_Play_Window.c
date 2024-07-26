@@ -263,9 +263,14 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_style_bg_color(ui_Progress_Slider, lv_color_hex(0xF05A5A), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Progress_Slider, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    ui_Header_Volume5 = ui_Header_Volume_create(ui_Music_Play_Window);
-    lv_obj_set_x(ui_Header_Volume5, 187);
-    lv_obj_set_y(ui_Header_Volume5, -216);
+    ui_Music_Play_Header_Volume = ui_Header_Volume_create(ui_Music_Play_Window);
+    lv_obj_set_x(ui_Music_Play_Header_Volume, 187);
+    lv_obj_set_y(ui_Music_Play_Header_Volume, -216);
+
+    ui_Music_Play_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Music_Play_Window);
+    lv_obj_set_x(ui_Music_Play_Window_Volume_adjust, 0);
+    lv_obj_set_y(ui_Music_Play_Window_Volume_adjust, 0);
+    lv_obj_add_flag(ui_Music_Play_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
     ui_CloseMusicEQPanelRange = lv_obj_create(ui_Music_Play_Window);
     lv_obj_remove_style_all(ui_CloseMusicEQPanelRange);

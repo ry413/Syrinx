@@ -160,12 +160,6 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_obj_clear_flag(ui_Wifi_Switch_Switch2, LV_OBJ_FLAG_CLICKABLE);      /// Flags
 
 
-    ui_Header_Volume8 = ui_Header_Volume_create(ui_Settings_Wifi_Window);
-    lv_obj_set_x(ui_Header_Volume8, 187);
-    lv_obj_set_y(ui_Header_Volume8, -216);
-
-
-
     ui_Wifi_Enter_Btn = lv_btn_create(ui_Settings_Wifi_Window);
     lv_obj_set_width(ui_Wifi_Enter_Btn, 100);
     lv_obj_set_height(ui_Wifi_Enter_Btn, 100);

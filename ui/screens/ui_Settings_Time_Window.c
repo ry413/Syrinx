@@ -202,11 +202,6 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_label_set_text(ui_Time_Enter_Text, "保存");
     lv_obj_set_style_text_font(ui_Time_Enter_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Header_Volume10 = ui_Header_Volume_create(ui_Settings_Time_Window);
-    lv_obj_set_x(ui_Header_Volume10, 187);
-    lv_obj_set_y(ui_Header_Volume10, -216);
-
-
 
     lv_obj_add_event_cb(ui_Time_Setting_Hour2, ui_event_Time_Setting_Hour2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Time_Setting_Min2, ui_event_Time_Setting_Min2, LV_EVENT_ALL, NULL);

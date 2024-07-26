@@ -115,11 +115,14 @@ void ui_Guide_Window_screen_init(void)
     lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn6, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
     lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn6, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_Header_Volume7 = ui_Header_Volume_create(ui_Guide_Window);
-    lv_obj_set_x(ui_Header_Volume7, 187);
-    lv_obj_set_y(ui_Header_Volume7, -216);
+    ui_Guide_Header_Volume = ui_Header_Volume_create(ui_Guide_Window);
+    lv_obj_set_x(ui_Guide_Header_Volume, 187);
+    lv_obj_set_y(ui_Guide_Header_Volume, -216);
 
-
+    ui_Guide_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Guide_Window);
+    lv_obj_set_x(ui_Guide_Window_Volume_adjust, 0);
+    lv_obj_set_y(ui_Guide_Window_Volume_adjust, 0);
+    lv_obj_add_flag(ui_Guide_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_add_event_cb(ui_More_Info_Close_Btn, ui_event_More_Info_Close_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BackToMainWindowBtn6, ui_event_BackToMainWindowBtn6, LV_EVENT_ALL, NULL);

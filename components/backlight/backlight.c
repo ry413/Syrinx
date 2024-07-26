@@ -7,6 +7,10 @@
 
 // 背光定时器是为了进入待机界面, 并不是黑屏
 
+// 那为什么不叫待机定时器?
+
+// 要改得把这个组件都改掉, 不管它了
+
 uint32_t backlight_level = 3;
 uint32_t backlight_time_level = 3;
 

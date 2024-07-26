@@ -56,7 +56,8 @@ lv_obj_t * ui_Paused_Img_Placeholder;
 lv_obj_t * ui_Label1;
 void ui_event_Button5(lv_event_t * e);
 lv_obj_t * ui_Button5;
-lv_obj_t * ui_Header_Volume;
+lv_obj_t * ui_Main_Header_Volume;
+lv_obj_t * ui_Main_Window_Volume_adjust;
 void ui_event_On_Screen_Range(lv_event_t * e);
 lv_obj_t * ui_On_Screen_Range;
 void ui_event_placeadeasdasd(lv_event_t * e);
@@ -80,7 +81,8 @@ void ui_event_Next_Music_List_Btn(lv_event_t * e);
 lv_obj_t * ui_Next_Music_List_Btn;
 lv_obj_t * ui_Next_Music_List_Btn_Text;
 void ui_event_Music_Play_Window(lv_event_t * e);
-lv_obj_t * ui_Header_Volume1;
+lv_obj_t * ui_Music_Header_Volume;
+lv_obj_t * ui_Music_Window_Volume_adjust;
 
 
 // SCREEN: ui_Nature_Sound_Window
@@ -113,7 +115,8 @@ lv_obj_t * ui_Sea_Sound_Icon;
 lv_obj_t * ui_Sea_Sound_Text;
 void ui_event_BackToMainWindowBtn7(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn7;
-lv_obj_t * ui_Header_Volume2;
+lv_obj_t * ui_Nature_Header_Volume;
+lv_obj_t * ui_Nature_Window_Volume_adjust;
 
 
 // SCREEN: ui_Bluetooth_WIndow
@@ -134,7 +137,8 @@ lv_obj_t * ui_Bluetooth_Password_Value;
 lv_obj_t * ui_Bluetooth_Guide_Text;
 void ui_event_BackToMainWindowBtn3(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn3;
-lv_obj_t * ui_Header_Volume3;
+lv_obj_t * ui_Bluetooth_Header_Volume;
+lv_obj_t * ui_Bluetooth_Window_Volume_adjust;
 
 
 // SCREEN: ui_Mode_WIndow
@@ -177,8 +181,8 @@ lv_obj_t * ui_Mode_Opera_Icon;
 lv_obj_t * ui_Mode_Opera_Text;
 void ui_event_BackToMainWindowBtn4(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn4;
-lv_obj_t * ui_Header_Volume4;
-
+lv_obj_t * ui_Mode_Header_Volume;
+lv_obj_t * ui_Mode_Window_Volume_adjust;
 
 // SCREEN: ui_Wake_up_Window
 void ui_Wake_up_Window_screen_init(void);
@@ -201,7 +205,8 @@ lv_obj_t * ui_Wakeup_Time_Btn;
 lv_obj_t * ui_Wakeup_Time_Decora_Icon;
 void ui_event_BackToMainWindowBtn5(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn5;
-lv_obj_t * ui_Header_Volume6;
+lv_obj_t * ui_Wakeup_Header_Volume;
+lv_obj_t * ui_Wakeup_Window_Volume_adjust;
 
 
 // SCREEN: ui_Guide_Window
@@ -220,7 +225,8 @@ lv_obj_t * ui_More_Info_Text;
 lv_obj_t * ui_QR_Code;
 void ui_event_BackToMainWindowBtn6(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn6;
-lv_obj_t * ui_Header_Volume7;
+lv_obj_t * ui_Guide_Header_Volume;
+lv_obj_t * ui_Guide_Window_Volume_adjust;
 
 
 // SCREEN: ui_Settings_Window
@@ -300,7 +306,6 @@ lv_obj_t * ui_Volume_Settings_Cancel_Btn;
 lv_obj_t * ui_Max_Volume_Cancel_Text;
 void ui_event_BackToMainWindowBtn8(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn8;
-lv_obj_t * ui_Header_Volume13;
 
 
 // SCREEN: ui_Settings_Backlight_Window
@@ -353,7 +358,6 @@ lv_obj_t * ui_Backlight_Time_Dec_Icon2;
 void ui_event_Backlight_Time_Add_Btn2(lv_event_t * e);
 lv_obj_t * ui_Backlight_Time_Add_Btn2;
 lv_obj_t * ui_Backlight_Time_Add_Icon2;
-lv_obj_t * ui_Header_Volume12;
 
 
 // SCREEN: ui_Settings_Bluetooth_Window
@@ -377,7 +381,6 @@ lv_obj_t * ui_Bluetooth_Settings_Enter_Text;
 lv_obj_t * ui_Bluetooth_Keyboard2;
 void ui_event_BackToSettingsWindow1(lv_event_t * e);
 lv_obj_t * ui_BackToSettingsWindow1;
-lv_obj_t * ui_Header_Volume11;
 
 
 // SCREEN: ui_Settings_Time_Window
@@ -407,7 +410,6 @@ lv_obj_t * ui_BackToMainWindow10;
 void ui_event_Time_Enter_Btn(lv_event_t * e);
 lv_obj_t * ui_Time_Enter_Btn;
 lv_obj_t * ui_Time_Enter_Text;
-lv_obj_t * ui_Header_Volume10;
 
 
 // SCREEN: ui_Settings_ID_Window
@@ -423,7 +425,6 @@ lv_obj_t * ui_ID_Enter_Btn;
 lv_obj_t * ui_ID_Enter_Text;
 void ui_event_BackToMainWindow11(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindow11;
-lv_obj_t * ui_Header_Volume9;
 
 
 // SCREEN: ui_Settings_Wifi_Window
@@ -448,7 +449,6 @@ void ui_event_Wifi_Switch2(lv_event_t * e);
 lv_obj_t * ui_Wifi_Switch2;
 lv_obj_t * ui_Wifi_Switch_Text2;
 lv_obj_t * ui_Wifi_Switch_Switch2;
-lv_obj_t * ui_Header_Volume8;
 void ui_event_Wifi_Enter_Btn(lv_event_t * e);
 lv_obj_t * ui_Wifi_Enter_Btn;
 lv_obj_t * ui_Wifi_Enter_Text;
@@ -513,7 +513,8 @@ void ui_event_Next_Track_Icon(lv_event_t * e);
 lv_obj_t * ui_Next_Track_Icon;
 void ui_event_Progress_Slider(lv_event_t * e);
 lv_obj_t * ui_Progress_Slider;
-lv_obj_t * ui_Header_Volume5;
+lv_obj_t * ui_Music_Play_Header_Volume;
+lv_obj_t * ui_Music_Play_Window_Volume_adjust;
 
 
 // SCREEN: ui_Idle_Window
@@ -689,6 +690,9 @@ void ui_event_Music_Play_Window(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SCREEN_LOADED) {
+        musicPlayScrLoaded(e);
+    }
     if(event_code == LV_EVENT_SCREEN_UNLOADED) {
         leaveMusicPlayWindow(e);
     }
@@ -751,7 +755,7 @@ void ui_event_Bluetooth_WIndow(lv_event_t * e)
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         bluetoothScrLoaded(e);
     }
-    if(event_code == LV_EVENT_SCREEN_UNLOAD_START) {
+    if(event_code == LV_EVENT_SCREEN_UNLOADED) {
         leaveBlutoothWindow(e);
     }
 }
@@ -769,6 +773,9 @@ void ui_event_Mode_WIndow(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         modeScrLoaded(e);
+    }
+    if(event_code == LV_EVENT_SCREEN_UNLOADED) {
+        leaveModeWindow(e);
     }
 }
 void ui_event_Mode_Nature_Btn(lv_event_t * e)
@@ -834,6 +841,9 @@ void ui_event_Wake_up_Window(lv_event_t * e)
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         wakeupScrLoaded(e);
     }
+    if(event_code == LV_EVENT_SCREEN_UNLOADED) {
+        leaveWakeupWindow(e);
+    }
 }
 void ui_event_Custom_Ringtone_Btn(lv_event_t * e)
 {
@@ -868,6 +878,9 @@ void ui_event_Guide_Window(lv_event_t * e)
     }
     if(event_code == LV_EVENT_SCREEN_LOADED) {
         guideScrLoaded(e);
+    }
+    if(event_code == LV_EVENT_SCREEN_UNLOADED) {
+        leaveGuideWindow(e);
     }
 }
 void ui_event_More_Info_Close_Btn(lv_event_t * e)
