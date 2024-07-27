@@ -68,8 +68,8 @@ void ui_event_Button5(lv_event_t * e);
 extern lv_obj_t * ui_Button5;
 extern lv_obj_t * ui_Main_Header_Volume;
 extern lv_obj_t * ui_Main_Window_Volume_adjust;
-void ui_event_On_Screen_Range(lv_event_t * e);
-extern lv_obj_t * ui_On_Screen_Range;
+void ui_event_Main_On_Screen_Range(lv_event_t * e);
+extern lv_obj_t * ui_On_Main_Screen_Range;
 void ui_event_placeadeasdasd(lv_event_t * e);
 extern lv_obj_t * ui_placeadeasdasd;
 // SCREEN: ui_Music_Window
@@ -90,9 +90,13 @@ extern lv_obj_t * ui_Next_Music_List_Btn;
 extern lv_obj_t * ui_Next_Music_List_Btn_Text;
 extern lv_obj_t * ui_Music_Header_Volume;
 extern lv_obj_t * ui_Music_Window_Volume_adjust;
+void ui_event_Music_On_Screen_Range(lv_event_t * e);
+extern lv_obj_t * ui_Music_On_Screen_Range;
 
 // SCREEN: ui_Music_Play_Window
 void ui_event_Music_Play_Window(lv_event_t * e);
+void ui_event_Music_Play_On_Screen_Range(lv_event_t * e);
+extern lv_obj_t * ui_Music_Play_On_Screen_Range;
 
 // SCREEN: ui_Nature_Sound_Window
 void ui_Nature_Sound_Window_screen_init(void);

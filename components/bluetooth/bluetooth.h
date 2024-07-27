@@ -17,7 +17,7 @@ typedef enum {
     CMD_PLAY_PAUSE,             // AT+CB    播放/暂停
     CMD_STOP_STATE,             // AT+AA0   停止播放
     CMD_PLAY_STATE,             // AT+AA1   播放
-    CMD_PAUSE_STATE,            // AT+CB    暂停
+    CMD_PAUSE_STATE,            // AT+AA2    暂停
     CMD_PLAY_MUSIC,             // AT+AFxx  播放指定序号的歌
     CMD_GET_DURATION,           // AT+MT    获取当前音频时长
     CMD_BLUETOOTH_SET_NAME,     // AT+BD    设置蓝牙名称
@@ -25,10 +25,11 @@ typedef enum {
     CMD_BLUETOOTH_GET_NAME,     // AT+TD    获取蓝牙名称
     CMD_BLUETOOTH_GET_PASSWORD, // AT+TE    获取蓝牙密码
     CMD_REBOOT,                 // AT+CZ    芯片复位
-    // CMD_DISCONNECT_BLUETOOTH,   // AT+BA1   断开蓝牙连接
+    CMD_GET_WORK_MODE,          // AT+QM    获取工作模式
     CMD_SET_VOLUME,             // AT+CA    设置音量
     CMD_CHANGE_TO_BLUETOOTH,    // AT+CM1   切换到蓝牙模式
     CMD_CHANGE_TO_MUSIC,        // AT+CM2   切换到音乐模式
+    CMD_CHANGE_TO_IDLE,         // AT_CM0   切换到空闲模式
     CMD_ON_MUTE,                // AT+CL0   关闭功放
     CMD_OFF_MUTE,               // AT+CL3   打开功放
     // CMD_BLUETOOTH_STATE,         // AT+TS    获取蓝牙状态
@@ -59,20 +60,22 @@ typedef enum {
 #define EVENT_END_PLAY (1 << 21)                    // 播放已结束
 #define EVENT_EQUALIZER_SET (1 << 22)               // 已设置均衡器
 #define EVENT_STARTUP_SUCCESS (1 << 23)             // 模块已上电并丢掉了返回值
+#define EVENT_GET_WORK_MODE (1 << 24)               // 已获取工作模式
+#define EVENT_CHANGE_TP_IDLE (1 << 25)              // 已换到空闲模式
 
 
 
 extern command_type_t current_command;
 extern EventGroupHandle_t bt_event_group;
 
-// 很诡异
+// 感觉, 大概都是别的组件需要的东西, 在这里声明, 好收到返回值后可以设上, 还能被别的组件引用
 extern char **utf8_file_names;
 extern int total_files_count;
 extern int current_playing_index;
 extern int current_music_duration;
 extern char bluetooth_name[13];
 extern char bluetooth_password[5];
-
+extern int work_mode;
 
 void get_all_file_names(void);
 

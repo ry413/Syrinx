@@ -307,7 +307,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_y(ui_MusicWindowEQBtn1, -62);
     lv_obj_set_align(ui_MusicWindowEQBtn1, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_MusicWindowEQBtn1, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn1, lv_color_hex(0x228B22), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn1, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_MusicWindowEQBtn1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQImg1 = lv_img_create(ui_MusicWindowEQBtn1);
@@ -345,7 +345,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_y(ui_MusicWindowEQBtn2, -62);
     lv_obj_set_align(ui_MusicWindowEQBtn2, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_MusicWindowEQBtn2, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn2, lv_color_hex(0x6A5ACD), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn2, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_MusicWindowEQBtn2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQImg2 = lv_img_create(ui_MusicWindowEQBtn2);
@@ -384,7 +384,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_y(ui_MusicWindowEQBtn3, -62);
     lv_obj_set_align(ui_MusicWindowEQBtn3, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_MusicWindowEQBtn3, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn3, lv_color_hex(0xDC143C), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn3, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_MusicWindowEQBtn3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQImg3 = lv_img_create(ui_MusicWindowEQBtn3);
@@ -423,7 +423,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_y(ui_MusicWindowEQBtn4, -62);
     lv_obj_set_align(ui_MusicWindowEQBtn4, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_MusicWindowEQBtn4, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn4, lv_color_hex(0xFF1493), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn4, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_MusicWindowEQBtn4, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQImg4 = lv_img_create(ui_MusicWindowEQBtn4);
@@ -461,7 +461,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_y(ui_MusicWindowEQBtn5, -62);
     lv_obj_set_align(ui_MusicWindowEQBtn5, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_MusicWindowEQBtn5, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn5, lv_color_hex(0xFFD700), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn5, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_MusicWindowEQBtn5, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQImg5 = lv_img_create(ui_MusicWindowEQBtn5);
@@ -499,7 +499,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_y(ui_MusicWindowEQBtn6, -62);
     lv_obj_set_align(ui_MusicWindowEQBtn6, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_MusicWindowEQBtn6, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn6, lv_color_hex(0x8B0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_MusicWindowEQBtn6, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_MusicWindowEQBtn6, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQImg6 = lv_img_create(ui_MusicWindowEQBtn6);
@@ -519,6 +519,14 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_MusicWindowEQText6, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_MusicWindowEQText6, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_Music_Play_On_Screen_Range = lv_obj_create(ui_Music_Play_Window);
+    lv_obj_remove_style_all(ui_Music_Play_On_Screen_Range);
+    lv_obj_set_width(ui_Music_Play_On_Screen_Range, 480);
+    lv_obj_set_height(ui_Music_Play_On_Screen_Range, 480);
+    lv_obj_set_align(ui_Music_Play_On_Screen_Range, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Music_Play_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_Music_Play_On_Screen_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
 
     lv_obj_add_event_cb(ui_Music_Play_Window, ui_event_Music_Play_Window, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BackToMusicWindowBtn9, ui_event_BackToMusicWindowBtn9, LV_EVENT_ALL, NULL);
@@ -537,5 +545,6 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Next_Track_Icon, ui_event_Next_Track_Icon, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Next_Track_Btn, ui_event_Next_Track_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Progress_Slider, ui_event_Progress_Slider, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Music_Play_On_Screen_Range, ui_event_Music_Play_On_Screen_Range, LV_EVENT_ALL, NULL);
 
 }

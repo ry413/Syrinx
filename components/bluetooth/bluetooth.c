@@ -33,6 +33,7 @@ int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, �
 int current_music_duration = 0;
 char bluetooth_name[13];
 char bluetooth_password[5];
+int work_mode = 0;              // 工作模式, 0: Idle, 1: 蓝牙, 2: 音乐
 
 
 command_type_t current_command = CMD_NONE;
@@ -147,9 +148,6 @@ void add_file_name(char **utf8_file_names, const char *file_name) {
         return;
     }
 
-    int index;
-    sscanf(file_name, "%2d", &index);
-
     // 计算新的文件名长度（去除 ".mp3" 的长度）
     size_t name_length = strlen(file_name) - 4;
     
@@ -189,12 +187,13 @@ void get_all_file_names(void) {
 
     printf("Files Count: %d\n", total_files_count);
 
-    utf8_file_names = (char **)malloc(total_files_count * sizeof(char *));
+    // 自然之音的四首歌也放这个数组里
+    utf8_file_names = (char **)malloc((total_files_count + 4) * sizeof(char *));
     if ((utf8_file_names == NULL)) {
         ESP_LOGE(TAG, "Failed to allocate memory for file_namess");
         return;
     }
-    for (int i = 0; i < total_files_count; i++) {
+    for (int i = 0; i < (total_files_count + 4); i++) {
         utf8_file_names[i] = (char *)malloc(100 * sizeof(char));
         if (utf8_file_names[i] == NULL) {
             ESP_LOGE(TAG, "Failed to allocate memory for utf8_file_names[%d]", i);
@@ -208,9 +207,11 @@ void get_all_file_names(void) {
     
     // 获取music目录(02)里的文件名列表
     bluetooth_send_at_command("AT+M402", CMD_GET_ALL_FILE_NAME);
+    // M4每返回一个文件名大概会间隔400毫秒, 这边给它每个500毫秒
+    vTaskDelay((total_files_count * 500 + 250) / portTICK_PERIOD_MS);
 
-    // M4每返回一个文件名大概会间隔400毫秒, 这边给它每个500毫秒, 再额外多一次500毫秒
-    vTaskDelay((total_files_count + 1) * 500 / portTICK_PERIOD_MS);
+    bluetooth_send_at_command("AT+M404", CMD_GET_ALL_FILE_NAME);    // 再获取theme_music目录(04)的列表
+    vTaskDelay((4 * 500 + 250) / portTICK_PERIOD_MS);
 
     xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
     printf("\n GET FILE NAME LIST END\n");
@@ -361,7 +362,11 @@ void bluetooth_monitor_task(void *pvParameters) {
             } else if (strncmp(response, "TE+", 3) == 0) {
                 sscanf(response, "TE+%s", bluetooth_password);
                 xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_GET_PASSWORD);
-            } else if (strncmp(response, "QV+", 3) == 0) {
+            } else if (strncmp(response, "QM+", 3) == 0) {
+                // // sscanf(response, "QM+%d", work_mode);
+                // xEventGroupSetBits(bt_event_group, EVENT_GET_WORK_MODE);
+            }
+            else if (strncmp(response, "QV+", 3) == 0) {
                 // 版本号
             } else if (strncmp(response, "QT+", 3) == 0) {
                 // 这什么啊, 反正没用

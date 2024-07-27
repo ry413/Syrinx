@@ -21,6 +21,7 @@
 #include "ui.h"
 #include "ui_comp_music_item.h"
 #include "wifi.h"
+#include "rs485.h"
 
 //////////////////// DEFINITIONS ////////////////////
 #define WIFI_CONNECTION_TIMEOUT pdMS_TO_TICKS(30000)  // wifi30秒超时时间
@@ -53,9 +54,11 @@ uint32_t prevMaxVolume = 15;
 char *prevWifiName = NULL;
 char *prevWifiPassword = NULL;
 
-// 当前页面的音量显示和音量调节块的指针, 写得好恶心
+// 当前页面的音量显示和音量调节块的指针, 写得好恶心.
+// 还有从熄屏中醒来的点击范围
 lv_obj_t * current_screen_header_volume = NULL;
 lv_obj_t * current_screen_volume_component = NULL;
+lv_obj_t * current_screen_on_screen_range = NULL;
 // 当前音量
 int current_volume;
 
@@ -96,7 +99,7 @@ static void format_time(int seconds, char *buffer, size_t buffer_size);
 static void update_progress(lv_timer_t *timer);
 static void initProgressBar(void);
 static void getDurationTask(void *pvParameter);
-static void playMusicWithId(int id);
+static void playMusicWithIndex(int id);
 static void bluetooth_cfg_task(void *pvParameter);
 static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min);
 static void inactiveCallback(lv_timer_t *timer);
@@ -231,9 +234,13 @@ static void getDurationTask(void *pvParameter) {
     durationTaskHandle = NULL;
     vTaskDelete(NULL);
 }
-// 播放指定id的音乐(从01开始)
-void playMusicWithId(int id) {
+// 播放指定index的音乐(utf8_file_names里的index)
+void playMusicWithIndex(int index) {
     char command[50];
+    
+    printf("name: %s\n", utf8_file_names[index]);
+    int id;
+    sscanf(utf8_file_names[index], "%2d", &id);
     // index从0开始, 文件id从01开始
     snprintf(command, sizeof(command), "AT+AF%02d", id);
     bluetooth_send_at_command(command, CMD_PLAY_MUSIC);
@@ -265,7 +272,7 @@ static void cleanBluetoothTask(void *pvParameter) {
     vTaskDelay(2000 / portTICK_PERIOD_MS);  // 等待"蓝牙已断开"播放, 也可能会是"TF卡模式"
     bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
     xEventGroupWaitBits(bt_event_group, EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
-    bluetooth_send_at_command("AT+CB", CMD_PAUSE_STATE);  // 回到音乐模式会自动播放, 所以这里暂停
+    bluetooth_send_at_command("AT+AA2", CMD_PAUSE_STATE);  // 回到音乐模式会自动播放, 所以这里暂停
     xEventGroupWaitBits(bt_event_group, EVENT_PAUSE_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
     // 删除蓝牙状态监听任务
     if (bluetooth_monitor_state_task_handle != NULL) {
@@ -414,9 +421,20 @@ static void selectNatureSoundTask(void *pvParameter) {
     // 只要开始播放任意一个自然之音, 就删除这个定时器, 无论如何都不自动返回主界面, 仅能手动返回
     delInactiveTimer();
 
-    int soundId = *(int *)pvParameter;
+    char *sound_name = (char *)pvParameter;
+
+    int id = -1;
+    for (int i = 0; i < 4; i++) {
+        if(strncmp(utf8_file_names[total_files_count + i] + 2, sound_name, 3) == 0) {
+            sscanf(utf8_file_names[total_files_count + i], "%2d", &id);
+            break;
+        }
+    }
+    if (id == -1) {
+        ESP_LOGE("selectNatureSoundTask", "未找到自然之音, name: %s", sound_name);
+    }
     char command[32];
-    snprintf(command, sizeof(command), "AT+AF%02d", soundId);
+    snprintf(command, sizeof(command), "AT+AF%02d", id);
 
     while (1) {
         bluetooth_send_at_command(command, CMD_PLAY_MUSIC);
@@ -446,6 +464,7 @@ void mainScrLoaded(lv_event_t *e) {
     if (global_time > 0) update_current_time_label();
     current_screen_header_volume = ui_Main_Header_Volume;
     current_screen_volume_component = ui_Main_Window_Volume_adjust;
+    current_screen_on_screen_range = ui_On_Main_Screen_Range;
     update_header_volume();
 
     // 每次到主界面时, 重建一个背光定时器, 因为只有在主界面时才会进入待机模式
@@ -458,15 +477,17 @@ void musicScrLoaded(lv_event_t *e) {
     if (global_time > 0) update_current_time_label();
     current_screen_header_volume = ui_Music_Header_Volume;
     current_screen_volume_component = ui_Music_Window_Volume_adjust;
+    current_screen_on_screen_range = ui_Music_On_Screen_Range;
     update_header_volume();
 
-    // 许多东西都不能写这里, 因为play界面能进入的不止是main, 还有music界面, 所以许多东西要写在leaveMainWindow里
+    // 许多东西都不能写这里, 因为play界面也能进入music界面, 不知可以从main进入music, 所以许多东西要写在leaveMainWindow里
 }
 void musicPlayScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Music_Time2);
     if (global_time > 0) update_current_time_label();
     current_screen_header_volume = ui_Music_Play_Header_Volume;
     current_screen_volume_component = ui_Music_Play_Window_Volume_adjust;
+    current_screen_on_screen_range = ui_Music_Play_On_Screen_Range;
     update_header_volume();
 }
 void natureSoundScrLoaded(lv_event_t *e) {
@@ -566,7 +587,7 @@ void leaveMusicWindow(lv_event_t *e) {
     if (currentScreen == ui_Main_Window) {
         bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
         xEventGroupWaitBits(bt_event_group, EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
-        bluetooth_send_at_command("AT+CB", CMD_STOP_STATE);
+        bluetooth_send_at_command("AT+AA2", CMD_STOP_STATE);
         xEventGroupWaitBits(bt_event_group, EVENT_STOP_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
         
         lv_timer_pause(progressTimer);
@@ -587,7 +608,7 @@ void leaveNatureSoundWindow(lv_event_t *e) {
 
     bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
     xEventGroupWaitBits(bt_event_group, EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
-    bluetooth_send_at_command("AT+CB", CMD_PAUSE_STATE);
+    bluetooth_send_at_command("AT+AA2", CMD_PAUSE_STATE);
     xEventGroupWaitBits(bt_event_group, EVENT_PAUSE_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
 
     if (nature_play_task_handle != NULL) {
@@ -755,19 +776,23 @@ void decBacklightTime(lv_event_t *e) {
 }
 // 进入熄屏
 void offScreen(lv_event_t *e) {
+    printf("Sleep\n");
     // 关闭背光
     set_backlight(0);
-    // 直接回到Main Window
-    lv_scr_load(ui_Main_Window);
+    // 在非music_play界面, 回到main
+    if (lv_scr_act() != ui_Music_Play_Window && lv_scr_act() != ui_Music_Window) {
+        lv_scr_load(ui_Main_Window);
+    }
     // 启用"从熄屏中醒来"的可触摸区域
-    lv_obj_clear_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
 }
 // 从熄屏中醒来
 void onScreen(lv_event_t *e) {
+    printf("Wakeup\n");
     // 恢复背光
     set_backlight(backlight_level);
-    lv_obj_add_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);
-    reset_backlight_timer();
+    lv_obj_add_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
+    // reset_backlight_timer();
 }
 // 从待机界面回到主界面
 void idleBackToMainWindow(lv_event_t *e) {
@@ -1298,10 +1323,16 @@ void playSelectedMusic(lv_event_t *e) {
 
     lv_scr_load(ui_Music_Play_Window);
 
-    // 设置当前播放的音乐的id, 减1后成为index
-    char temp[4];
-    sscanf(track_title, "%3[0-9]", temp);
-    current_playing_index = atoi(temp) - 1;
+    // 获得当前试图播放的音乐的id, 找到它在数组里的索引
+    int id;
+    int cmp_id;
+    sscanf(track_title, "%2d", &id);
+    for (int i = 0; i < total_files_count; i++) {
+        sscanf(utf8_file_names[i], "%2d", &cmp_id);
+        if(cmp_id == id) {
+            current_playing_index = i;
+        }
+    }
 
     if (play_mode == PLAY_MODE_SHUFFLE) {
         // 重置随机播放的索引
@@ -1318,7 +1349,7 @@ void playSelectedMusic(lv_event_t *e) {
         }
     }
 
-    playMusicWithId(current_playing_index + 1);
+    playMusicWithIndex(current_playing_index);
     xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
 }
 // 下一首音乐
@@ -1352,7 +1383,7 @@ void nextTrack(lv_event_t *e) {
     track_title = utf8_file_names[current_playing_index];
     lv_label_set_text(ui_Track_Title, track_title + 2);
     lv_label_set_text(ui_Track_Artist, "null");
-    playMusicWithId(current_playing_index + 1);
+    playMusicWithIndex(current_playing_index);
     xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
 }
 // 上一首音乐
@@ -1386,7 +1417,7 @@ void prevTrack(lv_event_t *e) {
     track_title = utf8_file_names[current_playing_index];
     lv_label_set_text(ui_Track_Title, track_title + 2);
     lv_label_set_text(ui_Track_Artist, "null");
-    playMusicWithId(current_playing_index + 1);
+    playMusicWithIndex(current_playing_index);
     xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
 }
 // 播放/暂停
@@ -1581,12 +1612,12 @@ void selectBirdSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    int soundId = 32;
+    char sound_name[] = "Bird";
     if (nature_play_task_handle != NULL) {
         vTaskDelete(nature_play_task_handle);
         nature_play_task_handle = NULL;
     }
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
+    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }
 void selectBugSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Bird_Sound_Btn, LV_STATE_CHECKED);
@@ -1594,12 +1625,12 @@ void selectBugSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    int soundId = 33;
+    char sound_name[] = "Bug";
     if (nature_play_task_handle != NULL) {
         vTaskDelete(nature_play_task_handle);
         nature_play_task_handle = NULL;
     }
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
+    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }
 void selectForestSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Bird_Sound_Btn, LV_STATE_CHECKED);
@@ -1607,12 +1638,12 @@ void selectForestSound(lv_event_t *e) {
     lv_obj_add_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    int soundId = 34;
+    char sound_name[] = "Forest";
     if (nature_play_task_handle != NULL) {
         vTaskDelete(nature_play_task_handle);
         nature_play_task_handle = NULL;
     }
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
+    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }
 void selectSeaSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Bird_Sound_Btn, LV_STATE_CHECKED);
@@ -1620,10 +1651,10 @@ void selectSeaSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_add_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    int soundId = 35;
+    char sound_name[] = "Sea";
     if (nature_play_task_handle != NULL) {
         vTaskDelete(nature_play_task_handle);
         nature_play_task_handle = NULL;
     }
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&soundId, 5, &nature_play_task_handle);
+    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }

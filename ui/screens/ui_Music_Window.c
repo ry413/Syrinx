@@ -118,9 +118,17 @@ void ui_Music_Window_screen_init(void)
     lv_obj_set_y(ui_Music_Window_Volume_adjust, 0);
     lv_obj_add_flag(ui_Music_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
+    ui_Music_On_Screen_Range = lv_obj_create(ui_Music_Window);
+    lv_obj_remove_style_all(ui_Music_On_Screen_Range);
+    lv_obj_set_width(ui_Music_On_Screen_Range, 480);
+    lv_obj_set_height(ui_Music_On_Screen_Range, 480);
+    lv_obj_set_align(ui_Music_On_Screen_Range, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Music_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_Music_On_Screen_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
     lv_obj_add_event_cb(ui_BackToMainWindowBtn1, ui_event_BackToMainWindowBtn1, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Prev_Music_List_Btn, ui_event_Prev_Music_List_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Next_Music_List_Btn, ui_event_Next_Music_List_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Music_Window, ui_event_Music_Window, LV_EVENT_ALL, NULL);
-
+    lv_obj_add_event_cb(ui_Music_On_Screen_Range, ui_event_Music_On_Screen_Range, LV_EVENT_ALL, NULL);
 }

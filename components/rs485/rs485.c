@@ -13,6 +13,8 @@
 
 static const char *TAG = "rs485";
 
+bool is_bath_playing = false;   // 现在是否是播放音乐只有这里能修改, 所以在这维护
+
 typedef struct {
     uint8_t header;
     uint8_t command[5];
@@ -72,35 +74,45 @@ void process_command(rs485_packet_t *packet, size_t len) {
     }
 
     // ******************** 指令 ********************
-    // EventGroupHandle_t event_group = get_bluetooth_event_group();
-    // EventBits_t bits;
 
-    // 插卡指令
+    // 插卡
     if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x01}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 插卡");
         set_backlight(backlight_level);                                     // 1.打开背光
         enable_touch();                                                     // 2.启用触摸
-        
     }
-    // 拔卡指令
+    // 拔卡
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x00}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 拔卡");
-        offScreen(NULL);                                                    // 1.关闭背光
-        disabled_touch();                                                   // 2.禁用触摸
-        // if (is_music_mode) {
-        //     bluetooth_send_at_command("AT+AA0", CMD_STOP_STATE);            // 3.停止播放
-        //     bits = xEventGroupWaitBits(event_group, EVENT_STOP_STATE, pdTRUE, pdFALSE, 5000 / portTICK_PERIOD_MS);
-        //     if (bits & EVENT_STOP_STATE) {
-        //         bluetooth_send_at_command("AT+CU1", CMD_ON_MUTE);           // 4.静音
-        //     }
-        // } else {
-        //     // bluetooth_send_at_command("AT+BA1", CMD_DISCONNECT_BLUETOOTH);  // 3.断开蓝牙
-        //     // bits = xEventGroupWaitBits(event_group, EVENT_DISCONNECT_BLUETOOTH, pdTRUE, pdFALSE, 5000 / portTICK_PERIOD_MS);
-        //     vTaskDelay(1000 / portTICK_PERIOD_MS);
-        //     // if (bits & EVENT_DISCONNECT_BLUETOOTH) {
-        //         bluetooth_send_at_command("AT+CU1", CMD_ON_MUTE);           // 4.静音
-        //     // }
-        // }
+        offScreen(NULL);
+        disabled_touch();
+
+        bluetooth_send_at_command("AT+QM", CMD_GET_WORK_MODE);
+        xEventGroupWaitBits(bt_event_group, EVENT_GET_WORK_MODE, pdTRUE, pdFALSE, portMAX_DELAY);
+        switch (work_mode) {
+            case 0:
+                // 空闲模式拔卡
+                ESP_LOGI(TAG, "Command: Idle模式拔卡");
+                break;
+            case 1:
+                ESP_LOGI(TAG, "Command: 蓝牙模式拔卡");
+                bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
+                xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TP_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
+                vTaskDelay(2000 / portTICK_PERIOD_MS);  // "蓝牙已断开"
+                bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
+                xEventGroupWaitBits(bt_event_group, EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
+                break;
+
+            case 2:
+                ESP_LOGI(TAG, "Command: 音乐模式拔卡");
+                bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
+                xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TP_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
+                bluetooth_send_at_command("AT+CL0", CMD_ON_MUTE);
+                xEventGroupWaitBits(bt_event_group, EVENT_ON_MUTE, pdTRUE, pdFALSE, portMAX_DELAY);
+            default:
+                ESP_LOGE(TAG, "如果这个能触发, 那重要的就不是这里了");
+                break;
+        }
     }
     // 睡眠模式
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x1E, 0x01, 0x0A, 0x00}, (size_t)5) == 0) {
@@ -120,7 +132,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
     // 停止
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x03}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 停止");
-        bluetooth_send_at_command("AT+AA0", CMD_STOP_STATE);
+        bluetooth_send_at_command("AT+AA2", CMD_STOP_STATE);
     }
     // 上一首
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x04}, (size_t)5) == 0) {
@@ -165,7 +177,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
     else {
         // ESP_LOGE(TAG, "Unknown command");
     }
-    uart_write_bytes(RS485_UART_PORT, (const char *)packet, sizeof(rs485_packet_t));
+    // uart_write_bytes(RS485_UART_PORT, (const char *)packet, sizeof(rs485_packet_t)); // 谁写的这个?
 }
 void print_rs485_packet(const rs485_packet_t *packet) {
     printf("RS485 Packet:\n");

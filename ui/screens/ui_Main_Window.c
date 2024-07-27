@@ -377,13 +377,13 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_y(ui_Main_Window_Volume_adjust, 0);
     lv_obj_add_flag(ui_Main_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
-    ui_On_Screen_Range = lv_obj_create(ui_Main_Window);
-    lv_obj_remove_style_all(ui_On_Screen_Range);
-    lv_obj_set_width(ui_On_Screen_Range, 480);
-    lv_obj_set_height(ui_On_Screen_Range, 480);
-    lv_obj_set_align(ui_On_Screen_Range, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_clear_flag(ui_On_Screen_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_On_Main_Screen_Range = lv_obj_create(ui_Main_Window);
+    lv_obj_remove_style_all(ui_On_Main_Screen_Range);
+    lv_obj_set_width(ui_On_Main_Screen_Range, 480);
+    lv_obj_set_height(ui_On_Main_Screen_Range, 480);
+    lv_obj_set_align(ui_On_Main_Screen_Range, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_On_Main_Screen_Range, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_On_Main_Screen_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     ui_placeadeasdasd = lv_obj_create(ui_Main_Window);
     lv_obj_remove_style_all(ui_placeadeasdasd);
@@ -400,7 +400,7 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Wake_up_Btn, ui_event_Wake_up_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Guide_Btn, ui_event_Guide_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button5, ui_event_Button5, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_On_Screen_Range, ui_event_On_Screen_Range, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_On_Main_Screen_Range, ui_event_Main_On_Screen_Range, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_placeadeasdasd, ui_event_placeadeasdasd, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Main_Window, ui_event_Main_Window, LV_EVENT_ALL, NULL);
 

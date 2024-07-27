@@ -58,8 +58,8 @@ void ui_event_Button5(lv_event_t * e);
 lv_obj_t * ui_Button5;
 lv_obj_t * ui_Main_Header_Volume;
 lv_obj_t * ui_Main_Window_Volume_adjust;
-void ui_event_On_Screen_Range(lv_event_t * e);
-lv_obj_t * ui_On_Screen_Range;
+void ui_event_Main_On_Screen_Range(lv_event_t * e);
+lv_obj_t * ui_On_Main_Screen_Range;
 void ui_event_placeadeasdasd(lv_event_t * e);
 lv_obj_t * ui_placeadeasdasd;
 
@@ -83,6 +83,8 @@ lv_obj_t * ui_Next_Music_List_Btn_Text;
 void ui_event_Music_Play_Window(lv_event_t * e);
 lv_obj_t * ui_Music_Header_Volume;
 lv_obj_t * ui_Music_Window_Volume_adjust;
+void ui_event_Music_On_Screen_Range(lv_event_t * e);
+lv_obj_t * ui_Music_On_Screen_Range;
 
 
 // SCREEN: ui_Nature_Sound_Window
@@ -515,6 +517,8 @@ void ui_event_Progress_Slider(lv_event_t * e);
 lv_obj_t * ui_Progress_Slider;
 lv_obj_t * ui_Music_Play_Header_Volume;
 lv_obj_t * ui_Music_Play_Window_Volume_adjust;
+void ui_event_Music_Play_On_Screen_Range(lv_event_t * e);
+lv_obj_t * ui_Music_Play_On_Screen_Range;
 
 
 // SCREEN: ui_Idle_Window
@@ -635,7 +639,23 @@ void ui_event_Button5(lv_event_t * e)
         _ui_screen_change(&ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
     }
 }
-void ui_event_On_Screen_Range(lv_event_t * e)
+void ui_event_Main_On_Screen_Range(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        onScreen(e);
+    }
+}
+void ui_event_Music_On_Screen_Range(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        onScreen(e);
+    }
+}
+void ui_event_Music_Play_On_Screen_Range(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
