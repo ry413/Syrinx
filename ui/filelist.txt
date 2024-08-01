@@ -10,10 +10,8 @@ screens/ui_Mode_WIndow.c
 screens/ui_Wake_up_Window.c
 screens/ui_Guide_Window.c
 screens/ui_Settings_Window.c
-screens/ui_Settings_Backlight_Window.c
 screens/ui_Settings_Bluetooth_Window.c
 screens/ui_Settings_Time_Window.c
-screens/ui_Settings_ID_Window.c
 screens/ui_Settings_Wifi_Window.c
 screens/ui_Music_Play_Window.c
 screens/ui_Idle_Window.c
@@ -65,7 +63,7 @@ fonts/ui_font_Font100.c
 fonts/ui_font_Font30.c
 fonts/ui_font_LanTing18.c
 fonts/ui_font_LanTIng20.c
-fonts/ui_font_LanTing40.c
+fonts/ui_font_LanTingFine16.c
 fonts/ui_font_LanTingFine18.c
 fonts/ui_font_LanTingFine22.c
 fonts/ui_font_LanTingFine24.c

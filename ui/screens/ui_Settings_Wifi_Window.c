@@ -64,7 +64,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_obj_set_y(ui_Wifi_Name_Input, 0);
     lv_obj_set_align(ui_Wifi_Name_Input, LV_ALIGN_CENTER);
     lv_textarea_set_max_length(ui_Wifi_Name_Input, 30);
-    lv_textarea_set_text(ui_Wifi_Name_Input, "xz526");
+    lv_textarea_set_text(ui_Wifi_Name_Input, "12345678");
     lv_textarea_set_placeholder_text(ui_Wifi_Name_Input, "WIFI Name");
     lv_textarea_set_one_line(ui_Wifi_Name_Input, true);
     lv_obj_clear_flag(ui_Wifi_Name_Input, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -107,7 +107,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_obj_set_y(ui_Wifi_Password_Input, -1);
     lv_obj_set_align(ui_Wifi_Password_Input, LV_ALIGN_CENTER);
     lv_textarea_set_max_length(ui_Wifi_Password_Input, 30);
-    lv_textarea_set_text(ui_Wifi_Password_Input, "exn3832cnao");
+    lv_textarea_set_text(ui_Wifi_Password_Input, "12345678");
     lv_textarea_set_placeholder_text(ui_Wifi_Password_Input, "Name");
     lv_textarea_set_one_line(ui_Wifi_Password_Input, true);
     lv_obj_clear_flag(ui_Wifi_Password_Input, LV_OBJ_FLAG_SCROLLABLE);      /// Flags

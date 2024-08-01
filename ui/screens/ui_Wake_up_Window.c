@@ -165,8 +165,8 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_set_y(ui_Wakeup_Window_Volume_adjust, 0);
     lv_obj_add_flag(ui_Wakeup_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
-    lv_obj_add_event_cb(ui_Custom_Ringtone_Btn, ui_event_Custom_Ringtone_Btn, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_Wakeup_Time_Btn, ui_event_Wakeup_Time_Btn, LV_EVENT_ALL, NULL);
+    // lv_obj_add_event_cb(ui_Custom_Ringtone_Btn, ui_event_Custom_Ringtone_Btn, LV_EVENT_ALL, NULL);
+    // lv_obj_add_event_cb(ui_Wakeup_Time_Btn, ui_event_Wakeup_Time_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BackToMainWindowBtn5, ui_event_BackToMainWindowBtn5, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wake_up_Window, ui_event_Wake_up_Window, LV_EVENT_ALL, NULL);
 

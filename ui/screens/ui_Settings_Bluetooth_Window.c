@@ -64,7 +64,7 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_obj_set_y(ui_Bluetooth_Name_Input2, -3);
     lv_obj_set_align(ui_Bluetooth_Name_Input2, LV_ALIGN_CENTER);
     lv_textarea_set_max_length(ui_Bluetooth_Name_Input2, 30);
-    lv_textarea_set_text(ui_Bluetooth_Name_Input2, "eqdwjalskdlkjzxc");
+    lv_textarea_set_text(ui_Bluetooth_Name_Input2, "bt-7274");
     lv_textarea_set_placeholder_text(ui_Bluetooth_Name_Input2, "Name");
     lv_textarea_set_one_line(ui_Bluetooth_Name_Input2, true);
     lv_obj_clear_flag(ui_Bluetooth_Name_Input2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -107,8 +107,8 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_obj_set_y(ui_Bluetooth_Password_Input2, -3);
     lv_obj_set_align(ui_Bluetooth_Password_Input2, LV_ALIGN_CENTER);
     lv_textarea_set_max_length(ui_Bluetooth_Password_Input2, 4);
-    lv_textarea_set_text(ui_Bluetooth_Password_Input2, "34567");
-    lv_textarea_set_placeholder_text(ui_Bluetooth_Password_Input2, "Name");
+    lv_textarea_set_text(ui_Bluetooth_Password_Input2, "1234");
+    lv_textarea_set_placeholder_text(ui_Bluetooth_Password_Input2, "Password");
     lv_textarea_set_one_line(ui_Bluetooth_Password_Input2, true);
     lv_obj_clear_flag(ui_Bluetooth_Password_Input2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_text_font(ui_Bluetooth_Password_Input2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);

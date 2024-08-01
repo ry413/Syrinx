@@ -169,11 +169,11 @@ static void example_lvgl_touch_cb(lv_indev_drv_t * drv, lv_indev_data_t * data)
     // 防止触摸时持续重置定时器
     static bool is_touching = false;
     if (touchpad_pressed && touchpad_cnt > 0) {
-        // data->point.x = touchpad_x[0];
-        // data->point.y = touchpad_y[0];
+        data->point.x = touchpad_x[0];
+        data->point.y = touchpad_y[0];
         // 翻转触摸坐标
-        data->point.x = 480 - touchpad_x[0];
-        data->point.y = 480 - touchpad_y[0];
+        // data->point.x = 480 - touchpad_x[0];
+        // data->point.y = 480 - touchpad_y[0];
         data->state = LV_INDEV_STATE_PR;
         ESP_LOGI(TAG, "X=%u Y=%u", data->point.x, data->point.y);
         // 仅在状态变化时重置定时器
@@ -352,7 +352,7 @@ static void lvgl_task(void *pvParameter)
 #endif // CONFIG_EXAMPLE_DOUBLE_FB
     };
     ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &panel_handle));
-    esp_lcd_panel_mirror(panel_handle, true, true); // 翻转x与y
+    // esp_lcd_panel_mirror(panel_handle, true, true); // 翻转x与y
 
     ESP_LOGI(TAG, "Register event callbacks");
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
@@ -562,6 +562,7 @@ void disabled_touch(void) {
 }
 void enable_touch(void) {
     if (indev_touch) {
+        lv_indev_reset(NULL, NULL);
         lv_indev_enable(indev_touch, true);
     }
 }
@@ -590,7 +591,6 @@ void app_main() {
     }
     xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096, NULL, 2, NULL, 1);
     xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
-    xTaskCreate(init_wifi_task, "init_wifi_task", 4096, NULL, 5, NULL);
     // 蓝牙
     bluetooth_init();
     xTaskCreate(bluetooth_monitor_task, "bluetooth_monitor_task", 8192, NULL, 3, NULL);

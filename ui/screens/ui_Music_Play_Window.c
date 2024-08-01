@@ -122,10 +122,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_style_bg_color(ui_Play_Style_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_Play_Style_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_shadow_color(ui_Play_Style_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    // lv_obj_set_style_shadow_opa(ui_Play_Style_Btn, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_shadow_opa(ui_Play_Style_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    // lv_obj_set_style_shadow_color(ui_Play_Style_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
-    // lv_obj_set_style_shadow_opa(ui_Play_Style_Btn, 0, LV_PART_MAIN | LV_STATE_PRESSED);
 
     ui_Play_Style_Text = lv_label_create(ui_Play_Style_Btn);
     lv_obj_set_width(ui_Play_Style_Text, LV_SIZE_CONTENT);   /// 1
@@ -282,7 +279,9 @@ void ui_Music_Play_Window_screen_init(void)
 
     ui_Music_Window_EQ_Panel = lv_obj_create(ui_Music_Play_Window);
     lv_obj_set_width(ui_Music_Window_EQ_Panel, 326);
-    lv_obj_set_height(ui_Music_Window_EQ_Panel, 269);
+    lv_obj_set_height(ui_Music_Window_EQ_Panel, 260);
+    lv_obj_set_x(ui_Music_Window_EQ_Panel, 0);
+    lv_obj_set_y(ui_Music_Window_EQ_Panel, -10);
     lv_obj_set_align(ui_Music_Window_EQ_Panel, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Music_Window_EQ_Panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_flex_flow(ui_Music_Window_EQ_Panel, LV_FLEX_FLOW_ROW_WRAP);

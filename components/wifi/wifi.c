@@ -4,14 +4,15 @@
 #include "esp_event.h"
 #include "freertos/event_groups.h"
 #include "esp_log.h"
+#include "string.h"
 
-#define EXAMPLE_ESP_WIFI_SSID      "xz526"
-#define EXAMPLE_ESP_WIFI_PASS      "xz526888"
 #define EXAMPLE_ESP_MAXIMUM_RETRY  5
 
 static const char *TAG = "wifi_station";
 static int s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
+char *wifi_name = "12345678";
+char *wifi_password = "12345678";
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
@@ -60,8 +61,8 @@ static void wifi_init_sta(void) {
 
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .password = EXAMPLE_ESP_WIFI_PASS,
+            .ssid = "",
+            .password = "",
             .threshold.authmode = WIFI_AUTH_WPA2_PSK,
             .listen_interval = 10,
             .pmf_cfg = {
@@ -70,6 +71,14 @@ static void wifi_init_sta(void) {
             },
         },
     };
+    // 使用 strncpy 确保字符串被正确复制
+    strncpy((char *)wifi_config.sta.ssid, wifi_name, sizeof(wifi_config.sta.ssid) - 1);
+    strncpy((char *)wifi_config.sta.password, wifi_password, sizeof(wifi_config.sta.password) - 1);
+
+    // 确保字符串以 '\0' 结尾
+    wifi_config.sta.ssid[sizeof(wifi_config.sta.ssid) - 1] = '\0';
+    wifi_config.sta.password[sizeof(wifi_config.sta.password) - 1] = '\0';
+
     
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
@@ -85,9 +94,9 @@ static void wifi_init_sta(void) {
     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
 
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi_name, wifi_password);
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", wifi_name, wifi_password);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }

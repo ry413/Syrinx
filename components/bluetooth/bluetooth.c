@@ -25,16 +25,21 @@
 static const char *TAG = "Bluetooth";
 static QueueHandle_t uart_queue;
 EventGroupHandle_t bt_event_group = NULL;
+EventGroupHandle_t music_event_group = NULL;
 
 
 char **utf8_file_names = NULL;  // 储存文件名的数组
-int total_files_count = 0;      // 这两个都是在初始化时获取全部文件名用的
+int current_dir_files_count = 0;// M2的返回值临时接收变量
+int music_files_count = 0;      // music目录下的文件数
+int bath_files_count = 0;       // bath目录下的文件数
+int *bath_file_ids = NULL;      // bath目录下的文件们的id数组
 int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在utf8_file_names中的索引, 我也不知道为什么要定义在这里
 int current_music_duration = 0;
 char bluetooth_name[13];
 char bluetooth_password[5];
-int work_mode = 0;              // 工作模式, 0: Idle, 1: 蓝牙, 2: 音乐
-
+int bluetooth_state = 0;        // 蓝牙状态
+int work_mode = 0;              // 工作模式, 0: 空闲, 1: 蓝牙, 2: 音乐
+int play_state = 0;
 
 command_type_t current_command = CMD_NONE;
 
@@ -116,6 +121,7 @@ esp_err_t bluetooth_init(void) {
     ESP_ERROR_CHECK(uart_driver_install(UART_PORT_NUM, BUF_SIZE * 2, BUF_SIZE * 2, QUEUE_SIZE, &uart_queue, intr_alloc_flags));
 
     bt_event_group = xEventGroupCreate();
+    music_event_group = xEventGroupCreate();
     
     ESP_LOGI(TAG, "UART 0 初始化成功");
     return ESP_OK;
@@ -174,26 +180,33 @@ void get_all_file_names(void) {
     // 切换到音乐模式
     bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+    work_mode = 2;
     // 切换到音乐模式之后, 似乎需要等待两秒, M2才能得到数值
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     // 必须进入目录才能保证得到对的M2数值
     bluetooth_send_at_command("AT+M602", CMD_CHANGE_DIR);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
+    // M6之后也得等一会才能M2
+    bluetooth_send_at_command("AT+M2", CMD_GET_DIR_FILE_COUNT);
+    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
+    music_files_count = current_dir_files_count;
+    // 再弄个bath目录的文件数
+    bluetooth_send_at_command("AT+M601", CMD_CHANGE_DIR);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
+    bluetooth_send_at_command("AT+M2", CMD_GET_DIR_FILE_COUNT);
+    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
+    bath_files_count = current_dir_files_count;
 
-    // 获取文件数量
-    bluetooth_send_at_command("AT+M2", CMD_GET_TOTAL_FILES);
-    xEventGroupWaitBits(bt_event_group, EVENT_TOTAL_FILES_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
+    printf("music: %d, bath: %d\n", music_files_count, bath_files_count);
 
-    printf("Files Count: %d\n", total_files_count);
 
-    // 自然之音的四首歌也放这个数组里
-    utf8_file_names = (char **)malloc((total_files_count + 4) * sizeof(char *));
+    // 自然之音的四首歌也放这个数组里, 这里面将分别装music, bath, theme三个目录的文件名
+    utf8_file_names = (char **)malloc((music_files_count + bath_files_count + 4) * sizeof(char *));
     if ((utf8_file_names == NULL)) {
         ESP_LOGE(TAG, "Failed to allocate memory for file_namess");
         return;
     }
-    for (int i = 0; i < (total_files_count + 4); i++) {
+    for (int i = 0; i < (music_files_count + bath_files_count + 4); i++) {
         utf8_file_names[i] = (char *)malloc(100 * sizeof(char));
         if (utf8_file_names[i] == NULL) {
             ESP_LOGE(TAG, "Failed to allocate memory for utf8_file_names[%d]", i);
@@ -205,14 +218,30 @@ void get_all_file_names(void) {
         }
     }
     
-    // 获取music目录(02)里的文件名列表
-    bluetooth_send_at_command("AT+M402", CMD_GET_ALL_FILE_NAME);
-    // M4每返回一个文件名大概会间隔400毫秒, 这边给它每个500毫秒
-    vTaskDelay((total_files_count * 500 + 250) / portTICK_PERIOD_MS);
+    // 获取各个目录的文件名列表
+    bluetooth_send_at_command("AT+M402", CMD_GET_DIR_FILE_NAMES);    // music
+    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
 
-    bluetooth_send_at_command("AT+M404", CMD_GET_ALL_FILE_NAME);    // 再获取theme_music目录(04)的列表
-    vTaskDelay((4 * 500 + 250) / portTICK_PERIOD_MS);
+    bluetooth_send_at_command("AT+M401", CMD_GET_DIR_FILE_NAMES);    // bath
+    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
 
+    bluetooth_send_at_command("AT+M404", CMD_GET_DIR_FILE_NAMES);    // theme
+    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 收集bath里的歌的id
+    bath_file_ids = (int *)malloc(bath_files_count * sizeof(int));
+    if (bath_file_ids == NULL) {
+        ESP_LOGE(TAG, "Failed to allocate memory");
+        return;
+    }
+    for (int i = 0; i < bath_files_count; i++) {
+        // 提取id
+        char id_str[3] = { utf8_file_names[music_files_count + i][0], utf8_file_names[music_files_count + i][1], '\0' };
+        bath_file_ids[i] = atoi(id_str);
+    }
+
+    // 不在这里回到空闲模式, 因为紧接着会进入蓝牙模式以同步蓝牙配置, 所以在那边进空闲
+
+    // 宣布初始化完毕
     xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
     printf("\n GET FILE NAME LIST END\n");
 }
@@ -227,23 +256,24 @@ esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
                 case UART_DATA:
                     int len = uart_read_bytes(UART_PORT_NUM, response, event.size, portTICK_PERIOD_MS);
                     if (len > 0) {
-                        printf("UART_DATA.length: %d, response: ", len);
-                        for (int i = 0; i < len; i++) {
-                            // 打印每个字符，对于不可打印字符打印一个点
-                            char c = response[i];
-                            if (c >= 32 && c <= 126) {  // 可打印ASCII范围
-                                putchar(c);
-                            } else {
-                                putchar('.');  // 对于控制字符等，打印点
-                            }
-                        }
-                        printf("\n");
-                        ESP_LOGI(TAG, "Received full response: %s", response);
+                        // printf("UART_DATA.length: %d, response: ", len);
+                        // for (int i = 0; i < len; i++) {
+                        //     // 打印每个字符，对于不可打印字符打印一个点
+                        //     char c = response[i];
+                        //     if (c >= 32 && c <= 126) {  // 可打印ASCII范围
+                        //         putchar(c);
+                        //     } else {
+                        //         putchar('.');  // 对于控制字符等，打印点
+                        //     }
+                        // }
+                        // printf("\n");
+                        // ESP_LOGI(TAG, "Received full response: %s", response);
                         return ESP_OK; // 成功接收到完整响应
                     } else {
                         // 如果读取超时或未读到数据
-                        ESP_LOGE(TAG, "WTFF?");
+                        ESP_LOGE(TAG, "读取超时或未读到数据");
                     }
+                    break;
                 case UART_FIFO_OVF:
                     ESP_LOGW(TAG, "UART FIFO Overflow");
                     uart_flush_input(UART_PORT_NUM);
@@ -276,32 +306,33 @@ void bluetooth_monitor_task(void *pvParameters) {
     while (1) {
         // 等待并接收响应
         if (bluetooth_wait_for_response(response, sizeof(response)) == ESP_OK) {
-            ESP_LOGI(TAG, "命令: %d, 接收到: %s\n", current_command, response);
+            // ESP_LOGI(TAG, "命令: %d, 接收到: %s\n", current_command, response);
+            printf("命令: %d, 接收到: %s\n", current_command, response);    // 换个颜色
             // 只有响应OK才需要判断是给谁的OK
             if (strncmp(response, "OK", 2) == 0) {
-                ESP_LOGI(TAG, "接收到OK: %d\n", current_command);
+                ESP_LOGI(TAG, "接收到OK: %d", current_command);
                 // 暂时没用的就不设置事件组了
                 switch (current_command) {
                     case CMD_NEXT_TRACK:
-                        xEventGroupSetBits(bt_event_group, EVENT_NEXT_TRACK);
+                        xEventGroupSetBits(music_event_group, EVENT_NEXT_TRACK);
                         break;
                     case CMD_PREV_TRACK:
-                        xEventGroupSetBits(bt_event_group, EVENT_PREV_TRACK);
+                        xEventGroupSetBits(music_event_group, EVENT_PREV_TRACK);
                         break;
-                    case CMD_PLAY_PAUSE:
-                        xEventGroupSetBits(bt_event_group, EVENT_PLAY_PAUSE);
+                    case CMD_PLAY_PAUSE_TOGGLE:
+                        xEventGroupSetBits(music_event_group, EVENT_PLAY_PAUSE_TOGGLE);
                         break;
-                    case CMD_STOP_STATE:
-                        xEventGroupSetBits(bt_event_group, EVENT_STOP_STATE);
+                    case CMD_STOP_TRACK:
+                        xEventGroupSetBits(music_event_group, EVENT_STOP_TRACK);
                         break;
-                    case CMD_PLAY_STATE:
-                        xEventGroupSetBits(bt_event_group, EVENT_PLAY_STATE);
+                    case CMD_PLAY_TRACK:
+                        xEventGroupSetBits(music_event_group, EVENT_PLAY_TRACK);
                         break;
-                    case CMD_PAUSE_STATE:
-                        xEventGroupSetBits(bt_event_group, EVENT_PAUSE_STATE);
+                    case CMD_PAUSE_TRACK:
+                        xEventGroupSetBits(music_event_group, EVENT_PAUSE_TRACK);
                         break;
-                    case CMD_PLAY_MUSIC:
-                        xEventGroupSetBits(bt_event_group, EVENT_PLAY_MUSIC);
+                    case CMD_PLAY_MUSIC_WITH_ID:
+                        xEventGroupSetBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID);
                         break;
                     case CMD_SET_VOLUME:
                         xEventGroupSetBits(bt_event_group, EVENT_SET_VOLUME);
@@ -316,11 +347,8 @@ void bluetooth_monitor_task(void *pvParameters) {
                     // case CMD_DISCONNECT_BLUETOOTH:
                         // xEventGroupSetBits(bt_event_group, EVENT_DISCONNECT_BLUETOOTH);
                         // break;
-                    case CMD_ON_MUTE:
-                        xEventGroupSetBits(bt_event_group, EVENT_ON_MUTE);
-                        break;
-                    case CMD_OFF_MUTE:
-                        xEventGroupSetBits(bt_event_group, EVENT_OFF_MUTE);
+                    case CMD_CHANGE_CHANNEL:
+                        xEventGroupSetBits(bt_event_group, EVENT_CHANGE_CHANNEL);
                         break;
                     case CMD_CHANGE_TO_BLUETOOTH:
                         xEventGroupSetBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH);
@@ -328,31 +356,33 @@ void bluetooth_monitor_task(void *pvParameters) {
                     case CMD_CHANGE_TO_MUSIC:
                         xEventGroupSetBits(bt_event_group, EVENT_CHANGE_TO_MUSIC);
                         break;
-                    case CMD_EQUALIZER_SET:
-                        xEventGroupSetBits(bt_event_group, EVENT_EQUALIZER_SET);
+                    case CMD_CHANGE_TO_IDLE:
+                        xEventGroupSetBits(bt_event_group, EVENT_CHANGE_TO_IDLE);
                         break;
-                    // 等待M6响应修复
-                    // case CMD_CHANGE_DIR:
-                    //     xEventGroupSetBits(bt_event_group, EVENT_CHANGE_DIR);
-                    //     break;
+                    case CMD_EQUALIZER_SET:
+                        xEventGroupSetBits(music_event_group, EVENT_EQUALIZER_SET);
+                        break;
+                    case CMD_CHANGE_DIR:
+                        xEventGroupSetBits(bt_event_group, EVENT_CHANGE_DIR);
+                        break;
                     default:
                         ESP_LOGI(TAG, "Other CMD: %d", current_command);
                 }
-            } else if (strncmp(response, "M6", 2) == 0) {
-                xEventGroupSetBits(bt_event_group, EVENT_CHANGE_DIR);
             } else if (strncmp(response, "QA+", 3) == 0) {
                 ESP_LOGI(TAG, "Volume: %s", response);
                 // strncpy(volume_response, response, BUF_SIZE);
                 // xEventGroupSetBits(bt_event_group, EVENT_VOLUME_RESPONSE);
             } else if (strncmp(response, "M2+", 3) == 0) {
-                sscanf(response, "M2+%d", &total_files_count);
-                xEventGroupSetBits(bt_event_group, EVENT_TOTAL_FILES_COUNT);
+                sscanf(response, "M2+%d", &current_dir_files_count);
+                xEventGroupSetBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT);
             } else if (strncmp(response, "MT+", 3) == 0) {
                 sscanf(response, "MT+%d", &current_music_duration);
-                xEventGroupSetBits(bt_event_group, EVENT_DURATION);
+                xEventGroupSetBits(music_event_group, EVENT_GET_DURATION);
             } else if (strncmp(response, "btlink", 6) == 0) {
+                bluetooth_state = 2;
                 xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_CONNECTED);
             } else if (strncmp(response, "btunlink", 8) == 0) {
+                bluetooth_state = 1;
                 xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_DISCONNECTED);
             } else if (strncmp(response, "END", 3) == 0) {
                 xEventGroupSetBits(bt_event_group, EVENT_END_PLAY);
@@ -362,9 +392,11 @@ void bluetooth_monitor_task(void *pvParameters) {
             } else if (strncmp(response, "TE+", 3) == 0) {
                 sscanf(response, "TE+%s", bluetooth_password);
                 xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_GET_PASSWORD);
-            } else if (strncmp(response, "QM+", 3) == 0) {
-                // // sscanf(response, "QM+%d", work_mode);
-                // xEventGroupSetBits(bt_event_group, EVENT_GET_WORK_MODE);
+            } else if (strncmp(response, "MP+", 3) == 0) {
+                sscanf(response, "MP+%d", &play_state);
+                xEventGroupSetBits(music_event_group, EVENT_GET_PLAY_STATE);
+            } else if (strncmp(response, "M4+END", 6) == 0) {
+                xEventGroupSetBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES);
             }
             else if (strncmp(response, "QV+", 3) == 0) {
                 // 版本号
@@ -396,9 +428,12 @@ void bluetooth_monitor_task(void *pvParameters) {
                 printf("UTF8编码的字符串: %s\n", utf8);
                 add_file_name(utf8_file_names, utf8);
                 free(utf8);
-            }
-            else {
-                ESP_LOGE(TAG, "未知返回值");
+            } else {
+                // 设置蓝牙名称会复位, 返回个不知道什么东西
+                if (current_command == CMD_BLUETOOTH_SET_NAME) {
+                    return;
+                }
+                ESP_LOGE(TAG, "未知返回值, CMD: %d", current_command);
             }
             
         } else {

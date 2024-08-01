@@ -7,11 +7,11 @@
 time_t global_time = 0;
 
 // 日期与时间
-uint32_t time_hour = 0;
-uint32_t time_min = 0;
-uint32_t date_year = 0;
-uint32_t date_month = 0;
-uint32_t date_day = 0;
+uint32_t time_hour = 11;
+uint32_t time_min = 42;
+uint32_t date_year = 2022;
+uint32_t date_month = 4;
+uint32_t date_day = 13;
 
 lv_obj_t *time_label;
 lv_obj_t *date_label;
@@ -35,7 +35,7 @@ void update_current_time_label(void) {
     char timeStr[9];
 
     localtime_r(&global_time, &timeinfo);
-    strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);
+    strftime(timeStr, sizeof(timeStr), "%H:%M", &timeinfo);
     lv_label_set_text(time_label, timeStr);
 }
 // 更新日期到date_label上

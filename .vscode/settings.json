@@ -53,7 +53,10 @@
         "stop_token": "c",
         "esp_lcd_touch.h": "c",
         "ctype.h": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "stdbool.h": "c",
+        "touch.h": "c",
+        "thread": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

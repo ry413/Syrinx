@@ -385,6 +385,14 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_flag(ui_On_Main_Screen_Range, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_clear_flag(ui_On_Main_Screen_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
+    ui_Disabled_Touch_Range = lv_obj_create(ui_Main_Window);
+    lv_obj_remove_style_all(ui_Disabled_Touch_Range);
+    lv_obj_set_width(ui_Disabled_Touch_Range, 480);
+    lv_obj_set_height(ui_Disabled_Touch_Range, 480);
+    lv_obj_set_align(ui_Disabled_Touch_Range, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
     ui_placeadeasdasd = lv_obj_create(ui_Main_Window);
     lv_obj_remove_style_all(ui_placeadeasdasd);
     lv_obj_set_width(ui_placeadeasdasd, 100);

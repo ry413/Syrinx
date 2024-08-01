@@ -209,7 +209,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Date_Setting_Month2, ui_event_Date_Setting_Month2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Date_Setting_Day2, ui_event_Date_Setting_Day2, LV_EVENT_ALL, NULL);
     lv_keyboard_set_textarea(ui_Date_Time_Keyboard2, ui_Time_Setting_Hour2);
-    lv_obj_add_event_cb(ui_BackToMainWindow10, ui_event_BackToMainWindow10, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BackToMainWindow10, ui_event_BackToSettingsWindow10, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Time_Enter_Btn, ui_event_Time_Enter_Btn, LV_EVENT_ALL, NULL);
 
 }
