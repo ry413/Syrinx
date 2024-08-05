@@ -131,7 +131,6 @@ static void create_music_item(void) {
     err = nvs_open("filenames", NVS_READONLY, &nvs_handle);
     if (err != ESP_OK) {
         ESP_LOGE("create_music_item", "NVS中未找到filenames命名空间, 需要刷新");
-        vTaskDelete(NULL);
         return;
     }
 
@@ -1292,7 +1291,7 @@ void decID(lv_event_t *e) {
     const char *text = lv_label_get_text(ui_System_ID_Value);
     int id = atoi(text);
     id = (id > 0) ? id - 1 : 0;
-    lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", id);
+    lv_label_set_text_fmt(ui_System_ID_Value, "%d", id);
 }
 // 确认恢复出厂设置
 void verifyResetFactory(lv_event_t *e)
@@ -1479,14 +1478,18 @@ void cancelResetFactory(lv_event_t *e)
 {
     lv_obj_add_flag(ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN);
 }
+
+// 曲目刷新
+void track_refresh_task_callback(void *param) {
+    lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN);
+}
 static void track_refresh_task(void *pvParameters) {
     get_all_file_names();
     xEventGroupWaitBits(bt_event_group, EVENT_FILE_LIST_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
-    lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN);
+    lv_async_call(track_refresh_task_callback, NULL);
     vTaskDelete(NULL);
 }
-// 曲目刷新
 void track_refresh(lv_event_t *e) {
     xTaskCreate(track_refresh_task, "track_refresh_task", 8192, NULL, 5, NULL);
 }
