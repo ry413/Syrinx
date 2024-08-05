@@ -387,15 +387,7 @@ static void lvgl_task(void *pvParameter)
     ESP_ERROR_CHECK(i2c_param_config(EXAMPLE_I2C_NUM, &i2c_conf));
     ESP_ERROR_CHECK(i2c_driver_install(EXAMPLE_I2C_NUM, i2c_conf.mode, 0, 0, 0));
 
-#if CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_GT911
     esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_GT911_CONFIG();
-#elif CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_TT21100
-    esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_TT21100_CONFIG();
-#elif CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_FT5X06
-    esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_FT5x06_CONFIG();
-#elif CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_FT6X06
-    esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_FT6x06_CONFIG();
-#endif
 
     ESP_LOGI(TAG, "Initialize touch IO (I2C)");
     /* Touch IO handle */
@@ -443,19 +435,10 @@ static void lvgl_task(void *pvParameter)
     //优先使用内部MALLOC_CAP_DMA 刷屏会提高一个档次
     //优先使用双buffer
 
-    // 在分配前打印可用内存
-    // ESP_LOGI("LVGL MALLOC1: ", "Free internal memory before allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-    // ESP_LOGI("LVGL MALLOC1: ", "Free DMA memory before allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_DMA));
-    // ESP_LOGI("LVGL MALLOC1: ", "Free SPIRAM memory before allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-
     buf1 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 120 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);//MALLOC_CAP_SPIRAM
     assert(buf1);
     buf2 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 120 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);//MALLOC_CAP_DMA
     assert(buf2);
-
-    // ESP_LOGI("LVGL MALLOC2: ", "Free internal memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-    // ESP_LOGI("LVGL MALLOC2: ", "Free DMA memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_DMA));
-    // ESP_LOGI("LVGL MALLOC2: ", "Free SPIRAM memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
 
     // initialize LVGL draw buffers
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, EXAMPLE_LCD_H_RES * 120);
@@ -472,8 +455,6 @@ static void lvgl_task(void *pvParameter)
     disp_drv.full_refresh = true; // the full_refresh mode can maintain the synchronization between the two frame buffers
 #endif
     lv_disp_t *disp=lv_disp_drv_register(&disp_drv);
-
-
 
 #if CONFIG_EXAMPLE_LCD_TOUCH_ENABLED
     static lv_indev_drv_t indev_drv;    // Input device driver (Touch)
@@ -515,22 +496,8 @@ static void lvgl_task(void *pvParameter)
 
 static void create_demo_application(void)
 {
-
     ui_init();
     init_backlight();
-
-    
-// #if defined CONFIG_LV_USE_DEMO_WIDGETS
-//     lv_demo_widgets();
-// #elif defined CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER
-//     lv_demo_keypad_encoder();
-// #elif defined CONFIG_LV_USE_DEMO_BENCHMARK
-//     lv_demo_benchmark();
-// #elif defined CONFIG_LV_USE_DEMO_STRESS
-//     lv_demo_stress();
-// #else
-//     #error "No demo application selected."
-// #endif
 }
 
 

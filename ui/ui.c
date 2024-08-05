@@ -362,8 +362,9 @@ lv_obj_t * ui_System_Parting_Line2;
 void ui_event_System_Reset_Factory_Btn( lv_event_t * e);
 lv_obj_t *ui_System_Reset_Factory_Btn;
 lv_obj_t *ui_System_Reset_Factory_Text;
-lv_obj_t *ui_verify;
-lv_obj_t *ui_cancel;
+void ui_event_System_Track_Refresh_Btn( lv_event_t * e);
+lv_obj_t *ui_System_Track_Refresh_Btn;
+lv_obj_t *ui_System_Track_Refresh_Text;
 lv_obj_t *ui_Rellay_Panel;
 lv_obj_t *ui_Reset_Factory_Text;
 void ui_event_Verify_Reset_Btn( lv_event_t * e);
@@ -372,16 +373,17 @@ lv_obj_t *ui_Verify_Reset_Text;
 void ui_event_Cancel_Reset_Btn( lv_event_t * e);
 lv_obj_t *ui_Cancel_Reset_Btn;
 lv_obj_t *ui_Cancel_Reset_Text;
+lv_obj_t *ui_TrackRefreshMsgPanel;
+lv_obj_t *ui_TrackRefreshMsgText;
 void ui_event_System_Settings_Verify_Btn(lv_event_t * e);
 lv_obj_t * ui_System_Settings_Verify_Btn;
 lv_obj_t * ui_System_Settings_Verify_Btn_Text;
 void ui_event_System_Settings_Cancel_Btn(lv_event_t * e);
 lv_obj_t * ui_System_Settings_Cancel_Btn;
 lv_obj_t * ui_System_Settings_Cancel_Btn_Text;
-
-
 void ui_event_BackToMainWindowBtn8(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn8;
+lv_obj_t * ui_Disabled_Touch_Range_Settings_window;
 
 // SCREEN: ui_Settings_Bluetooth_Window
 void ui_Settings_Bluetooth_Window_screen_init(void);
@@ -1248,12 +1250,22 @@ void ui_event_System_Reset_Factory_Btn( lv_event_t * e)
         _ui_flag_modify(ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
+void ui_event_System_Track_Refresh_Btn( lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if ( event_code == LV_EVENT_SHORT_CLICKED) {
+        _ui_flag_modify(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        track_refresh(e);
+    }
+}
 void ui_event_Verify_Reset_Btn( lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if ( event_code == LV_EVENT_SHORT_CLICKED) {
-        VerifyResetFactory( e );
+        verifyResetFactory( e );
         _ui_flag_modify(ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
@@ -1262,7 +1274,7 @@ void ui_event_Cancel_Reset_Btn( lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if ( event_code == LV_EVENT_SHORT_CLICKED) {
-        CancelResetFactory( e );
+        cancelResetFactory( e );
         _ui_flag_modify(ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }

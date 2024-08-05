@@ -12,6 +12,7 @@
 #include <locale.h>
 #include <wchar.h>
 #include "ctype.h"
+#include "nvs.h"
 
 
 #define UART_PORT_NUM      UART_NUM_0
@@ -28,12 +29,12 @@ EventGroupHandle_t bt_event_group = NULL;
 EventGroupHandle_t music_event_group = NULL;
 
 
-char **utf8_file_names = NULL;  // 储存文件名的数组
+char **temp_file_names = NULL;  // 储存文件名的数组
 int current_dir_files_count = 0;// M2的返回值临时接收变量
 int music_files_count = 0;      // music目录下的文件数
 int bath_files_count = 0;       // bath目录下的文件数
 int *bath_file_ids = NULL;      // bath目录下的文件们的id数组
-int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在utf8_file_names中的索引, 我也不知道为什么要定义在这里
+int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在temp_file_names中的索引, 我也不知道为什么要定义在这里
 int current_music_duration = 0;
 char bluetooth_name[13];
 char bluetooth_password[5];
@@ -147,7 +148,7 @@ esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type
 }
 
 // 添加文件名到列表
-void add_file_name(char **utf8_file_names, const char *file_name) {
+void add_file_name(char **temp_file_names, const char *file_name) {
     // 确保 file_name 以 2位数字 开头并以 ".mp3" 结尾
     if (!isdigit((unsigned char)file_name[0]) || !isdigit((unsigned char)file_name[1]) || strcmp(file_name + strlen(file_name) - 4, ".mp3") != 0) {
         ESP_LOGE(TAG, "Invalid file name format: %s", file_name);
@@ -163,20 +164,16 @@ void add_file_name(char **utf8_file_names, const char *file_name) {
         return;
     }
     static int idx = 0;
-    // 动态分配并复制处理后的文件名到 utf8_file_names 列表中
-    utf8_file_names[idx] = strndup(file_name, name_length);
-    if (utf8_file_names[idx] == NULL) {
-        ESP_LOGE(TAG, "Failed to duplicate string for utf8_file_names[%d]", idx);
+    // 动态分配并复制处理后的文件名到 temp_file_names 列表中
+    temp_file_names[idx] = strndup(file_name, name_length);
+    if (temp_file_names[idx] == NULL) {
+        ESP_LOGE(TAG, "Failed to duplicate string for temp_file_names[%d]", idx);
         return;
     }
     idx++;
 }
+// 读取所有音乐文件名并储存于nvs中的任务
 void get_all_file_names(void) {
-    // 等待上电返回值被丢掉
-    xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
-
-    ESP_LOGW(TAG, "这条日志应该在打印蓝牙模块上电返回值之后出现");
-
     // 切换到音乐模式
     bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
@@ -199,21 +196,39 @@ void get_all_file_names(void) {
 
     printf("music: %d, bath: %d\n", music_files_count, bath_files_count);
 
+    // 储存文件数
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("filenames", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("get_all_file_names", "Failed to open NVS");
+        return;
+    }
+
+    err = nvs_set_u32(nvs_handle, "music_count", music_files_count);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_set_u32(nvs_handle, "bath_count", bath_files_count);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return;
+    }
 
     // 自然之音的四首歌也放这个数组里, 这里面将分别装music, bath, theme三个目录的文件名
-    utf8_file_names = (char **)malloc((music_files_count + bath_files_count + 4) * sizeof(char *));
-    if ((utf8_file_names == NULL)) {
+    temp_file_names = (char **)malloc((music_files_count + bath_files_count + 4) * sizeof(char *));
+    if ((temp_file_names == NULL)) {
         ESP_LOGE(TAG, "Failed to allocate memory for file_namess");
         return;
     }
     for (int i = 0; i < (music_files_count + bath_files_count + 4); i++) {
-        utf8_file_names[i] = (char *)malloc(100 * sizeof(char));
-        if (utf8_file_names[i] == NULL) {
-            ESP_LOGE(TAG, "Failed to allocate memory for utf8_file_names[%d]", i);
+        temp_file_names[i] = (char *)malloc(100 * sizeof(char));
+        if (temp_file_names[i] == NULL) {
+            ESP_LOGE(TAG, "Failed to allocate memory for temp_file_names[%d]", i);
             for (int j = 0; j < i; j++) {
-                free(utf8_file_names[j]);
+                free(temp_file_names[j]);
             }
-            free(utf8_file_names);
+            free(temp_file_names);
             return;
         }
     }
@@ -227,19 +242,28 @@ void get_all_file_names(void) {
 
     bluetooth_send_at_command("AT+M404", CMD_GET_DIR_FILE_NAMES);    // theme
     xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
-    // 收集bath里的歌的id
-    bath_file_ids = (int *)malloc(bath_files_count * sizeof(int));
-    if (bath_file_ids == NULL) {
-        ESP_LOGE(TAG, "Failed to allocate memory");
-        return;
-    }
-    for (int i = 0; i < bath_files_count; i++) {
-        // 提取id
-        char id_str[3] = { utf8_file_names[music_files_count + i][0], utf8_file_names[music_files_count + i][1], '\0' };
-        bath_file_ids[i] = atoi(id_str);
+
+    // 储存文件名们到nvs里
+    for (int i = 0; i < (music_files_count + bath_files_count + 4); i++) {
+        char key[16];
+        snprintf(key, sizeof(key), "file_%u", (unsigned int)i);
+
+        err = nvs_set_str(nvs_handle, key, temp_file_names[i]);
+        if (err != ESP_OK) {
+            ESP_LOGE("get_all_file_names", "Failed to write string to NVS");
+            nvs_close(nvs_handle);
+            return;
+        }
     }
 
-    // 不在这里回到空闲模式, 因为紧接着会进入蓝牙模式以同步蓝牙配置, 所以在那边进空闲
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("get_all_file_names", "Failed to commit changes to NVS");
+    }
+    
+    nvs_close(nvs_handle);
+
+    // 回到空闲模式
 
     // 宣布初始化完毕
     xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
@@ -426,7 +450,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                 char *utf8 = NULL;
                 utf16_to_utf8(utf16_str, &utf8);
                 printf("UTF8编码的字符串: %s\n", utf8);
-                add_file_name(utf8_file_names, utf8);
+                add_file_name(temp_file_names, utf8);
                 free(utf8);
             } else {
                 // 设置蓝牙名称会复位, 返回个不知道什么东西

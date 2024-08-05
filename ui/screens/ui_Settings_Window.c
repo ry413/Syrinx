@@ -1130,8 +1130,8 @@ void ui_Settings_Window_screen_init(void)
     ui_System_Reset_Factory_Btn = lv_btn_create(ui_System_Settings_Panel);
     lv_obj_set_width( ui_System_Reset_Factory_Btn, 106);
     lv_obj_set_height( ui_System_Reset_Factory_Btn, 50);
-    lv_obj_set_x( ui_System_Reset_Factory_Btn, 0 );
-    lv_obj_set_y( ui_System_Reset_Factory_Btn, 35 );
+    lv_obj_set_x( ui_System_Reset_Factory_Btn, -70 );
+    lv_obj_set_y( ui_System_Reset_Factory_Btn, 40 );
     lv_obj_set_align( ui_System_Reset_Factory_Btn, LV_ALIGN_CENTER );
     lv_obj_clear_flag( ui_System_Reset_Factory_Btn, LV_OBJ_FLAG_PRESS_LOCK );    /// Flags
     lv_obj_set_style_bg_color(ui_System_Reset_Factory_Btn, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT );
@@ -1143,6 +1143,22 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_align( ui_System_Reset_Factory_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_System_Reset_Factory_Text,"恢复出厂设置");
     lv_obj_set_style_text_font(ui_System_Reset_Factory_Text, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_System_Track_Refresh_Btn = lv_btn_create(ui_System_Settings_Panel);
+    lv_obj_set_width( ui_System_Track_Refresh_Btn, 106);
+    lv_obj_set_height( ui_System_Track_Refresh_Btn, 50);
+    lv_obj_set_x( ui_System_Track_Refresh_Btn, 70 );
+    lv_obj_set_y( ui_System_Track_Refresh_Btn, 40 );
+    lv_obj_set_align( ui_System_Track_Refresh_Btn, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_System_Track_Refresh_Btn, LV_OBJ_FLAG_PRESS_LOCK );    /// Flags
+    lv_obj_set_style_bg_opa(ui_System_Track_Refresh_Btn, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_System_Track_Refresh_Text = lv_label_create(ui_System_Track_Refresh_Btn);
+    lv_obj_set_width( ui_System_Track_Refresh_Text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_System_Track_Refresh_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_System_Track_Refresh_Text, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_System_Track_Refresh_Text,"曲目刷新");
+    lv_obj_set_style_text_font(ui_System_Track_Refresh_Text, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_System_Settings_Verify_Btn = lv_obj_create(ui_System_Settings_Panel);
     lv_obj_set_width(ui_System_Settings_Verify_Btn, 155);
@@ -1246,6 +1262,24 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_Cancel_Reset_Text,"取消");
     lv_obj_set_style_text_font(ui_Cancel_Reset_Text, &ui_font_LanTingFine22, LV_PART_MAIN| LV_STATE_DEFAULT);
 
+    ui_TrackRefreshMsgPanel = lv_obj_create(ui_System_Settings_Panel);
+    lv_obj_set_width( ui_TrackRefreshMsgPanel, 239);
+    lv_obj_set_height( ui_TrackRefreshMsgPanel, 164);
+    lv_obj_set_x( ui_TrackRefreshMsgPanel, 0 );
+    lv_obj_set_y( ui_TrackRefreshMsgPanel, -13 );
+    lv_obj_set_align( ui_TrackRefreshMsgPanel, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN );   /// Flags
+    lv_obj_clear_flag( ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_TrackRefreshMsgText = lv_label_create(ui_TrackRefreshMsgPanel);
+    lv_obj_set_width( ui_TrackRefreshMsgText, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_TrackRefreshMsgText, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_TrackRefreshMsgText, 0 );
+    lv_obj_set_y( ui_TrackRefreshMsgText, 5 );
+    lv_obj_set_align( ui_TrackRefreshMsgText, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_TrackRefreshMsgText,"正在刷新曲目清单中");
+    lv_obj_set_style_text_font(ui_TrackRefreshMsgText, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
+
     ui_BackToMainWindowBtn8 = lv_imgbtn_create(ui_Settings_Window);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn8, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn8, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
@@ -1257,6 +1291,14 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_clear_flag(ui_BackToMainWindowBtn8, LV_OBJ_FLAG_PRESS_LOCK);      /// Flags
     lv_obj_set_style_img_recolor(ui_BackToMainWindowBtn8, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
     lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn8, 100, LV_PART_MAIN | LV_STATE_PRESSED);
+
+    ui_Disabled_Touch_Range_Settings_window = lv_obj_create(ui_Settings_Window);
+    lv_obj_remove_style_all(ui_Disabled_Touch_Range_Settings_window);
+    lv_obj_set_width(ui_Disabled_Touch_Range_Settings_window, 480);
+    lv_obj_set_height(ui_Disabled_Touch_Range_Settings_window, 480);
+    lv_obj_set_align(ui_Disabled_Touch_Range_Settings_window, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     lv_obj_add_event_cb(ui_Settings_Window, ui_event_Settings_Window, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Settings_Backlight_Btn2, ui_event_Settings_Backlight_Btn2, LV_EVENT_ALL, NULL);
@@ -1280,6 +1322,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_add_event_cb(ui_System_ID_Add_Btn, ui_event_System_ID_Add_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_ID_Dec_Btn, ui_event_System_ID_Dec_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_Reset_Factory_Btn, ui_event_System_Reset_Factory_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_System_Track_Refresh_Btn, ui_event_System_Track_Refresh_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Verify_Reset_Btn, ui_event_Verify_Reset_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Cancel_Reset_Btn, ui_event_Cancel_Reset_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_Settings_Verify_Btn, ui_event_System_Settings_Verify_Btn, LV_EVENT_ALL, NULL);

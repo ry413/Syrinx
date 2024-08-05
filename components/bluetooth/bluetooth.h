@@ -79,7 +79,7 @@ extern EventGroupHandle_t bt_event_group;           // 除了音乐播放相关�
 extern char **utf8_file_names;
 extern int music_files_count;
 extern int bath_files_count;
-    extern int *bath_file_ids;
+extern int *bath_file_ids;
 extern int current_dir_files_count;
 
 extern int current_playing_index;

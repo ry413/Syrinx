@@ -60,7 +60,9 @@
         "freertos.h": "c",
         "locale.h": "c",
         "esp_event.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "task.h": "c",
+        "queue.h": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

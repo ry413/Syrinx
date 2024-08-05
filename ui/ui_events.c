@@ -34,11 +34,13 @@
 static lv_obj_t *musicLists[MAX_LISTS]; // 存储 MusicList 的指针数组
 static int currentListIndex = 0;        // 当前 MusicList 的索引
 static int numMusicLists = 0;           // MusicList 的总数
-static bool playing = false;            // 播放状态
 
+static bool playing = false;            // 播放状态
 static lv_timer_t *progressTimer = NULL;// 音频进度条定时器
 static int currentPlayTime = 0;         // 音频进度条的当前值
 static char current_duration_format[12]; // 当前歌的总时长的格式化hh:mm:ss
+// 当前音量
+int current_volume;
 
 static lv_timer_t *CM2MT_timer = NULL;  // 很牛逼的命名. CM2后等待2s才能MT
 
@@ -63,8 +65,6 @@ uint32_t system_id = 0;
 lv_obj_t * current_screen_header_volume = NULL;
 lv_obj_t * current_screen_volume_component = NULL;
 lv_obj_t * current_screen_on_screen_range = NULL;
-// 当前音量
-int current_volume;
 
 // 播放模式部分
 int shuffle_list_index = 0;  // 当前播放的歌曲的index, 在洗牌数组里的索引
@@ -96,9 +96,11 @@ static TaskHandle_t durationTaskHandle = NULL;
 static TaskHandle_t bluetooth_monitor_state_task_handle = NULL;
 static TaskHandle_t wait_wifi_connect_task_handle = NULL;
 
+char **file_names = NULL;
+
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
 
-static void createMusicItemTask(void *pvParameter);
+static void create_music_item(void);
 static void format_time(int seconds, char *buffer, size_t buffer_size);
 static void update_progress(lv_timer_t *timer);
 static void initProgressBar(void);
@@ -120,10 +122,80 @@ static void CM2MT_timer_callback(lv_timer_t *timer);
 
 //////////////////// 不给lvgl事件直接调用的静态函数 ////////////////////
 
-// 创建Music List及item的任务, 由这里发起get_all_file_names
-static void createMusicItemTask(void *pvParameters) {
-    // 等待获取完文件名
-    get_all_file_names();
+// 创建Music List及item
+static void create_music_item(void) {
+    // 从nvs中读取所有音乐文件名储存于file_names
+    nvs_handle_t nvs_handle;
+    esp_err_t err;
+
+    err = nvs_open("filenames", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("create_music_item", "NVS中未找到filenames命名空间, 需要刷新");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    // 读取字符串数量
+    err = nvs_get_u32(nvs_handle, "music_count", &music_files_count);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_get_u32(nvs_handle, "bath_count", &bath_files_count);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return;
+    }
+
+    // 读取字符串们
+    file_names = (char **)malloc((music_files_count + bath_files_count + 4) * sizeof(char *));
+    if ((file_names == NULL)) {
+        ESP_LOGE("create_music_item", "Failed to allocate memory for file_names");
+        nvs_close(nvs_handle);
+        return;
+    }
+    for (int i = 0; i < music_files_count + bath_files_count + 4; i++) {
+        char key[16];
+        snprintf(key, sizeof(key), "file_%u", (unsigned int)i);
+
+        // 获取字符串长度
+        size_t required_size;
+        err = nvs_get_str(nvs_handle, key, NULL, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE("create_music_item", "Failed to nvs_get_str required_size: [%d]", i);
+            for (size_t j = 0; j < i; j++) {
+                free(file_names[j]);
+            }
+            free(file_names);
+            nvs_close(nvs_handle);
+            return;
+        }
+        
+        file_names[i] = malloc(required_size);
+        if (file_names[i] == NULL) {
+            ESP_LOGE("create_music_item", "Failed to allocate memory for file_names[%d]", i);
+            for (int j = 0; j < i; j++) {
+                free(file_names[j]);
+            }
+            free(file_names);
+            nvs_close(nvs_handle);
+            return;
+        }
+
+        err = nvs_get_str(nvs_handle, key, file_names[i], &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE("create_music_item", "Failed to nvs_get_str: [%d]", i);
+            for (size_t j = 0; j < i; j++) {
+                free(file_names[j]);
+            }
+            free(file_names);
+            nvs_close(nvs_handle);
+            return;
+        }
+    }
+    nvs_close(nvs_handle);
+
+    // 生成列表UI
     musicLists[currentListIndex] = ui_Music_List_create(ui_Music_List_Container);
     numMusicLists++;
     int items_added = 0;
@@ -148,7 +220,7 @@ static void createMusicItemTask(void *pvParameters) {
         lv_img_set_src(icon, &ui_img_35201459);
 
         lv_obj_t *name_label = lv_obj_get_child(obj, 0);
-        lv_label_set_text(name_label, utf8_file_names[i]);
+        lv_label_set_text(name_label, file_names[i]);
 
         items_added++;
     }
@@ -161,7 +233,17 @@ static void createMusicItemTask(void *pvParameters) {
     lv_obj_add_flag(ui_Music_Btn, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(ui_tfcard_States_Icon, LV_OBJ_FLAG_HIDDEN);
 
-    vTaskDelete(NULL);
+    // 收集bath里的歌的id
+    bath_file_ids = (int *)malloc(bath_files_count * sizeof(int));
+    if (bath_file_ids == NULL) {
+        ESP_LOGE("create_music_item", "Failed to allocate memory");
+        return;
+    }
+    for (int i = 0; i < bath_files_count; i++) {
+        // 提取id
+        char id_str[3] = { file_names[music_files_count + i][0], file_names[music_files_count + i][1], '\0' };
+        bath_file_ids[i] = atoi(id_str);
+    }
 }
 // 将秒转为hh:mm:ss
 static void format_time(int seconds, char *buffer, size_t buffer_size) {
@@ -238,7 +320,7 @@ void CM2MT_timer_callback(lv_timer_t * timer) {
     lv_timer_del(CM2MT_timer);
     CM2MT_timer = NULL;
 }
-// 播放指定index的音乐(utf8_file_names里的index)
+// 播放指定index的音乐(file_names里的index)
 void playMusicWithIndex(int index) {
     // 如果浴室在播放, 关掉它
     if (bath_play_task_handle != NULL) {
@@ -249,7 +331,7 @@ void playMusicWithIndex(int index) {
 
     char command[50];
     int id;
-    sscanf(utf8_file_names[index], "%2d", &id);
+    sscanf(file_names[index], "%2d", &id);
     // index从0开始, 文件id从01开始
     snprintf(command, sizeof(command), "AT+AF%02d", id);
     bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
@@ -420,8 +502,10 @@ static void bluetooth_sync_cfg(void) {
 }
 // 开机时同步蓝牙信息的任务
 static void init_bluetooth_settings_task(void *pvParameter) {
-    // 等待音乐列表初始化那边用完蓝牙模块
-    xEventGroupWaitBits(bt_event_group, EVENT_FILE_LIST_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 等待上电返回值被丢掉
+    xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
+    ESP_LOGW("init_bluetooth_settings_task", "这条日志应该在打印蓝牙模块上电返回值之后出现");
+
     bluetooth_sync_cfg();
     vTaskDelete(NULL);
 }
@@ -434,8 +518,8 @@ static void selectNatureSoundTask(void *pvParameter) {
 
     int id = -1;
     for (int i = 0; i < 4; i++) {
-        if(strncmp(utf8_file_names[music_files_count + bath_files_count + i] + 2, sound_name, 3) == 0) {
-            sscanf(utf8_file_names[music_files_count + bath_files_count + i], "%2d", &id);
+        if(strncmp(file_names[music_files_count + bath_files_count + i] + 2, sound_name, 3) == 0) {
+            sscanf(file_names[music_files_count + bath_files_count + i], "%2d", &id);
             break;
         }
     }
@@ -467,7 +551,7 @@ static void selectNatureSoundTask(void *pvParameter) {
 // 除了这个, 还有各个init[****]Settings函数也在initital actions
 void initActions(lv_event_t *e) {
     // 初始化音乐列表
-    xTaskCreate(createMusicItemTask, "createMusicItemTask", 8192, NULL, 5, NULL);
+    create_music_item();
     // 设置待机界面的日期label, 只能写在这了, 毕竟日期就这个地方会显示
     set_date_label(ui_Idle_Window_Date);
     // 设置待机screen, 为了不让多余的文件include "ui_events.h"只好这么写了
@@ -788,7 +872,7 @@ void decBacklightTime(lv_event_t *e) {
     set_backlight_time_to_label(ui_Backlight_Time_Value, backlightTimeLevel);
 }
 // 进入熄屏
-void offScreen(lv_event_t *e) {
+static void offScreen_callback(void *param) {
     printf("Sleep\n");
     // 关闭背光
     set_backlight(0);
@@ -799,13 +883,21 @@ void offScreen(lv_event_t *e) {
     // 启用"从熄屏中醒来"的可触摸区域
     lv_obj_clear_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
 }
+void offScreen(lv_event_t *e) {
+    // 确保在主线程中执行 UI 更新
+    lv_async_call(offScreen_callback, NULL);
+}
 // 从熄屏中醒来
-void onScreen(lv_event_t *e) {
+static void onScreen_callback(void *param) {
     printf("Wakeup\n");
     // 恢复背光
     set_backlight(backlight_level);
     lv_obj_add_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
     // reset_backlight_timer();
+}
+void onScreen(lv_event_t *e) {
+    // 确保在主线程中执行 UI 更新
+    lv_async_call(onScreen_callback, NULL);
 }
 // 从待机界面回到主界面
 void idleBackToMainWindow(lv_event_t *e) {
@@ -1203,15 +1295,15 @@ void decID(lv_event_t *e) {
     lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", id);
 }
 // 确认恢复出厂设置
-void VerifyResetFactory(lv_event_t * e)
+void verifyResetFactory(lv_event_t *e)
 {
     // 擦除 NVS
     esp_err_t err = nvs_flash_erase();
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "NVS擦除失败: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "NVS擦除失败: %s", esp_err_to_name(err));
         return;
     } else {
-        ESP_LOGI("VerifyResetFactory", "NVS擦除成功");
+        ESP_LOGI("verifyResetFactory", "NVS擦除成功");
     }
     // 初始化nvs
     err = nvs_flash_init();
@@ -1220,9 +1312,9 @@ void VerifyResetFactory(lv_event_t * e)
         err = nvs_flash_init();
     }
     if (err == ESP_OK) {
-        ESP_LOGI("VerifyResetFactory", "NVS初始化成功");
+        ESP_LOGI("verifyResetFactory", "NVS初始化成功");
     } else {
-        ESP_LOGE("VerifyResetFactory", "NVS初始化失败: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "NVS初始化失败: %s", esp_err_to_name(err));
         return;
     }
 
@@ -1231,24 +1323,24 @@ void VerifyResetFactory(lv_event_t * e)
     // 重置背光设置
     err = nvs_open("BLSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
     uint32_t new_bk_level = 3;
     uint32_t new_bk_time_level = 3;
     err = nvs_set_u32(nvs_handle, "level", new_bk_level);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set default value for 'level': %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to set default value for 'level': %s", esp_err_to_name(err));
     }
     err = nvs_set_u32(nvs_handle, "time", new_bk_time_level);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set default value for 'time': %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to set default value for 'time': %s", esp_err_to_name(err));
     }
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
     } else {
-        ESP_LOGI("VerifyResetFactory", "背光设置重置完成");
+        ESP_LOGI("verifyResetFactory", "背光设置重置完成");
     }
     nvs_close(nvs_handle);
 
@@ -1262,7 +1354,7 @@ void VerifyResetFactory(lv_event_t * e)
     // 重置声音设置
     err = nvs_open("VolumeCfg", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
     uint32_t new_default_volume = 10;
@@ -1270,21 +1362,21 @@ void VerifyResetFactory(lv_event_t * e)
     uint32_t new_bath_channel = 3; 
     err = nvs_set_u32(nvs_handle, "defaultVolume", new_default_volume);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set defaultVolume: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to set defaultVolume: %s", esp_err_to_name(err));
     }
     err = nvs_set_u32(nvs_handle, "maxVolume", new_max_volume);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set maxVolume: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to set maxVolume: %s", esp_err_to_name(err));
     }
     err = nvs_set_u32(nvs_handle, "bathChannel", new_bath_channel);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set bathChannel: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to set bathChannel: %s", esp_err_to_name(err));
     }
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
     } else {
-        ESP_LOGI("VerifyResetFactory", "声音设置重置完成");
+        ESP_LOGI("verifyResetFactory", "声音设置重置完成");
     }
     nvs_close(nvs_handle);
 
@@ -1298,19 +1390,19 @@ void VerifyResetFactory(lv_event_t * e)
     // 重置ID
     err = nvs_open("SystemSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
     uint32_t new_id = 0;
     err = nvs_set_u32(nvs_handle, "ID", new_id);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set default ID: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to set default ID: %s", esp_err_to_name(err));
     }
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
     } else {
-        ESP_LOGI("VerifyResetFactory", "ID重置完成");
+        ESP_LOGI("verifyResetFactory", "ID重置完成");
     }
     nvs_close(nvs_handle);
     system_id = new_id;
@@ -1320,7 +1412,7 @@ void VerifyResetFactory(lv_event_t * e)
     // 重置WiFi设置
     err = nvs_open("WifiCfg", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
     uint8_t new_enabled = 0;
@@ -1328,27 +1420,27 @@ void VerifyResetFactory(lv_event_t * e)
     char new_wifi_password[] = "12345678";
     err = nvs_set_u8(nvs_handle, "enabled", new_enabled);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set default value for 'enabled': %s", esp_err_to_name(err));
+        ESP_LOGE("verifyResetFactory", "Failed to set default value for 'enabled': %s", esp_err_to_name(err));
         nvs_close(nvs_handle);
         return;
     }
     err = nvs_set_str(nvs_handle, "name", new_wifi_name);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set name in NVS");
+        ESP_LOGE("verifyResetFactory", "Failed to set name in NVS");
         nvs_close(nvs_handle);
         return;
     }
     err = nvs_set_str(nvs_handle, "password", new_wifi_password);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to set password in NVS");
+        ESP_LOGE("verifyResetFactory", "Failed to set password in NVS");
         nvs_close(nvs_handle);
         return;
     }
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
-        ESP_LOGE("VerifyResetFactory", "Failed to commit NVS changes");
+        ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes");
     } else {
-        ESP_LOGI("VerifyResetFactory", "WIFI设置重置完成");
+        ESP_LOGI("verifyResetFactory", "WIFI设置重置完成");
     }
     nvs_close(nvs_handle);
 
@@ -1370,7 +1462,7 @@ void VerifyResetFactory(lv_event_t * e)
     bluetoothPassword = "0000";
     lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetoothPassword);
     xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
-    ESP_LOGI("VerifyResetFactory", "蓝牙设置重置完成");
+    ESP_LOGI("verifyResetFactory", "蓝牙设置重置完成");
 
 
     // 重置时间设置(不操作nvs)
@@ -1379,13 +1471,24 @@ void VerifyResetFactory(lv_event_t * e)
     lv_textarea_set_text(ui_Date_Setting_Year2, "2022");
     lv_textarea_set_text(ui_Date_Setting_Month2, "04");
     lv_textarea_set_text(ui_Date_Setting_Day2, "13");
-    ESP_LOGI("VerifyResetFactory", "时间设置重置完成");
+    ESP_LOGI("verifyResetFactory", "时间设置重置完成");
 
 }
 // 取消恢复出厂设置
-void CancelResetFactory(lv_event_t * e)
+void cancelResetFactory(lv_event_t *e)
 {
     lv_obj_add_flag(ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN);
+}
+static void track_refresh_task(void *pvParameters) {
+    get_all_file_names();
+    xEventGroupWaitBits(bt_event_group, EVENT_FILE_LIST_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+    lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN);
+    vTaskDelete(NULL);
+}
+// 曲目刷新
+void track_refresh(lv_event_t *e) {
+    xTaskCreate(track_refresh_task, "track_refresh_task", 8192, NULL, 5, NULL);
 }
 
 // ******************** Wifi相关 ********************
@@ -1574,13 +1677,24 @@ void saveWifiSetting(lv_event_t *e) {
         wifi_disconnect();
     }
 }
-// 给wifi.c调用的修改图标的函数
-void setWifiStateIcon(bool state) {
+static void update_wifi_icon_callback(void *param) {
+    bool state = *((bool *)param);
     if (state) {
         lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
     } else {
         lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
     }
+    free(param);
+}
+// 给wifi.c调用的修改图标的函数
+void setWifiStateIcon(bool state) {
+    bool *state_param = (bool *)malloc(sizeof(bool));
+    if (state_param == NULL) {
+        ESP_LOGE("setWifiStateIcon", "Failed to allocate memory");
+        return;
+    }
+    *state_param = state;
+    lv_async_call(update_wifi_icon_callback, state_param);
 }
 
 // ******************** 音乐相关 ********************
@@ -1637,7 +1751,7 @@ void playSelectedMusic(lv_event_t *e) {
     int cmp_id;
     sscanf(track_title, "%2d", &id);
     for (int i = 0; i < music_files_count; i++) {
-        sscanf(utf8_file_names[i], "%2d", &cmp_id);
+        sscanf(file_names[i], "%2d", &cmp_id);
         if(cmp_id == id) {
             current_playing_index = i;
         }
@@ -1662,7 +1776,7 @@ void playSelectedMusic(lv_event_t *e) {
     xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
 }
 // 下一首音乐
-void nextTrack(lv_event_t *e) {
+static void nextTrack_callback(void *param) {
     changeMusicUpdateUI();
     char *track_title;
 
@@ -1685,18 +1799,18 @@ void nextTrack(lv_event_t *e) {
             }
             current_playing_index = shuffle_order[shuffle_list_index];
             break;
-        default:
-            ESP_LOGE("nextTrack", "我干什么要写这种东西?");
-            break;
     }
-    track_title = utf8_file_names[current_playing_index];
+    track_title = file_names[current_playing_index];
     lv_label_set_text(ui_Track_Title, track_title + 2);
     lv_label_set_text(ui_Track_Artist, "null");
     playMusicWithIndex(current_playing_index);
     xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
 }
+void nextTrack(lv_event_t *e) {
+    lv_async_call(nextTrack_callback, NULL);
+}
 // 上一首音乐
-void prevTrack(lv_event_t *e) {
+static void prevTrack_callback(void *param) {
     changeMusicUpdateUI();
     char *track_title;
 
@@ -1719,18 +1833,19 @@ void prevTrack(lv_event_t *e) {
             }
             current_playing_index = shuffle_order[shuffle_list_index];
             break;
-        default:
-            ESP_LOGE("nextTrack", "我干什么要写这种东西?");
-            break;
     }
-    track_title = utf8_file_names[current_playing_index];
+    track_title = file_names[current_playing_index];
     lv_label_set_text(ui_Track_Title, track_title + 2);
     lv_label_set_text(ui_Track_Artist, "null");
     playMusicWithIndex(current_playing_index);
     xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
 }
+void prevTrack(lv_event_t *e) {
+    // 确保在主线程中执行 UI 更新
+    lv_async_call(prevTrack_callback, NULL);
+}
 // 播放/暂停
-void playPause(lv_event_t *e) {
+static void playPause_callback(void *param) {
     bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE_TOGGLE);
     xEventGroupWaitBits(music_event_group, EVENT_PLAY_PAUSE_TOGGLE, pdTRUE, pdFALSE, portMAX_DELAY);
     // 如果是在播放音乐库音乐就修改UI
@@ -1748,8 +1863,11 @@ void playPause(lv_event_t *e) {
             printf("播放\n");
             playing = true;
         }
-
     }
+}
+void playPause(lv_event_t *e) {
+    // 确保在主线程中执行 UI 更新
+    lv_async_call(playPause_callback, NULL);
 }
 // 切换播放模式
 void changePlayMode(lv_event_t *e) {
