@@ -7,11 +7,20 @@
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
+struct wifi_config_params {
+    char ssid[32];
+    char password[64];
+};
+
+extern bool wifi_is_connected;
+
+extern uint8_t wifi_enabled;
 extern char *wifi_name;
 extern char *wifi_password;
 
-void init_wifi_task(void *pvParameter);
-EventGroupHandle_t get_wifi_event_group(void);
-void wifi_disconnect(void);
+extern EventGroupHandle_t wifi_event_group;
 
+void wifi_init(void);
+void start_wifi_connect_task(const char* ssid, const char* password);
+void wifi_disconnect(void);
 #endif // WIFI_H

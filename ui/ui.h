@@ -310,7 +310,6 @@ extern lv_obj_t * ui_Settings_System_Icon;
 extern lv_obj_t * ui_Settings_System_Decora_Icon;
 void ui_event_Settings_System_Btn(lv_event_t * e);
 extern lv_obj_t * ui_Settings_System_Btn;
-
 extern lv_obj_t * ui_System_Settings_Panel;
 extern lv_obj_t * ui_System_Version_Text;
 extern lv_obj_t * ui_System_Parting_Line1;
@@ -325,19 +324,19 @@ void ui_event_System_ID_Add_Btn(lv_event_t * e);
 extern lv_obj_t * ui_System_ID_Add_Btn;
 extern lv_obj_t * ui_System_ID_Add_Icon;
 extern lv_obj_t * ui_System_Parting_Line2;
-
-// danger
-// extern lv_obj_t * ui_Backlight_Time_Settings;
-// extern lv_obj_t * ui_Backlight_Time_Text;
-// extern lv_obj_t * ui_Backlight_Time_Panel;
-// extern lv_obj_t * ui_Backlight_Time_Value;
-// void ui_event_Backlight_Time_Dec_Btn(lv_event_t * e);
-// extern lv_obj_t * ui_Backlight_Time_Dec_Btn;
-// extern lv_obj_t * ui_Backlight_Time_Dec_Icon;
-// extern lv_obj_t * ui_Backlight_Time_Add_Btn;
-// void ui_event_Backlight_Time_Add_Btn(lv_event_t * e);
-// extern lv_obj_t * ui_Backlight_Time_Add_Icon;
-
+void ui_event_System_Reset_Factory_Btn( lv_event_t * e);
+extern lv_obj_t *ui_System_Reset_Factory_Btn;
+extern lv_obj_t *ui_System_Reset_Factory_Text;
+extern lv_obj_t *ui_verify;
+extern lv_obj_t *ui_cancel;
+extern lv_obj_t *ui_Rellay_Panel;
+extern lv_obj_t *ui_Reset_Factory_Text;
+void ui_event_Verify_Reset_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Verify_Reset_Btn;
+extern lv_obj_t *ui_Verify_Reset_Text;
+void ui_event_Cancel_Reset_Btn( lv_event_t * e);
+extern lv_obj_t *ui_Cancel_Reset_Btn;
+extern lv_obj_t *ui_Cancel_Reset_Text;
 void ui_event_System_Settings_Verify_Btn(lv_event_t * e);
 extern lv_obj_t * ui_System_Settings_Verify_Btn;
 extern lv_obj_t * ui_System_Settings_Verify_Btn_Text;

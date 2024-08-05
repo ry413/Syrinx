@@ -359,9 +359,19 @@ void ui_event_System_ID_Add_Btn(lv_event_t * e);
 lv_obj_t * ui_System_ID_Add_Btn;
 lv_obj_t * ui_System_ID_Add_Icon;
 lv_obj_t * ui_System_Parting_Line2;
-
-
-
+void ui_event_System_Reset_Factory_Btn( lv_event_t * e);
+lv_obj_t *ui_System_Reset_Factory_Btn;
+lv_obj_t *ui_System_Reset_Factory_Text;
+lv_obj_t *ui_verify;
+lv_obj_t *ui_cancel;
+lv_obj_t *ui_Rellay_Panel;
+lv_obj_t *ui_Reset_Factory_Text;
+void ui_event_Verify_Reset_Btn( lv_event_t * e);
+lv_obj_t *ui_Verify_Reset_Btn;
+lv_obj_t *ui_Verify_Reset_Text;
+void ui_event_Cancel_Reset_Btn( lv_event_t * e);
+lv_obj_t *ui_Cancel_Reset_Btn;
+lv_obj_t *ui_Cancel_Reset_Text;
 void ui_event_System_Settings_Verify_Btn(lv_event_t * e);
 lv_obj_t * ui_System_Settings_Verify_Btn;
 lv_obj_t * ui_System_Settings_Verify_Btn_Text;
@@ -1196,11 +1206,6 @@ void ui_event_Wifi_Switch2(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_state_modify(ui_Wifi_Switch_Switch2, LV_STATE_CHECKED, _UI_MODIFY_STATE_TOGGLE);
-        _ui_state_modify(ui_Wifi_Name_Input, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
-        _ui_state_modify(ui_Wifi_Enter_Btn, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
-        _ui_state_modify(ui_Wifi_Password_Input, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
-        _ui_state_modify(ui_Wifi_Keyboard, LV_STATE_DISABLED, _UI_MODIFY_STATE_TOGGLE);
-        saveWifiSwitchState(e);
     }
 }
 void ui_event_Wifi_Enter_Btn(lv_event_t * e)
@@ -1235,7 +1240,32 @@ void ui_event_System_ID_Add_Btn(lv_event_t * e)
         addID(e);
     }
 }
-// danger!
+void ui_event_System_Reset_Factory_Btn( lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if ( event_code == LV_EVENT_SHORT_CLICKED) {
+        _ui_flag_modify(ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+    }
+}
+void ui_event_Verify_Reset_Btn( lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if ( event_code == LV_EVENT_SHORT_CLICKED) {
+        VerifyResetFactory( e );
+        _ui_flag_modify(ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
+void ui_event_Cancel_Reset_Btn( lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if ( event_code == LV_EVENT_SHORT_CLICKED) {
+        CancelResetFactory( e );
+        _ui_flag_modify(ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
 void ui_event_System_Settings_Verify_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);

@@ -5,47 +5,57 @@
 #include "freertos/event_groups.h"
 #include "esp_log.h"
 #include "string.h"
+#include "../timesync/timesync.h"
+#include "../../ui/ui_events.h"
 
-#define EXAMPLE_ESP_MAXIMUM_RETRY  5
+
+#define MAX_RECONNECT_ATTEMPTS  5
 
 static const char *TAG = "wifi_station";
-static int s_retry_num = 0;
-static EventGroupHandle_t s_wifi_event_group;
+EventGroupHandle_t wifi_event_group = NULL;
+
+bool wifi_is_connected = false;
+uint8_t wifi_enabled = 0;
 char *wifi_name = "12345678";
 char *wifi_password = "12345678";
+static TaskHandle_t wifi_connect_task_handle = NULL;
+static bool should_reconnect = true;        // 断开后是否重连
+
+static int reconnect_attempts = 0;      // 重连次数
+
+
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY) {
+        reconnect_attempts++;
+        if (should_reconnect && reconnect_attempts <= MAX_RECONNECT_ATTEMPTS) {
+            ESP_LOGI(TAG, "WiFi连接中: (%d/%d)", reconnect_attempts, MAX_RECONNECT_ATTEMPTS);
             esp_wifi_connect();
-            s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
+            xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
         } else {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+            if (reconnect_attempts >= MAX_RECONNECT_ATTEMPTS) {
+                ESP_LOGE(TAG, "已达到最大重连次数, 停止连接");
+                xEventGroupSetBits(wifi_event_group, WIFI_FAIL_BIT);
+                should_reconnect = false;
+            } else {
+                ESP_LOGI(TAG, "WiFi已断开");
+            }
         }
-        ESP_LOGI(TAG,"connect to the AP fail");
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        reconnect_attempts = 0;
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-        s_retry_num = 0;
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        ESP_LOGI(TAG, "got ip: " IPSTR, IP2STR(&event->ip_info.ip));
+        xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     }
 }
-
-static void wifi_init_sta(void) {
-    
-    // ESP_LOGI("WIFI INIT1: ", "Free internal memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-    // ESP_LOGI("WIFI INIT1: ", "Free DMA memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_DMA));
-    // ESP_LOGI("WIFI INIT1: ", "Free SPIRAM memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-
-    s_wifi_event_group = xEventGroupCreate();
-
+void wifi_init(void) {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
 
+    // 初始化 WiFi 配置
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     cfg.static_rx_buf_num = 10;  // 设置静态接收缓冲区数量
     cfg.dynamic_rx_buf_num = 32; // 设置动态接收缓冲区数量
@@ -54,10 +64,31 @@ static void wifi_init_sta(void) {
 
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    esp_event_handler_instance_t instance_any_id;
-    esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+    wifi_event_group = xEventGroupCreate();
+    ESP_LOGI(TAG, "WiFi initialized.");
+}
+static void wifi_connect_task(void *pvParameter) {
+    struct wifi_config_params* params = (struct wifi_config_params*) pvParameter;
+
+    // 检查 WiFi 是否已初始化
+    wifi_mode_t mode;
+    esp_err_t err = esp_wifi_get_mode(&mode);
+
+    if (err == ESP_ERR_WIFI_NOT_INIT) {
+        ESP_LOGE(TAG, "WiFi is not initialized.");
+        free(params);
+        vTaskDelete(NULL);
+        return;
+    } else if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to get WiFi mode: %s", esp_err_to_name(err));
+        free(params);
+        vTaskDelete(NULL);
+        return;
+    }
 
     wifi_config_t wifi_config = {
         .sta = {
@@ -71,55 +102,76 @@ static void wifi_init_sta(void) {
             },
         },
     };
-    // 使用 strncpy 确保字符串被正确复制
-    strncpy((char *)wifi_config.sta.ssid, wifi_name, sizeof(wifi_config.sta.ssid) - 1);
-    strncpy((char *)wifi_config.sta.password, wifi_password, sizeof(wifi_config.sta.password) - 1);
 
-    // 确保字符串以 '\0' 结尾
-    wifi_config.sta.ssid[sizeof(wifi_config.sta.ssid) - 1] = '\0';
-    wifi_config.sta.password[sizeof(wifi_config.sta.password) - 1] = '\0';
+    snprintf((char *)wifi_config.sta.ssid, sizeof(wifi_config.sta.ssid), "%s", params->ssid);
+    snprintf((char *)wifi_config.sta.password, sizeof(wifi_config.sta.password), "%s", params->password);
 
-    
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_stop());
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
+    should_reconnect = true;
+    reconnect_attempts = 0;
     
-    // ESP_LOGI("WIFI INIT2: ", "Free internal memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-    // ESP_LOGI("WIFI INIT2: ", "Free DMA memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_DMA));
-    // ESP_LOGI("WIFI INIT2: ", "Free SPIRAM memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-
-
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+    EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdTRUE, pdFALSE, portMAX_DELAY);
 
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", wifi_name, wifi_password);
+        ESP_LOGI(TAG, "WiFi已连接 SSID:%s", params->ssid);
+        wifi_is_connected = true;
+        setWifiStateIcon(true);
+        obtain_time();
+        srand(global_time);
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", wifi_name, wifi_password);
+        ESP_LOGW(TAG, "WiFi未连接 SSID:%s", params->ssid);
+        wifi_is_connected = false;
+        setWifiStateIcon(false);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
+        wifi_is_connected = false;
     }
 
-    // ESP_LOGI("WIFI INIT3: ", "Free internal memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-    // ESP_LOGI("WIFI INIT3: ", "Free DMA memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_DMA));
-    // ESP_LOGI("WIFI INIT3: ", "Free SPIRAM memory after allocation: %d bytes", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-
-}
-
-EventGroupHandle_t get_wifi_event_group(void) {
-    return s_wifi_event_group;
-}
-
-void init_wifi_task(void *pvParameter) {
-    wifi_init_sta();
+    free(params);
+    wifi_connect_task_handle = NULL;
     vTaskDelete(NULL);
 }
 
+void start_wifi_connect_task(const char* ssid, const char* password) {
+    if (wifi_is_connected) {
+        ESP_LOGI(TAG, "WIFI已连接, 拒绝重复连接");
+        return;
+    }
+    if (wifi_connect_task_handle != NULL) {
+        vTaskDelete(wifi_connect_task_handle);
+        wifi_connect_task_handle = NULL;
+        ESP_LOGW(TAG, "WiFi正在连接, 已重新开始连接");
+    }
+    struct wifi_config_params* params = malloc(sizeof(struct wifi_config_params));
+    if (params == NULL) {
+        ESP_LOGE(TAG, "Failed to allocate memory for wifi_config_params");
+        return;
+    }
+
+    snprintf(params->ssid, sizeof(params->ssid), "%s", ssid);
+    snprintf(params->password, sizeof(params->password), "%s", password);
+    assert(wifi_connect_task_handle == NULL);
+    xTaskCreate(&wifi_connect_task, "wifi_connect_task", 4096, (void*) params, 5, &wifi_connect_task_handle);
+}
+
 void wifi_disconnect(void) {
+    if (wifi_is_connected == false) {
+        ESP_LOGI(TAG, "WIFI未连接, 拒绝断开");
+        return;
+    }
+    should_reconnect = false;
     esp_err_t err = esp_wifi_disconnect();
     if (err == ESP_OK) {
         ESP_LOGI(TAG, "WiFi disconnected successfully.");
+        wifi_is_connected = false;
+        xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
+        if (wifi_connect_task_handle != NULL) {
+            vTaskDelete(wifi_connect_task_handle);
+            wifi_connect_task_handle = NULL;
+        }
     } else {
         ESP_LOGE(TAG, "WiFi disconnection failed: %s", esp_err_to_name(err));
     }

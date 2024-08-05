@@ -63,7 +63,7 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_obj_set_x(ui_Bluetooth_Name_Input2, 46);
     lv_obj_set_y(ui_Bluetooth_Name_Input2, -3);
     lv_obj_set_align(ui_Bluetooth_Name_Input2, LV_ALIGN_CENTER);
-    lv_textarea_set_max_length(ui_Bluetooth_Name_Input2, 30);
+    lv_textarea_set_max_length(ui_Bluetooth_Name_Input2, 12);
     lv_textarea_set_text(ui_Bluetooth_Name_Input2, "bt-7274");
     lv_textarea_set_placeholder_text(ui_Bluetooth_Name_Input2, "Name");
     lv_textarea_set_one_line(ui_Bluetooth_Name_Input2, true);

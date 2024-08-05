@@ -78,16 +78,19 @@ void obtain_time(void) {
     struct tm timeinfo = { 0 };
     int retry = 0;
     const int retry_count = 20;
-    // 放个IP
-    ip_addr_t *addr = NULL;
-    ipaddr_aton("111.230.50.201", addr);
-    esp_sntp_setserver(0, addr);
+    
+    if (esp_sntp_enabled()) {
+        // 放个IP
+        ip_addr_t *addr = NULL;
+        ipaddr_aton("111.230.50.201", addr);
+        esp_sntp_setserver(0, addr);
 
-    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    for (int i = 0; i < num_ntp_servers; ++i) {
-        esp_sntp_setservername(i, ntp_servers[i]);
+        esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+        for (int i = 0; i < num_ntp_servers; ++i) {
+            esp_sntp_setservername(i, ntp_servers[i]);
+        }
+        esp_sntp_init();
     }
-    esp_sntp_init();
 
     while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
         ESP_LOGI("obtainTime", "等待系统时间设置... (%d/%d) 正在尝试连接服务器: %s", retry, retry_count, ntp_servers[retry % num_ntp_servers]);

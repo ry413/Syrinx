@@ -589,12 +589,15 @@ void app_main() {
     } else {
         ESP_LOGE(TAG, "NVS初始化失败: %s", esp_err_to_name(ret));
     }
-    xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096, NULL, 2, NULL, 1);
-    xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
+    // Wifi
+    wifi_init();
     // 蓝牙
     bluetooth_init();
     xTaskCreate(bluetooth_monitor_task, "bluetooth_monitor_task", 8192, NULL, 3, NULL);
     // rs485
     rs485_init();
     xTaskCreate(rs485_monitor_task, "rs485_monitor_task", 4096, NULL, 5, NULL);
+
+    xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096, NULL, 6, NULL, 1);
+    xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
 }

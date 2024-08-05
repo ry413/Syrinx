@@ -1116,10 +1116,33 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_add_flag(ui_System_ID_Add_Icon, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_System_ID_Add_Icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_zoom(ui_System_ID_Add_Icon, 300);
-    
-    // danger
-    // ui_System_Reset_Factory_Btn
-    // ui_System_Reset_Factory_Text
+
+    ui_System_Parting_Line2 = lv_obj_create(ui_System_Settings_Panel);
+    lv_obj_set_width( ui_System_Parting_Line2, 300);
+    lv_obj_set_height( ui_System_Parting_Line2, 2);
+    lv_obj_set_x( ui_System_Parting_Line2, -1 );
+    lv_obj_set_y( ui_System_Parting_Line2, -4 );
+    lv_obj_set_align( ui_System_Parting_Line2, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_System_Parting_Line2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_set_style_border_color(ui_System_Parting_Line2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_border_opa(ui_System_Parting_Line2, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_System_Reset_Factory_Btn = lv_btn_create(ui_System_Settings_Panel);
+    lv_obj_set_width( ui_System_Reset_Factory_Btn, 106);
+    lv_obj_set_height( ui_System_Reset_Factory_Btn, 50);
+    lv_obj_set_x( ui_System_Reset_Factory_Btn, 0 );
+    lv_obj_set_y( ui_System_Reset_Factory_Btn, 35 );
+    lv_obj_set_align( ui_System_Reset_Factory_Btn, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_System_Reset_Factory_Btn, LV_OBJ_FLAG_PRESS_LOCK );    /// Flags
+    lv_obj_set_style_bg_color(ui_System_Reset_Factory_Btn, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_bg_opa(ui_System_Reset_Factory_Btn, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_System_Reset_Factory_Text = lv_label_create(ui_System_Reset_Factory_Btn);
+    lv_obj_set_width( ui_System_Reset_Factory_Text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_System_Reset_Factory_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_System_Reset_Factory_Text, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_System_Reset_Factory_Text,"恢复出厂设置");
+    lv_obj_set_style_text_font(ui_System_Reset_Factory_Text, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_System_Settings_Verify_Btn = lv_obj_create(ui_System_Settings_Panel);
     lv_obj_set_width(ui_System_Settings_Verify_Btn, 155);
@@ -1175,6 +1198,53 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_System_Settings_Cancel_Btn_Text, "取消");
     lv_obj_set_style_text_font(ui_System_Settings_Cancel_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_Rellay_Panel = lv_obj_create(ui_System_Settings_Panel);
+    lv_obj_set_width( ui_Rellay_Panel, 300);
+    lv_obj_set_height( ui_Rellay_Panel, 283);
+    lv_obj_set_align( ui_Rellay_Panel, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_Rellay_Panel, LV_OBJ_FLAG_HIDDEN );   /// Flags
+    lv_obj_clear_flag( ui_Rellay_Panel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_Reset_Factory_Text = lv_label_create(ui_Rellay_Panel);
+    lv_obj_set_width( ui_Reset_Factory_Text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_Reset_Factory_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_Reset_Factory_Text, -6 );
+    lv_obj_set_y( ui_Reset_Factory_Text, -80 );
+    lv_obj_set_align( ui_Reset_Factory_Text, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_Reset_Factory_Text,"恢复出厂设置?");
+    lv_obj_set_style_text_font(ui_Reset_Factory_Text, &ui_font_LanTingFine22, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_Verify_Reset_Btn = lv_btn_create(ui_Rellay_Panel);
+    lv_obj_set_width( ui_Verify_Reset_Btn, 143);
+    lv_obj_set_height( ui_Verify_Reset_Btn, 60);
+    lv_obj_set_x( ui_Verify_Reset_Btn, -75 );
+    lv_obj_set_y( ui_Verify_Reset_Btn, 15 );
+    lv_obj_set_align( ui_Verify_Reset_Btn, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_Verify_Reset_Btn, LV_OBJ_FLAG_PRESS_LOCK );    /// Flags
+    lv_obj_set_style_bg_color(ui_Verify_Reset_Btn, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_bg_opa(ui_Verify_Reset_Btn, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_Verify_Reset_Text = lv_label_create(ui_Verify_Reset_Btn);
+    lv_obj_set_width( ui_Verify_Reset_Text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_Verify_Reset_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_Verify_Reset_Text, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_Verify_Reset_Text,"确认");
+    lv_obj_set_style_text_font(ui_Verify_Reset_Text, &ui_font_LanTingFine22, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_Cancel_Reset_Btn = lv_btn_create(ui_Rellay_Panel);
+    lv_obj_set_width( ui_Cancel_Reset_Btn, 143);
+    lv_obj_set_height( ui_Cancel_Reset_Btn, 60);
+    lv_obj_set_x( ui_Cancel_Reset_Btn, 75 );
+    lv_obj_set_y( ui_Cancel_Reset_Btn, 15 );
+    lv_obj_set_align( ui_Cancel_Reset_Btn, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_Cancel_Reset_Btn, LV_OBJ_FLAG_PRESS_LOCK );    /// Flags
+
+    ui_Cancel_Reset_Text = lv_label_create(ui_Cancel_Reset_Btn);
+    lv_obj_set_width( ui_Cancel_Reset_Text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_Cancel_Reset_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_Cancel_Reset_Text, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_Cancel_Reset_Text,"取消");
+    lv_obj_set_style_text_font(ui_Cancel_Reset_Text, &ui_font_LanTingFine22, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_BackToMainWindowBtn8 = lv_imgbtn_create(ui_Settings_Window);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn8, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
@@ -1209,7 +1279,9 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Settings_System_Btn, ui_event_Settings_System_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_ID_Add_Btn, ui_event_System_ID_Add_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_ID_Dec_Btn, ui_event_System_ID_Dec_Btn, LV_EVENT_ALL, NULL);
-    // danger
+    lv_obj_add_event_cb(ui_System_Reset_Factory_Btn, ui_event_System_Reset_Factory_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Verify_Reset_Btn, ui_event_Verify_Reset_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Cancel_Reset_Btn, ui_event_Cancel_Reset_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_Settings_Verify_Btn, ui_event_System_Settings_Verify_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_Settings_Cancel_Btn, ui_event_System_Settings_Cancel_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BackToMainWindowBtn8, ui_event_BackToMainWindowBtn8, LV_EVENT_ALL, NULL);

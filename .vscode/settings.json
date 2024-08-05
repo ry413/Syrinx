@@ -56,7 +56,11 @@
         "cstdlib": "c",
         "stdbool.h": "c",
         "touch.h": "c",
-        "thread": "c"
+        "thread": "c",
+        "freertos.h": "c",
+        "locale.h": "c",
+        "esp_event.h": "c",
+        "string.h": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

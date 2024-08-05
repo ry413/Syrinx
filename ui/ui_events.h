@@ -73,7 +73,8 @@ void saveSystemSettings(lv_event_t * e);
 void cancelSaveSystemSettings(lv_event_t * e);
 void addID(lv_event_t *e);
 void decID(lv_event_t *e);
-void saveWifiSwitchState(lv_event_t * e);
+void VerifyResetFactory(lv_event_t * e);
+void CancelResetFactory(lv_event_t * e);
 void saveWifiSetting(lv_event_t * e);
 void changePlayMode(lv_event_t * e);
 void changePlayStyle(lv_event_t * e);
@@ -86,10 +87,11 @@ void offScreen(lv_event_t * e);
 void playSelectedMusic(lv_event_t * e);
 void musicPlayScrLoaded(lv_event_t * e);
 
-
+void setWifiStateIcon(bool state);
 
 void createInactiveTimer(void);
 void delInactiveTimer(void);
+
 // 暴露给485那边用, 天呐, 有生之年必须把这些封装成music组件
 lv_obj_t * get_ui_main_window(void);
 lv_obj_t * get_ui_music_window(void);
@@ -97,8 +99,6 @@ lv_obj_t * get_ui_music_play_window(void);
 lv_obj_t * get_ui_nature_sound_window(void);
 lv_obj_t * get_ui_disabled_touch_range(void);
 lv_obj_t * get_ui_bluetooth_window(void);
-void play_track(void);
-void stop_track(void);
 
 
 #ifdef __cplusplus
