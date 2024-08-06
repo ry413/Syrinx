@@ -250,7 +250,7 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_obj_set_x(ui_Nature_Header_Volume, 187);
     lv_obj_set_y(ui_Nature_Header_Volume, -216);
 
-    ui_Nature_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Nature_Sound_Window);
+    ui_Nature_Window_Volume_adjust = ui_VolumeAdjustDisabledRange_create(ui_Nature_Sound_Window);
     lv_obj_set_x(ui_Nature_Window_Volume_adjust, 0);
     lv_obj_set_y(ui_Nature_Window_Volume_adjust, 0);
     lv_obj_add_flag(ui_Nature_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);

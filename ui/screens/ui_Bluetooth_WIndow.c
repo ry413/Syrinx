@@ -147,7 +147,7 @@ void ui_Bluetooth_WIndow_screen_init(void)
     lv_obj_set_x(ui_Bluetooth_Header_Volume, 187);
     lv_obj_set_y(ui_Bluetooth_Header_Volume, -216);
 
-    ui_Bluetooth_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Bluetooth_WIndow);
+    ui_Bluetooth_Window_Volume_adjust = ui_VolumeAdjustDisabledRange_create(ui_Bluetooth_WIndow);
     lv_obj_set_x(ui_Bluetooth_Window_Volume_adjust, 0);
     lv_obj_set_y(ui_Bluetooth_Window_Volume_adjust, 0);
     lv_obj_add_flag(ui_Bluetooth_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);

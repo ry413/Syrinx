@@ -3,7 +3,7 @@
 // LVGL version: 8.3.6
 // Project name: SquareLine_Project
 
-// 很明显, 有许多鬼命名, 多亏了s[]uareline导出的代码的格式与我代码风格的冲突
+// 很明显, 有许多鬼命名, 多亏了squareline导出的代码的格式与我代码风格的冲突
 
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
@@ -18,16 +18,17 @@
 #include "backlight.h"
 #include "bluetooth.h"
 #include "driver/uart.h"
-// #include "timesync.h"
+
 #include "ui.h"
 #include "ui_comp_music_item.h"
 #include "wifi.h"
 #include "rs485.h"
 
 //////////////////// DEFINITIONS ////////////////////
-#define MAX_ITEMS_PER_LIST 5
-#define MAX_LISTS 10                   // 假设最多有 10 个 MusicList
-#define INACTIVE_TIME 0.5 * 60 * 1000  // 无操作几分钟就返回主界面的几
+#define MAX_ITEMS_PER_LIST 5            // 每个MusicList里有几首歌
+#define MAX_LISTS 10                    // 假设最多有 10 个 MusicList
+#define INACTIVE_TIME 0.5 * 60 * 1000   // 无操作几分钟就返回主界面的几
+#define MAX_VOLUME_LIMIT 30             // 真实的音量上限
 
 //////////////////// GLOBAL VARIABLES ////////////////////
 
@@ -39,8 +40,6 @@ static bool playing = false;            // 播放状态
 static lv_timer_t *progressTimer = NULL;// 音频进度条定时器
 static int currentPlayTime = 0;         // 音频进度条的当前值
 static char current_duration_format[12]; // 当前歌的总时长的格式化hh:mm:ss
-// 当前音量
-int current_volume;
 
 static lv_timer_t *CM2MT_timer = NULL;  // 很牛逼的命名. CM2后等待2s才能MT
 
@@ -50,11 +49,15 @@ static lv_timer_t *inactiveTimer;  // 不活动就返回主界面, 的定时器
 char *bluetoothName = NULL;
 char *bluetoothPassword = NULL;
 
+// 当前音量
+int current_volume;
 // 默认音量与最大音量
 uint32_t defaultVolume = 6;
 uint32_t maxVolume = 15;
 // 浴室功放通道
 uint32_t bath_channel_bit = 3;
+// 调节音量时的防抖定时器
+static TimerHandle_t volume_timer = NULL;
 
 // ID
 uint32_t system_id = 0;
@@ -422,7 +425,7 @@ static void bluetooth_monitor_state_task(void *pvParameter) {
 }
 // 更新当前界面的音量显示
 static void update_header_volume(void) {
-    lv_label_set_text_fmt(lv_obj_get_child(current_screen_header_volume, 1), "%d", current_volume);
+    lv_label_set_text_fmt(lv_obj_get_child(current_screen_header_volume, 1), "%d", current_volume / 2);
 }
 // 洗牌
 static void shufflePlaylist(void) {
@@ -1003,6 +1006,7 @@ void cancelSaveTimeSettings(lv_event_t *e) {
 }
 // ******************** 声音相关 ********************
 
+static void volume_timer_callback(TimerHandle_t xTimer);
 // 初始化默认音量与最大音量与浴室播放通道
 void initVolumeSettings(lv_event_t *e) {
     nvs_handle_t nvs_handle;
@@ -1075,6 +1079,7 @@ void initVolumeSettings(lv_event_t *e) {
     }
 
     nvs_close(nvs_handle);
+    volume_timer = xTimerCreate("VolumeTimer", pdMS_TO_TICKS(100), pdFALSE, NULL, volume_timer_callback);
 }
 // 增加默认音量
 void addDefaultVolume(lv_event_t *e) {
@@ -1179,7 +1184,7 @@ void cancelSaveVolumeSettings(lv_event_t *e) {
     }
 }
 // 打开音量调节块
-void changeVolume(lv_event_t *e) {
+void openVolumeAdjust(lv_event_t *e) {
     printf("已打开音量调节块\n");
     lv_obj_clear_flag(current_screen_volume_component, LV_OBJ_FLAG_HIDDEN);
 }
@@ -1187,6 +1192,22 @@ void changeVolume(lv_event_t *e) {
 void closeVolumeAdjust(lv_event_t * e) {
     printf("已关闭音量调节块\n");
     lv_obj_add_flag(current_screen_volume_component, LV_OBJ_FLAG_HIDDEN);
+}
+// 改变音量
+static void volume_timer_callback(TimerHandle_t xTimer) {
+    char command[20];
+    snprintf(command, sizeof(command), "AT+CA%02d", current_volume);
+    bluetooth_send_at_command(command, CMD_SET_VOLUME);
+    xEventGroupWaitBits(bt_event_group, EVENT_SET_VOLUME, pdTRUE, pdFALSE, portMAX_DELAY);
+}
+void changeVolume(lv_event_t * e) {
+    lv_obj_t * slider = lv_event_get_target(e); // 获取触发事件的对象
+    int value = lv_slider_get_value(slider); // 获取滑块的值
+    printf("Slider value: %d\n", value);
+
+    current_volume = (value * maxVolume) / MAX_VOLUME_LIMIT;
+    update_header_volume();
+    xTimerReset(volume_timer, 0);
 }
 // 减少音量
 void decVolume(lv_event_t * e) {
@@ -1198,7 +1219,6 @@ void decVolume(lv_event_t * e) {
         bluetooth_send_at_command(command, CMD_SET_VOLUME);
         xEventGroupWaitBits(bt_event_group, EVENT_SET_VOLUME, pdTRUE, pdFALSE, portMAX_DELAY);
         
-        update_header_volume();
     }
 
 }

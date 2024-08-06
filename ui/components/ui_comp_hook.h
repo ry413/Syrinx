@@ -11,10 +11,9 @@ extern "C" {
 #endif
 
 void ui_comp_Header_Volume_create_hook(lv_obj_t * comp);
-void ui_comp_Volume_Adjust_create_hook(lv_obj_t * comp);
 void ui_comp_Music_Item_create_hook(lv_obj_t * comp);
 void ui_comp_Music_List_create_hook(lv_obj_t * comp);
-
+void ui_comp_VolumeAdjustDisabledRange_create_hook( lv_obj_t *comp );
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

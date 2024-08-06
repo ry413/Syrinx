@@ -12,7 +12,7 @@ void ui_event_comp_Header_Volume_Header_Volume(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     lv_obj_t ** comp_Header_Volume = lv_event_get_user_data(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        changeVolume(e);
+        openVolumeAdjust(e);
     }
 }
 

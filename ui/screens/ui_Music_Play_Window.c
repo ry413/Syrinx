@@ -264,7 +264,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_obj_set_x(ui_Music_Play_Header_Volume, 187);
     lv_obj_set_y(ui_Music_Play_Header_Volume, -216);
 
-    ui_Music_Play_Window_Volume_adjust = ui_Volume_Adjust_create(ui_Music_Play_Window);
+    ui_Music_Play_Window_Volume_adjust = ui_VolumeAdjustDisabledRange_create(ui_Music_Play_Window);
     lv_obj_set_x(ui_Music_Play_Window_Volume_adjust, 0);
     lv_obj_set_y(ui_Music_Play_Window_Volume_adjust, 0);
     lv_obj_add_flag(ui_Music_Play_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
