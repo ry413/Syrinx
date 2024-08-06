@@ -425,7 +425,8 @@ static void bluetooth_monitor_state_task(void *pvParameter) {
 }
 // 更新当前界面的音量显示
 static void update_header_volume(void) {
-    lv_label_set_text_fmt(lv_obj_get_child(current_screen_header_volume, 1), "%d", current_volume / 2);
+    lv_label_set_text_fmt(lv_obj_get_child(current_screen_header_volume, 1), "%d", current_volume);
+    lv_slider_set_value(lv_obj_get_child(current_screen_volume_component, 0), current_volume * 2 * MAX_VOLUME_LIMIT / maxVolume, LV_ANIM_OFF);
 }
 // 洗牌
 static void shufflePlaylist(void) {
@@ -1030,6 +1031,9 @@ void initVolumeSettings(lv_event_t *e) {
     }
     lv_label_set_text_fmt(ui_Default_Volume_Value, "%ld", defaultVolume);
     current_volume = defaultVolume;
+    // 更新默认音量到实际音量, 很诡异, 这个CA会比上电返回值还快发, 甚至还能响应, 好危险
+    volume_timer = xTimerCreate("VolumeTimer", pdMS_TO_TICKS(100), pdFALSE, NULL, volume_timer_callback);
+    xTimerReset(volume_timer, 0);
 
     // 读取 maxVolume
     err = nvs_get_u32(nvs_handle, "maxVolume", &maxVolume);
@@ -1059,6 +1063,7 @@ void initVolumeSettings(lv_event_t *e) {
     } else if (err != ESP_OK) {
         ESP_LOGE("initVolumeSettings", "Failed to get bathChannel from NVS: %s", esp_err_to_name(err));
     }
+    nvs_close(nvs_handle);
     switch (bath_channel_bit) {
         case 0:
             lv_obj_clear_state(ui_Bath_Play_Left_Channel_Switch, LV_STATE_CHECKED);
@@ -1078,8 +1083,7 @@ void initVolumeSettings(lv_event_t *e) {
             break;
     }
 
-    nvs_close(nvs_handle);
-    volume_timer = xTimerCreate("VolumeTimer", pdMS_TO_TICKS(100), pdFALSE, NULL, volume_timer_callback);
+    
 }
 // 增加默认音量
 void addDefaultVolume(lv_event_t *e) {
@@ -1196,7 +1200,7 @@ void closeVolumeAdjust(lv_event_t * e) {
 // 改变音量
 static void volume_timer_callback(TimerHandle_t xTimer) {
     char command[20];
-    snprintf(command, sizeof(command), "AT+CA%02d", current_volume);
+    snprintf(command, sizeof(command), "AT+CA%02d", current_volume * 2);
     bluetooth_send_at_command(command, CMD_SET_VOLUME);
     xEventGroupWaitBits(bt_event_group, EVENT_SET_VOLUME, pdTRUE, pdFALSE, portMAX_DELAY);
 }
@@ -1205,36 +1209,11 @@ void changeVolume(lv_event_t * e) {
     int value = lv_slider_get_value(slider); // 获取滑块的值
     printf("Slider value: %d\n", value);
 
-    current_volume = (value * maxVolume) / MAX_VOLUME_LIMIT;
+    current_volume = (value * maxVolume) / MAX_VOLUME_LIMIT / 2;
     update_header_volume();
     xTimerReset(volume_timer, 0);
 }
-// 减少音量
-void decVolume(lv_event_t * e) {
-    if (current_volume > 1) {
-        current_volume--;
 
-        char command[20];
-        snprintf(command, sizeof(command), "AT+CA%02d", current_volume * 2);
-        bluetooth_send_at_command(command, CMD_SET_VOLUME);
-        xEventGroupWaitBits(bt_event_group, EVENT_SET_VOLUME, pdTRUE, pdFALSE, portMAX_DELAY);
-        
-    }
-
-}
-// 增加音量
-void addVolume(lv_event_t * e) {
-    if (current_volume < maxVolume) {
-        current_volume++;
-
-        char command[20];
-        snprintf(command, sizeof(command), "AT+CA%02d", current_volume * 2);
-        bluetooth_send_at_command(command, CMD_SET_VOLUME);
-        xEventGroupWaitBits(bt_event_group, EVENT_SET_VOLUME, pdTRUE, pdFALSE, portMAX_DELAY);
-
-        update_header_volume();
-    }
-}
 
 // ******************** 系统相关 ********************
 
