@@ -38,10 +38,12 @@ lv_obj_t * ui_Music_Item_create(lv_obj_t * comp_parent)
     lv_obj_set_x(cui_Music_Name, 100);
     lv_obj_set_y(cui_Music_Name, 0);
     lv_obj_set_align(cui_Music_Name, LV_ALIGN_LEFT_MID);
-    lv_label_set_text(cui_Music_Name, "自定铃声");
+    lv_label_set_text(cui_Music_Name, "Tempestissimo");
     lv_obj_set_style_text_color(cui_Music_Name, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(cui_Music_Name, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(cui_Music_Name, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_text_color(cui_Music_Name, lv_color_hex(0xC1FF00), LV_PART_MAIN | LV_STATE_CHECKED);
 
     lv_obj_t * cui_Music_Item_Line;
     cui_Music_Item_Line = lv_obj_create(cui_Music_Item);

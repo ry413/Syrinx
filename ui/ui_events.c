@@ -39,11 +39,12 @@ static int numMusicLists = 0;           // MusicList 的总数
 static bool playing = false;            // 播放状态
 static lv_timer_t *progressTimer = NULL;// 音频进度条定时器
 static int currentPlayTime = 0;         // 音频进度条的当前值
-static char current_duration_format[12]; // 当前歌的总时长的格式化hh:mm:ss
 
-static lv_timer_t *CM2MT_timer = NULL;  // 很牛逼的命名. CM2后等待2s才能MT
+static lv_obj_t **music_obj_list = NULL;    // 储存所有歌的MusicItem对象, 用于实习当前播放高亮
+static lv_obj_t *current_playing_music_obj; // 当前歌的MusicItem对象, 同样用于实现当前播放高亮
 
-static lv_timer_t *inactiveTimer;  // 不活动就返回主界面, 的定时器
+
+static lv_timer_t *inactiveTimer;       // 不活动就返回主界面, 的定时器
 
 // 蓝牙名称与密码
 char *bluetoothName = NULL;
@@ -93,13 +94,13 @@ typedef enum {
 equalizer_t equalizer_mode = EQ_MODE_POP;
 
 
-static TaskHandle_t durationTaskHandle = NULL;
 // TaskHandle_t music_play_mode_task_handle = NULL;     // 这两个放在rs485.h声明了, 好惨
 // TaskHandle_t nature_play_task_handle = NULL;
 static TaskHandle_t bluetooth_monitor_state_task_handle = NULL;
 static TaskHandle_t wait_wifi_connect_task_handle = NULL;
 
-char **file_names = NULL;
+static char **file_names = NULL;
+static uint32_t *music_durations;
 
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
 
@@ -107,8 +108,6 @@ static void create_music_item(void);
 static void format_time(int seconds, char *buffer, size_t buffer_size);
 static void update_progress(lv_timer_t *timer);
 static void initProgressBar(void);
-static void getDurationTask(void *pvParameter);
-static void playMusicWithIndex(int id);
 static void bluetooth_cfg_task(void *pvParameter);
 static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min);
 static void inactiveCallback(lv_timer_t *timer);
@@ -121,7 +120,6 @@ static void bluetooth_cfg_task(void *pvParameter);
 static void bluetooth_sync_cfg(void);
 static void init_bluetooth_settings_task(void *pvParameter);
 static void selectNatureSoundTask(void *pvParameter);
-static void CM2MT_timer_callback(lv_timer_t *timer);
 
 //////////////////// 不给lvgl事件直接调用的静态函数 ////////////////////
 
@@ -151,7 +149,7 @@ static void create_music_item(void) {
 
     // 读取字符串们
     file_names = (char **)malloc((music_files_count + bath_files_count + 4) * sizeof(char *));
-    if ((file_names == NULL)) {
+    if (file_names == NULL) {
         ESP_LOGE("create_music_item", "Failed to allocate memory for file_names");
         nvs_close(nvs_handle);
         return;
@@ -197,6 +195,12 @@ static void create_music_item(void) {
     }
     nvs_close(nvs_handle);
 
+    music_obj_list = (lv_obj_t **)malloc(music_files_count * sizeof(lv_obj_t *));
+    if (music_obj_list == NULL) {
+        ESP_LOGE("create_music_item", "Failed to allocate memory for music_obj_list");
+        return;
+    }
+
     // 生成列表UI
     musicLists[currentListIndex] = ui_Music_List_create(ui_Music_List_Container);
     numMusicLists++;
@@ -222,7 +226,9 @@ static void create_music_item(void) {
         lv_img_set_src(icon, &ui_img_35201459);
 
         lv_obj_t *name_label = lv_obj_get_child(obj, 0);
-        lv_label_set_text(name_label, file_names[i]);
+        lv_label_set_text(name_label, file_names[i] + 2);
+
+        music_obj_list[i] = obj;
 
         items_added++;
     }
@@ -247,6 +253,37 @@ static void create_music_item(void) {
         bath_file_ids[i] = atoi(id_str);
     }
 }
+static void init_durations_for_nvs(void) {
+    nvs_handle_t nvs_handle;
+    esp_err_t err;
+
+    err = nvs_open("music_durations", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("init_durations_for_nvs", "NVS中未找到music_durations命名空间, 需要刷新");
+        return;
+    }
+
+    // 读取duration们
+    music_durations = (uint32_t *)malloc(music_files_count * sizeof(uint32_t));
+    if (music_durations == NULL) {
+        ESP_LOGE("init_durations_for_nvs", "Failed to allocate memory for music_durations");
+        nvs_close(nvs_handle);
+        return;
+    }
+    for (int i = 0; i < music_files_count; i++) {
+        char key[16];
+        snprintf(key, sizeof(key), "file_%u", (unsigned int)i);
+
+        err = nvs_get_u32(nvs_handle, key, &music_durations[i]);
+        if (err != ESP_OK) {
+            ESP_LOGE("init_durations_for_nvs", "Failed to music_duration: [%d]", i);
+            free(music_durations);
+            nvs_close(nvs_handle);
+            return;
+        }
+    }
+    nvs_close(nvs_handle);
+}
 // 将秒转为hh:mm:ss
 static void format_time(int seconds, char *buffer, size_t buffer_size) {
     int hours = seconds / 3600;
@@ -263,82 +300,7 @@ static void format_time(int seconds, char *buffer, size_t buffer_size) {
         fprintf(stderr, "Error formatting time string\n");
     }
 }
-// 更新进度条与时间标签的回调函数
-static void update_progress(lv_timer_t *timer) {
-    if (currentPlayTime < current_music_duration) {
-        currentPlayTime++;
 
-        // 更新当前时间标签
-        char time_str[9];  // hh:mm:ss
-        format_time(currentPlayTime, time_str, sizeof(time_str));
-        lv_label_set_text(ui_Current_Time, time_str);
-
-        format_time(current_music_duration, current_duration_format, sizeof(current_duration_format));
-        lv_label_set_text_static(ui_Total_Time, current_duration_format);
-
-        // 把总时长当作减2秒的状况, 好让进度条动得快一点, 消除与实际播放进度的误差)
-        int progressValue = (currentPlayTime * 100) / (current_music_duration - 2);
-        lv_slider_set_value(ui_Progress_Slider, progressValue, LV_ANIM_OFF);
-    } else {
-        if (timer != NULL) {
-            lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
-            lv_timer_pause(timer);  // 停止定时器
-        }
-    }
-}
-// 初始化音频进度条定时器
-static void initProgressBar(void) {
-    // 创建定时器，每秒更新一次
-    progressTimer = lv_timer_create(update_progress, 1000, NULL);
-
-    lv_timer_pause(progressTimer);  // 初始化时暂停定时器
-}
-// 获取音乐总时长, 并启动进度条定时器的任务, 因为要先有总时长, 才能使用进度条
-static void getDurationTask(void *pvParameter) {
-    xEventGroupWaitBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID | EVENT_NEXT_TRACK | EVENT_PREV_TRACK, pdTRUE,
-                            pdFALSE, portMAX_DELAY);
-    // 如果这个鬼timer还存在就说明进音乐模式还没2秒
-    while (CM2MT_timer != NULL) {
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
-    bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
-    xEventGroupWaitBits(music_event_group, EVENT_GET_DURATION, pdTRUE, pdFALSE, portMAX_DELAY);
-
-    char time_str[12];
-    format_time(current_music_duration, time_str, sizeof(time_str));
-    ESP_LOGI("getDurationTask", "Total time: %s", time_str);
-    lv_label_set_text_static(ui_Total_Time, time_str);
-
-    currentPlayTime = 0;
-    update_progress(NULL);
-    lv_timer_reset(progressTimer);  // 重置进度条
-    lv_timer_resume(progressTimer); // 然后启动
-
-    durationTaskHandle = NULL;
-    vTaskDelete(NULL);
-}
-// 回调就是删除这个timer
-void CM2MT_timer_callback(lv_timer_t * timer) {
-    lv_timer_del(CM2MT_timer);
-    CM2MT_timer = NULL;
-}
-// 播放指定index的音乐(file_names里的index)
-void playMusicWithIndex(int index) {
-    // 如果浴室在播放, 关掉它
-    if (bath_play_task_handle != NULL) {
-        vTaskDelete(bath_play_task_handle);
-        bath_play_task_handle = NULL;
-        ESP_LOGI("close bath play", "已关闭浴室音乐");
-    }
-
-    char command[50];
-    int id;
-    sscanf(file_names[index], "%2d", &id);
-    // index从0开始, 文件id从01开始
-    snprintf(command, sizeof(command), "AT+AF%02d", id);
-    bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
-    // 在getDurationTask等待
-}
 // 时间转为时间戳
 static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min) {
     struct tm timeinfo;
@@ -460,7 +422,6 @@ static void changeMusicUpdateUI(void) {
 
     playing = true;
     lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
-    printf("changeMusicUpdateUI: ed\n");
 }
 // 当播放完毕后下一首的任务
 static void music_play_mode_task(void *pvParameter) {
@@ -547,6 +508,8 @@ static void selectNatureSoundTask(void *pvParameter) {
         xEventGroupWaitBits(bt_event_group, EVENT_END_PLAY, pdTRUE, pdFALSE, portMAX_DELAY);
     }
 }
+
+
 //////////////////// lvgl事件回调 ////////////////////
 
 // ******************** initial actions ********************
@@ -555,6 +518,8 @@ static void selectNatureSoundTask(void *pvParameter) {
 void initActions(lv_event_t *e) {
     // 初始化音乐列表
     create_music_item();
+    // 从nvs中读出durations
+    init_durations_for_nvs();
     // 设置待机界面的日期label, 只能写在这了, 毕竟日期就这个地方会显示
     set_date_label(ui_Idle_Window_Date);
     // 设置待机screen, 为了不让多余的文件include "ui_events.h"只好这么写了
@@ -675,8 +640,6 @@ void leaveMainWindow(lv_event_t *e) {
         bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
         xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
         work_mode = 2;
-        // CM2后必须等待2s才能用MT, 因为只有音乐库播放会用到MT, 所以这边要搞个诡异的timer, 这个timer为空后才允许MT
-        CM2MT_timer = lv_timer_create(CM2MT_timer_callback, 2000, NULL);
 
         assert(music_play_task_handle == NULL);
         xTaskCreate(music_play_mode_task, "music_play_mode_task", 4096, NULL, 5, &music_play_task_handle);
@@ -702,7 +665,7 @@ void leaveMainWindow(lv_event_t *e) {
 void leaveMusicWindow(lv_event_t *e) {
     printf("Leave Music\n");
     lv_obj_t *currentScreen = lv_scr_act();
-    // 只有从music界面进入main界面才关闭功放与停止音乐(因为music界面也能进入play界面)
+    // 只有从music界面离开至main界面才关闭功放与停止音乐(因为music界面也能进入play界面)
     if (currentScreen == ui_Main_Window) {
         assert(music_play_task_handle != NULL);
         vTaskDelete(music_play_task_handle);
@@ -716,6 +679,12 @@ void leaveMusicWindow(lv_event_t *e) {
         work_mode = 0;
 
         lv_timer_pause(progressTimer);
+
+        // 关闭当前音乐名高亮
+        if (current_playing_music_obj != NULL) {
+            lv_obj_clear_state(lv_obj_get_child(current_playing_music_obj, 0), LV_STATE_CHECKED);
+            current_playing_music_obj = NULL;
+        }
     }
 }
 void leaveMusicPlayWindow(lv_event_t * e) {
@@ -1218,7 +1187,7 @@ void changeVolume(lv_event_t * e) {
 // ******************** 系统相关 ********************
 
 // 初始化系统设置
-void initSystemSettings(lv_event_t *e) {    
+void initSystemSettings(lv_event_t *e) {
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("SystemSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
@@ -1484,8 +1453,12 @@ void track_refresh_task_callback(void *param) {
     lv_obj_add_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN);
 }
 static void track_refresh_task(void *pvParameters) {
+    // 获得文件名列表
     get_all_file_names();
     xEventGroupWaitBits(bt_event_group, EVENT_FILE_LIST_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 获得音乐库的歌的时长
+    get_all_music_duration();
+    xEventGroupWaitBits(bt_event_group, EVENT_ALL_DURATION_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
     lv_async_call(track_refresh_task_callback, NULL);
     vTaskDelete(NULL);
 }
@@ -1701,6 +1674,82 @@ void setWifiStateIcon(bool state) {
 
 // ******************** 音乐相关 ********************
 
+// 更新进度条与时间标签的回调函数
+static void update_progress_callback(void *param) {
+    if (currentPlayTime < current_music_duration) {
+        currentPlayTime++;
+        // 更新当前时间标签
+        char time_str[9];  // hh:mm:ss
+        format_time(currentPlayTime, time_str, sizeof(time_str));
+        lv_label_set_text(ui_Current_Time, time_str);
+
+        int progressValue = (currentPlayTime * 100) / (current_music_duration);
+        lv_slider_set_value(ui_Progress_Slider, progressValue, LV_ANIM_OFF);
+    } else {
+        if (progressTimer != NULL) {
+            lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
+            lv_timer_pause(progressTimer);  // 停止定时器
+        }
+    }
+}
+static void update_progress(lv_timer_t *timer) {
+    lv_async_call(update_progress_callback, NULL);
+}
+// 初始化音频进度条定时器
+static void initProgressBar(void) {
+    // 创建定时器，每秒更新一次
+    progressTimer = lv_timer_create(update_progress, 1000, NULL);
+
+    lv_timer_pause(progressTimer);  // 初始化时暂停定时器
+}
+// 设置新的进度条
+static void create_protgress_bar(void) {
+    current_music_duration = music_durations[current_playing_index] - 1;    // 将总时长减1秒以更好地...做许多事
+    char time_str[12];
+    format_time(current_music_duration, time_str, sizeof(time_str));
+    ESP_LOGI("create_protgress_bar", "Total time: %s", time_str);
+    lv_label_set_text(ui_Total_Time, time_str);
+
+    currentPlayTime = 0;
+
+    lv_timer_reset(progressTimer);  // 重置进度条
+    lv_timer_resume(progressTimer); // 然后启动
+}
+// 关闭EVENT_PLAY_MUSIC_WITH_ID位的任务, AT响应实际上非常快, 但还是会阻塞界面, 不知道有没有必要这么做, 也许就不管它而在退出音乐库时clear得了
+static void clear_play_event_bit_task(void *pvParameter) {
+    xEventGroupClearBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID);
+    vTaskDelete(NULL);
+}
+// 播放指定index的音乐(file_names里的index)
+static void playMusicWithCurrentIndex(void) {
+    // 如果浴室在播放, 关掉它
+    if (bath_play_task_handle != NULL) {
+        vTaskDelete(bath_play_task_handle);
+        bath_play_task_handle = NULL;
+        ESP_LOGI("close bath play", "已关闭浴室音乐");
+    }
+
+    char command[50];
+    int id;
+    sscanf(file_names[current_playing_index], "%2d", &id);
+    // index从0开始, 文件id从01开始
+    snprintf(command, sizeof(command), "AT+AF%02d", id);
+    bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
+    xTaskCreate(clear_play_event_bit_task, "clear_play_event_bit_task", 1024, NULL, 2, NULL);
+
+    create_protgress_bar();
+
+    // 在列表中高亮指定的音乐名字
+    if (current_playing_music_obj != NULL) {
+        lv_obj_clear_state(lv_obj_get_child(current_playing_music_obj, 0), LV_STATE_CHECKED);
+    }
+    current_playing_music_obj = music_obj_list[current_playing_index];
+    lv_obj_add_state(lv_obj_get_child(current_playing_music_obj, 0), LV_STATE_CHECKED);
+    // 保证在列表中, 总是显示当前音乐所在的musicList页
+    lv_obj_add_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
+    currentListIndex = current_playing_index / MAX_ITEMS_PER_LIST;
+    lv_obj_clear_flag(musicLists[currentListIndex], LV_OBJ_FLAG_HIDDEN);
+}
 // 上一页音乐列表
 void prevMusicList(lv_event_t *e) {
     if (numMusicLists == 0) return;
@@ -1737,27 +1786,25 @@ void playSelectedMusic(lv_event_t *e) {
     bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
 
+    // 更新UI
     changeMusicUpdateUI();
-
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *label = lv_obj_get_child(obj, 0);
 
     char *track_title = lv_label_get_text(label);
-    lv_label_set_text(ui_Track_Title, track_title + 2);
+    lv_label_set_text(ui_Track_Title, track_title);
     lv_label_set_text(ui_Track_Artist, "null");
 
     lv_scr_load(ui_Music_Play_Window);
 
-    // 获得当前试图播放的音乐的id, 找到它在数组里的索引
-    int id;
-    int cmp_id;
-    sscanf(track_title, "%2d", &id);
+    // 获得当前试图播放的音乐在数组里的索引
     for (int i = 0; i < music_files_count; i++) {
-        sscanf(file_names[i], "%2d", &cmp_id);
-        if(cmp_id == id) {
+        if (strcmp(track_title, file_names[i] + 2) == 0) {
             current_playing_index = i;
+            break;
         }
     }
+    printf("INDEX: %d\n", current_playing_index);
 
     if (play_mode == PLAY_MODE_SHUFFLE) {
         // 重置随机播放的索引
@@ -1773,14 +1820,11 @@ void playSelectedMusic(lv_event_t *e) {
             ESP_LOGE("shuffle", "错误索引");
         }
     }
-
-    playMusicWithIndex(current_playing_index);
-    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
+    playMusicWithCurrentIndex();
 }
 // 下一首音乐
 static void nextTrack_callback(void *param) {
     changeMusicUpdateUI();
-    char *track_title;
 
     switch (play_mode) {
         case PLAY_MODE_LOOP:
@@ -1802,13 +1846,14 @@ static void nextTrack_callback(void *param) {
             current_playing_index = shuffle_order[shuffle_list_index];
             break;
     }
+    char *track_title;
     track_title = file_names[current_playing_index];
     lv_label_set_text(ui_Track_Title, track_title + 2);
     lv_label_set_text(ui_Track_Artist, "null");
-    playMusicWithIndex(current_playing_index);
-    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
+    playMusicWithCurrentIndex();
 }
 void nextTrack(lv_event_t *e) {
+    // 确保在主线程中执行 UI 更新, 因为485指令也会调用这几个函数
     lv_async_call(nextTrack_callback, NULL);
 }
 // 上一首音乐
@@ -1839,8 +1884,7 @@ static void prevTrack_callback(void *param) {
     track_title = file_names[current_playing_index];
     lv_label_set_text(ui_Track_Title, track_title + 2);
     lv_label_set_text(ui_Track_Artist, "null");
-    playMusicWithIndex(current_playing_index);
-    xTaskCreate(getDurationTask, "getDurationTask", 4096, NULL, 5, &durationTaskHandle);
+    playMusicWithCurrentIndex();
 }
 void prevTrack(lv_event_t *e) {
     // 确保在主线程中执行 UI 更新

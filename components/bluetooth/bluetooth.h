@@ -70,6 +70,7 @@ extern EventGroupHandle_t bt_event_group;           // 除了音乐播放相关�
 #define EVENT_END_PLAY (1 << 14)                    // 播放已结束
 #define EVENT_STARTUP_SUCCESS (1 << 15)             // 模块已上电并丢掉了返回值
 #define EVENT_GET_DIR_FILE_NAMES (1 << 16)          // 已获取当前目录下所有音频文件名
+#define EVENT_ALL_DURATION_COMPLETE (1 << 17)       // 已获取完音乐库每首歌的总时长
 // #define EVENT_GET_WORK_MODE (1 << 17)               // 已获取工作模式
 
 
@@ -77,13 +78,13 @@ extern EventGroupHandle_t bt_event_group;           // 除了音乐播放相关�
 
 // 感觉, 大概都是别的组件需要的东西, 在这里声明, 好收到返回值后可以设上, 还能被别的组件引用
 extern char **utf8_file_names;
-extern int music_files_count;
-extern int bath_files_count;
+extern uint32_t music_files_count;
+extern uint32_t bath_files_count;
 extern int *bath_file_ids;
 extern int current_dir_files_count;
 
 extern int current_playing_index;
-extern int current_music_duration;
+extern uint32_t current_music_duration;
 extern char bluetooth_name[13];
 extern char bluetooth_password[5];
 extern int bluetooth_state;
@@ -91,7 +92,7 @@ extern int work_mode;
 extern int play_state;
 
 void get_all_file_names(void);
-
+void get_all_music_duration(void);
 esp_err_t bluetooth_init(void);
 esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type);
 

@@ -31,11 +31,11 @@ EventGroupHandle_t music_event_group = NULL;
 
 char **temp_file_names = NULL;  // 储存文件名的数组
 int current_dir_files_count = 0;// M2的返回值临时接收变量
-int music_files_count = 0;      // music目录下的文件数
-int bath_files_count = 0;       // bath目录下的文件数
+uint32_t music_files_count = 0;      // music目录下的文件数
+uint32_t bath_files_count = 0;       // bath目录下的文件数
 int *bath_file_ids = NULL;      // bath目录下的文件们的id数组
-int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在temp_file_names中的索引, 我也不知道为什么要定义在这里
-int current_music_duration = 0;
+int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在file_names中的索引, 我也不知道为什么要定义在这里
+uint32_t current_music_duration = 0;
 char bluetooth_name[13];
 char bluetooth_password[5];
 int bluetooth_state = 0;        // 蓝牙状态
@@ -172,7 +172,7 @@ void add_file_name(char **temp_file_names, const char *file_name) {
     }
     idx++;
 }
-// 读取所有音乐文件名并储存于nvs中的任务
+// 读取所有音乐文件名并储存于nvs中
 void get_all_file_names(void) {
     // 切换到音乐模式
     bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
@@ -194,7 +194,7 @@ void get_all_file_names(void) {
     xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
     bath_files_count = current_dir_files_count;
 
-    printf("music: %d, bath: %d\n", music_files_count, bath_files_count);
+    printf("music: %ld, bath: %ld\n", music_files_count, bath_files_count);
 
     // 储存文件数
     nvs_handle_t nvs_handle;
@@ -263,11 +263,57 @@ void get_all_file_names(void) {
     
     nvs_close(nvs_handle);
 
-    // 回到空闲模式
+    // 不回到空闲模式, 因为接下来要同步歌的总时长
+    // bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
+    // xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
 
     // 宣布初始化完毕
-    xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
     printf("\n GET FILE NAME LIST END\n");
+    xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
+}
+// 获得音乐库中所有歌的总时长并储存到nvs中
+void get_all_music_duration(void) {
+    bluetooth_send_at_command("AT+M602", CMD_CHANGE_DIR);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
+
+    // 获得durations
+    uint32_t tmp_music_durations[music_files_count];
+    for (int i = 0; i < music_files_count; i++) {
+        bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
+        xEventGroupWaitBits(music_event_group, EVENT_GET_DURATION, pdTRUE, pdFALSE, portMAX_DELAY);
+        tmp_music_durations[i] = current_music_duration;
+        bluetooth_send_at_command("AT+CC", CMD_NEXT_TRACK);
+        xEventGroupWaitBits(music_event_group, EVENT_NEXT_TRACK, pdTRUE, pdFALSE, portMAX_DELAY);
+    }
+
+    // 储存durations到nvs里
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("music_durations", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("get_all_music_duration", "Failed to open NVS");
+        return;
+    }
+    for (int i = 0; i < music_files_count; i++) {
+        char key[16];
+        snprintf(key, sizeof(key), "file_%u", (unsigned int)i);
+        err = nvs_set_u32(nvs_handle, key, tmp_music_durations[i]);
+        if (err != ESP_OK) {
+            ESP_LOGE("get_all_music_duration", "Failed to write duration to NVS");
+            nvs_close(nvs_handle);
+            return;
+        }
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("get_all_file_names", "Failed to commit changes to NVS");
+    }
+    
+    nvs_close(nvs_handle);
+    bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
+    printf("GET ALL MUSIC DURATION END\n");
+    xEventGroupSetBits(bt_event_group, EVENT_ALL_DURATION_COMPLETE);
 }
 esp_err_t bluetooth_wait_for_response(char *response, size_t max_len) {
     uart_event_t event;
@@ -400,7 +446,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                 sscanf(response, "M2+%d", &current_dir_files_count);
                 xEventGroupSetBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT);
             } else if (strncmp(response, "MT+", 3) == 0) {
-                sscanf(response, "MT+%d", &current_music_duration);
+                sscanf(response, "MT+%lu", &current_music_duration);
                 xEventGroupSetBits(music_event_group, EVENT_GET_DURATION);
             } else if (strncmp(response, "btlink", 6) == 0) {
                 bluetooth_state = 2;
