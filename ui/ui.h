@@ -57,6 +57,11 @@ extern lv_obj_t * ui_Guide_Btn;
 extern lv_obj_t * ui_Guide_Icon;
 extern lv_obj_t * ui_Guide_Text;
 extern lv_obj_t * ui_tfcard_States_Icon;
+extern lv_obj_t * ui_tfcard_unavailable_the_X;
+void ui_event_TFCardNotFoundMsg(lv_event_t * e);
+extern lv_obj_t * ui_TFCardNotFoundMsg;
+extern lv_obj_t * ui_TFCardNotFoundMsgPanel;
+extern lv_obj_t * ui_TFCardNotFoundMsgText;
 extern lv_obj_t * ui_Wifi_States_Icon;
 extern lv_obj_t * ui_Wifi_Img_Placeholder;
 extern lv_obj_t * ui_Music_Note_Img_Placeholder1;
@@ -71,8 +76,6 @@ extern lv_obj_t * ui_Main_Window_Volume_adjust;
 void ui_event_Main_On_Screen_Range(lv_event_t * e);
 extern lv_obj_t * ui_On_Main_Screen_Range;
 extern lv_obj_t * ui_Disabled_Touch_Range;
-void ui_event_placeadeasdasd(lv_event_t * e);
-extern lv_obj_t * ui_placeadeasdasd;
 // SCREEN: ui_Music_Window
 void ui_Music_Window_screen_init(void);
 void ui_event_Music_Window(lv_event_t * e);
@@ -332,6 +335,8 @@ extern lv_obj_t *ui_System_Track_Refresh_Btn;
 extern lv_obj_t *ui_System_Track_Refresh_Text;
 extern lv_obj_t *ui_TrackRefreshMsgPanel;
 extern lv_obj_t *ui_TrackRefreshMsgText;
+extern lv_obj_t *ui_PleaseRestartMsgPanel;
+extern lv_obj_t *ui_PleaseRestartMsgText;
 extern lv_obj_t *ui_Rellay_Panel;
 extern lv_obj_t *ui_Reset_Factory_Text;
 void ui_event_Verify_Reset_Btn( lv_event_t * e);
@@ -595,6 +600,8 @@ LV_FONT_DECLARE(ui_font_LanTingFine16);
 LV_FONT_DECLARE(ui_font_LanTingFine18);
 LV_FONT_DECLARE(ui_font_LanTingFine22);
 LV_FONT_DECLARE(ui_font_LanTingFine24);
+LV_FONT_DECLARE(ui_font_MSBlack22);
+LV_FONT_DECLARE(ui_font_MSBlack16);
 
 
 

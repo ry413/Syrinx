@@ -29,6 +29,7 @@ EventGroupHandle_t bt_event_group = NULL;
 EventGroupHandle_t music_event_group = NULL;
 
 
+
 char **temp_file_names = NULL;  // 储存文件名的数组
 int current_dir_files_count = 0;// M2的返回值临时接收变量
 uint32_t music_files_count = 0;      // music目录下的文件数
@@ -41,6 +42,7 @@ char bluetooth_password[5];
 int bluetooth_state = 0;        // 蓝牙状态
 int work_mode = 0;              // 工作模式, 0: 空闲, 1: 蓝牙, 2: 音乐
 int play_state = 0;
+int device_state = 0;
 
 command_type_t current_command = CMD_NONE;
 
@@ -467,6 +469,9 @@ void bluetooth_monitor_task(void *pvParameters) {
                 xEventGroupSetBits(music_event_group, EVENT_GET_PLAY_STATE);
             } else if (strncmp(response, "M4+END", 6) == 0) {
                 xEventGroupSetBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES);
+            } else if (strncmp(response, "MV+", 3) == 0) {
+                sscanf(response, "MV+%d", &device_state);
+                xEventGroupSetBits(bt_event_group, EVENT_GET_DEVICE_STATE);
             }
             else if (strncmp(response, "QV+", 3) == 0) {
                 // 版本号

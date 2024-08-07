@@ -198,7 +198,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         work_mode = 2;
                         open_bath_channel();
                         play_bath_music();
-                        delInactiveTimer(); // 某时间后不再退出蓝牙界面
+                        pause_inactive_timer(); // 某时间后不再退出蓝牙界面
                     }
                 }
                 // 剩下所有界面
@@ -288,7 +288,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
                         xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);
                         work_mode = 1;
-                        createInactiveTimer();  // 回来了如果很久都不连也要回主界面
+                        
+                        reset_inactive_timer();  // 回蓝牙模式后如果很久都不连接, 也要回主界面, 所以重置它
                     } else {
                         ESP_LOGE(TAG, "音乐模式, 蓝牙界面, 也不在播放浴室音乐, 这不应该");
                         assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);

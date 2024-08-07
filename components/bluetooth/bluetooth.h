@@ -33,6 +33,7 @@ typedef enum {
     CMD_CHANGE_CHANNEL,         // AT+CLx   修改功放通道
     CMD_GET_PLAY_STATE,         // AT+MP    获取播放状态
     CMD_EQUALIZER_SET,          // AT+CQx   设置均衡器
+    CMD_GET_DEVICE_STATE,       // AT+MV    查询设备状态
 } command_type_t;
 
 extern command_type_t current_command;
@@ -71,6 +72,7 @@ extern EventGroupHandle_t bt_event_group;           // 除了音乐播放相关�
 #define EVENT_STARTUP_SUCCESS (1 << 15)             // 模块已上电并丢掉了返回值
 #define EVENT_GET_DIR_FILE_NAMES (1 << 16)          // 已获取当前目录下所有音频文件名
 #define EVENT_ALL_DURATION_COMPLETE (1 << 17)       // 已获取完音乐库每首歌的总时长
+#define EVENT_GET_DEVICE_STATE (1 << 18)            // 已获取设备状态
 // #define EVENT_GET_WORK_MODE (1 << 17)               // 已获取工作模式
 
 
@@ -90,6 +92,9 @@ extern char bluetooth_password[5];
 extern int bluetooth_state;
 extern int work_mode;
 extern int play_state;
+
+extern int device_state;
+
 
 void get_all_file_names(void);
 void get_all_music_duration(void);

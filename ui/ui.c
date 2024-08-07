@@ -49,6 +49,10 @@ lv_obj_t * ui_Guide_Btn;
 lv_obj_t * ui_Guide_Icon;
 lv_obj_t * ui_Guide_Text;
 lv_obj_t * ui_tfcard_States_Icon;
+lv_obj_t * ui_tfcard_unavailable_the_X;
+lv_obj_t * ui_TFCardNotFoundMsg;
+lv_obj_t * ui_TFCardNotFoundMsgPanel;
+lv_obj_t * ui_TFCardNotFoundMsgText;
 lv_obj_t * ui_Wifi_States_Icon;
 lv_obj_t * ui_Wifi_Img_Placeholder;
 lv_obj_t * ui_Music_Note_Img_Placeholder1;
@@ -58,11 +62,10 @@ void ui_event_Button5(lv_event_t * e);
 lv_obj_t * ui_Button5;
 lv_obj_t * ui_Main_Header_Volume;
 lv_obj_t * ui_Main_Window_Volume_adjust;
+void ui_event_TFCardNotFoundMsg(lv_event_t * e);
 void ui_event_Main_On_Screen_Range(lv_event_t * e);
 lv_obj_t * ui_On_Main_Screen_Range;
 lv_obj_t * ui_Disabled_Touch_Range;
-void ui_event_placeadeasdasd(lv_event_t * e);
-lv_obj_t * ui_placeadeasdasd;
 
 
 // SCREEN: ui_Music_Window
@@ -375,6 +378,8 @@ lv_obj_t *ui_Cancel_Reset_Btn;
 lv_obj_t *ui_Cancel_Reset_Text;
 lv_obj_t *ui_TrackRefreshMsgPanel;
 lv_obj_t *ui_TrackRefreshMsgText;
+lv_obj_t *ui_PleaseRestartMsgPanel;
+lv_obj_t *ui_PleaseRestartMsgText;
 void ui_event_System_Settings_Verify_Btn(lv_event_t * e);
 lv_obj_t * ui_System_Settings_Verify_Btn;
 lv_obj_t * ui_System_Settings_Verify_Btn_Text;
@@ -595,7 +600,8 @@ void ui_event_Music_Btn(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Music_Window_screen_init);
+        // _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Music_Window_screen_init);
+        attempt_enter_music_window(e);
     }
 }
 void ui_event_Nature_Sound_Btn(lv_event_t * e)
@@ -603,7 +609,8 @@ void ui_event_Nature_Sound_Btn(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        _ui_screen_change(&ui_Nature_Sound_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Nature_Sound_Window_screen_init);
+        // _ui_screen_change(&ui_Nature_Sound_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Nature_Sound_Window_screen_init);
+        attempt_enter_nature_window(e);
     }
 }
 void ui_event_Bluetooth_Btn(lv_event_t * e)
@@ -646,6 +653,14 @@ void ui_event_Button5(lv_event_t * e)
         _ui_screen_change(&ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
     }
 }
+void ui_event_TFCardNotFoundMsg(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        lv_obj_add_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
+    }
+}
 void ui_event_Main_On_Screen_Range(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -668,14 +683,6 @@ void ui_event_Music_Play_On_Screen_Range(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         onScreen(e);
-    }
-}
-void ui_event_placeadeasdasd(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_CLICKED) {
-        resetInactiveTimer(e);
     }
 }
 void ui_event_Music_Window(lv_event_t * e)
@@ -1450,12 +1457,12 @@ void ui_event____initial_actions0(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SCREEN_LOAD_START) {
+        initActions(e);
+        initVolumeSettings(e);
+        initBluetoothSettings(e);
         initWifiSettings(e);
         initBacklightSettings(e);
-        initBluetoothSettings(e);
         initSystemSettings(e);
-        initVolumeSettings(e);
-        initActions(e);
     }
 }
 

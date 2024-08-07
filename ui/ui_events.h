@@ -21,11 +21,8 @@ void leaveMainWindow(lv_event_t * e);
 // void disconnectWifi(lv_event_t * e);
 void openVolumeAdjust(lv_event_t * e);
 void closeVolumeAdjust(lv_event_t * e);
-void decVolume(lv_event_t * e);
-void addVolume(lv_event_t * e);
 void changeVolume(lv_event_t * e);
 void onScreen(lv_event_t * e);
-void resetInactiveTimer(lv_event_t * e);
 void musicScrLoaded(lv_event_t * e);
 void leaveMusicWindow(lv_event_t * e);
 void prevMusicList(lv_event_t * e);
@@ -88,11 +85,14 @@ void idleBackToMainWindow(lv_event_t * e);
 void offScreen(lv_event_t * e);
 void playSelectedMusic(lv_event_t * e);
 void musicPlayScrLoaded(lv_event_t * e);
+void attempt_enter_music_window(lv_event_t * e);
+void attempt_enter_nature_window(lv_event_t * e);
+
 
 void setWifiStateIcon(bool state);
 
-void createInactiveTimer(void);
-void delInactiveTimer(void);
+void reset_inactive_timer(void);
+void pause_inactive_timer(void);
 
 // 暴露给485那边用, 天呐, 有生之年必须把这些封装成music组件
 lv_obj_t * get_ui_main_window(void);

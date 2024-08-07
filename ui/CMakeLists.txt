@@ -67,6 +67,8 @@ SET(SOURCES components/ui_comp_header_volume.c
     fonts/ui_font_LanTingFine16.c
     fonts/ui_font_LanTingFine18.c
     fonts/ui_font_LanTingFine22.c
-    fonts/ui_font_LanTingFine24.c)
+    fonts/ui_font_LanTingFine24.c
+    fonts/ui_font_MSBlack22.c
+    fonts/ui_font_MSBlack16.c)
 
 add_library(ui ${SOURCES})

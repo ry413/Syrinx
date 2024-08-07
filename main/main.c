@@ -178,7 +178,7 @@ static void example_lvgl_touch_cb(lv_indev_drv_t * drv, lv_indev_data_t * data)
         ESP_LOGI(TAG, "X=%u Y=%u", data->point.x, data->point.y);
         // 仅在状态变化时重置定时器
         if (!is_touching) {
-            resetInactiveTimer(NULL);   // 重置无操作就返回主界面的定时器
+            reset_inactive_timer();   // 重置无操作就返回主界面的定时器
             reset_backlight_timer();    // 重置待机定时器
             is_touching = true;
         }
@@ -556,6 +556,7 @@ void app_main() {
     } else {
         ESP_LOGE(TAG, "NVS初始化失败: %s", esp_err_to_name(ret));
     }
+
     // Wifi
     wifi_init();
     // 蓝牙

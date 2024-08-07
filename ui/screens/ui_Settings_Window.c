@@ -1280,6 +1280,21 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_TrackRefreshMsgText,"正在刷新曲目清单中");
     lv_obj_set_style_text_font(ui_TrackRefreshMsgText, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
+    ui_PleaseRestartMsgPanel = lv_obj_create(ui_Settings_Window);
+    lv_obj_set_width( ui_PleaseRestartMsgPanel, 273);
+    lv_obj_set_height( ui_PleaseRestartMsgPanel, 203);
+    lv_obj_set_align( ui_PleaseRestartMsgPanel, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN );    /// Flags
+    lv_obj_clear_flag( ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_PleaseRestartMsgText = lv_label_create(ui_PleaseRestartMsgPanel);
+    lv_obj_set_width( ui_PleaseRestartMsgText, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_PleaseRestartMsgText, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_PleaseRestartMsgText, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_PleaseRestartMsgText,"已完成, 需要断电重启");
+    lv_obj_set_style_text_font(ui_PleaseRestartMsgText, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+
     ui_BackToMainWindowBtn8 = lv_imgbtn_create(ui_Settings_Window);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn8, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn8, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
