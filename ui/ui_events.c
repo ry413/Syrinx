@@ -105,10 +105,10 @@ static uint32_t *music_durations = NULL;
 // 开机初始化阶段会有某些地方争着发AT指令, 所以用个信号量
 SemaphoreHandle_t init_phase_semaphore = NULL;
 
+static bool create_music_item_complete = false;     // 如果已插入卡, 但是没有刷新音乐列表就进音乐库什么的会出事
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
 // 真有必要写这些吗
 
-static void create_music_item(void);
 static void format_time(int seconds, char *buffer, size_t buffer_size);
 static void update_progress(lv_timer_t *timer);
 static void initProgressBar(void);
@@ -254,6 +254,8 @@ static void create_music_item(void) {
         char id_str[3] = { file_names[music_files_count + i][0], file_names[music_files_count + i][1], '\0' };
         bath_file_ids[i] = atoi(id_str);
     }
+
+    create_music_item_complete = true;
 }
 static void init_durations_for_nvs(void) {
     nvs_handle_t nvs_handle;
@@ -423,7 +425,7 @@ static void music_play_mode_task(void *pvParameter) {
     }
 }
 
-// 自动关闭"tf卡未插入"的弹窗的回调
+// 关闭"tf卡未插入"的弹窗的回调
 static void close_tf_card_notfound_msg_timer_callback(lv_timer_t *timer) {
     lv_obj_add_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
 }
@@ -1658,7 +1660,7 @@ void setWifiStateIcon(bool state) {
 
 // 点击主界面的音乐库按钮时的回调
 void attempt_enter_music_window(lv_event_t *e) {
-    if (device_state == 2) {
+    if (create_music_item_complete == true) {
         lv_scr_load(ui_Music_Window);
     } else {
         lv_obj_clear_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
@@ -2081,7 +2083,7 @@ void close_music_EQ_Panel(lv_event_t * e) {
 
 // 点击主界面的自然之音按钮时的回调
 void attempt_enter_nature_window(lv_event_t *e) {
-    if (device_state == 2) {
+    if (create_music_item_complete == true) {
         lv_scr_load(ui_Nature_Sound_Window);
     } else {
         lv_obj_clear_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);

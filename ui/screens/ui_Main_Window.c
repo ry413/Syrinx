@@ -324,27 +324,6 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_tfcard_unavailable_the_X, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_tfcard_unavailable_the_X, &ui_font_MSBlack22, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-    ui_TFCardNotFoundMsg = lv_obj_create(ui_Main_Window);
-    lv_obj_remove_style_all(ui_TFCardNotFoundMsg);
-    lv_obj_set_width( ui_TFCardNotFoundMsg, 480);
-    lv_obj_set_height( ui_TFCardNotFoundMsg, 480);
-    lv_obj_set_align( ui_TFCardNotFoundMsg, LV_ALIGN_CENTER );
-    lv_obj_add_flag( ui_TFCardNotFoundMsg, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_HIDDEN );     /// Flags
-    lv_obj_clear_flag( ui_TFCardNotFoundMsg, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-    ui_TFCardNotFoundMsgPanel = lv_obj_create(ui_TFCardNotFoundMsg);
-    lv_obj_set_width( ui_TFCardNotFoundMsgPanel, 172);
-    lv_obj_set_height( ui_TFCardNotFoundMsgPanel, 62);
-    lv_obj_set_align( ui_TFCardNotFoundMsgPanel, LV_ALIGN_CENTER );
-    lv_obj_clear_flag( ui_TFCardNotFoundMsgPanel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-    ui_TFCardNotFoundMsgText = lv_label_create(ui_TFCardNotFoundMsgPanel);
-    lv_obj_set_width( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_align( ui_TFCardNotFoundMsgText, LV_ALIGN_CENTER );
-    lv_label_set_text(ui_TFCardNotFoundMsgText,"TF卡未插入");
-    lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
-
     ui_Wifi_States_Icon = lv_img_create(ui_Main_Window);
     lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
     lv_obj_set_width(ui_Wifi_States_Icon, LV_SIZE_CONTENT);   /// 1
@@ -424,6 +403,27 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_align(ui_Disabled_Touch_Range, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_TFCardNotFoundMsg = lv_obj_create(ui_Main_Window);
+    lv_obj_remove_style_all(ui_TFCardNotFoundMsg);
+    lv_obj_set_width( ui_TFCardNotFoundMsg, 480);
+    lv_obj_set_height( ui_TFCardNotFoundMsg, 480);
+    lv_obj_set_align( ui_TFCardNotFoundMsg, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_TFCardNotFoundMsg, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_HIDDEN );     /// Flags
+    lv_obj_clear_flag( ui_TFCardNotFoundMsg, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_TFCardNotFoundMsgPanel = lv_obj_create(ui_TFCardNotFoundMsg);
+    lv_obj_set_width( ui_TFCardNotFoundMsgPanel, 200);
+    lv_obj_set_height( ui_TFCardNotFoundMsgPanel, 100);
+    lv_obj_set_align( ui_TFCardNotFoundMsgPanel, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_TFCardNotFoundMsgPanel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_TFCardNotFoundMsgText = lv_label_create(ui_TFCardNotFoundMsgPanel);
+    lv_obj_set_width( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_TFCardNotFoundMsgText, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_TFCardNotFoundMsgText,"TF卡未插入或未刷新曲目");
+    lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_Music_Btn, ui_event_Music_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Nature_Sound_Btn, ui_event_Nature_Sound_Btn, LV_EVENT_ALL, NULL);
