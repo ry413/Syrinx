@@ -523,7 +523,7 @@ void bluetoothScrLoaded(lv_event_t *e) {
     // 进入蓝牙模式, 需要播放提示音
     bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
-    bluetooth_send_at_command("AT+CN2", CMD_CHANGE_PROMPT_TONE);
+    bluetooth_send_at_command("AT+CN0", CMD_CHANGE_PROMPT_TONE);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE, pdTRUE, pdFALSE, portMAX_DELAY);
     bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);

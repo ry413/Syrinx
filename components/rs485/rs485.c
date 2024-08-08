@@ -11,6 +11,7 @@ static const char *TAG = "rs485";
 TaskHandle_t bath_play_task_handle = NULL;
 TaskHandle_t music_play_task_handle = NULL;
 TaskHandle_t nature_play_task_handle = NULL;
+static SemaphoreHandle_t rs485_handle_semaphore = NULL; // 防止同时处理多条485
 
 int current_bath_playing_index = 0;
 
@@ -34,11 +35,15 @@ esp_err_t rs485_init(void) {
     ESP_ERROR_CHECK(uart_set_pin(RS485_UART_PORT, RS485_TX_GPIO_NUM, RS485_RX_GPIO_NUM, RS485_DE_GPIO_NUM, UART_PIN_NO_CHANGE));
     ESP_ERROR_CHECK(uart_driver_install(RS485_UART_PORT, 1024 * 2, 0, 0, NULL, 0));
 
-
-
     ESP_ERROR_CHECK(uart_set_mode(RS485_UART_PORT, UART_MODE_RS485_HALF_DUPLEX));
 
     ESP_LOGI(TAG, "UART 1 初始化成功");
+
+    rs485_handle_semaphore = xSemaphoreCreateBinary();
+    if (rs485_handle_semaphore == NULL) {
+        ESP_LOGE("initActions", "创建信号量失败");
+    }
+    xSemaphoreGive(rs485_handle_semaphore);
     return ESP_OK;
 }
 // 检查校验和
@@ -131,122 +136,139 @@ void process_command(rs485_packet_t *packet, size_t len) {
     // 插卡
     if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x01}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 插卡");
-        set_backlight(backlight_level);
-        // enable_touch();
-        lv_obj_add_flag(get_ui_disabled_touch_range(), LV_OBJ_FLAG_HIDDEN);
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            set_backlight(backlight_level);
+            // enable_touch();
+            lv_obj_add_flag(get_ui_disabled_touch_range(), LV_OBJ_FLAG_HIDDEN);
+            xSemaphoreGive(rs485_handle_semaphore);
+        }
     }
     // 拔卡
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x00}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 拔卡");
-        set_backlight(0);
-        // disabled_touch();
-        // 触摸缓冲好像删不掉, 所以开一个遮罩防止在拔卡后积累触摸事件
-        lv_obj_clear_flag(get_ui_disabled_touch_range(), LV_OBJ_FLAG_HIDDEN);
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            set_backlight(0);
+            // disabled_touch();
+            // 触摸缓冲好像删不掉, 所以开一个遮罩防止在拔卡后积累触摸事件
+            lv_obj_clear_flag(get_ui_disabled_touch_range(), LV_OBJ_FLAG_HIDDEN);
 
-        lv_scr_load(get_ui_main_window());  // 回到主界面理应会删掉音乐播放任务和自然之音播放任务, 浴室的在这里删
-        if (bath_play_task_handle != NULL) {
-            vTaskDelete(bath_play_task_handle);
-            bath_play_task_handle = NULL;
+            lv_scr_load(get_ui_main_window());  // 回到主界面理应会删掉音乐播放任务和自然之音播放任务, 浴室的在这里删
+            if (bath_play_task_handle != NULL) {
+                vTaskDelete(bath_play_task_handle);
+                bath_play_task_handle = NULL;
+            }
+            xSemaphoreGive(rs485_handle_semaphore);
         }
     }
     // 睡眠模式
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x1E, 0x01, 0x0A, 0x00}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 睡眠模式");
-        offScreen(NULL);
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            offScreen(NULL);
+            xSemaphoreGive(rs485_handle_semaphore);
+        }
     }
     // 明亮模式
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x1E, 0x01, 0x01, 0x00}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 明亮模式");
-        onScreen(NULL);
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            onScreen(NULL);
+            xSemaphoreGive(rs485_handle_semaphore);
+        }
     }
     // 播放
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x02}, (size_t)5) == 0) {
-        lv_obj_t *scr = lv_scr_act();
-        switch (work_mode)
-        {
-            case 0:
-                // 几个特殊界面
-                if (scr != get_ui_music_window() && scr != get_ui_music_play_window() && scr != get_ui_nature_sound_window() && scr != get_ui_bluetooth_window()) {
-                    if (bath_play_task_handle == NULL) {
-                        ESP_LOGI(TAG, "空闲模式, 非特殊界面, 未播放浴室音乐, 进音乐模式并打开通道并播放浴室音乐");
-                        assert(music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                        bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
-                        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
-                        work_mode = 2;
-                        open_bath_channel();
-                        play_bath_music();
+        ESP_LOGI(TAG, "Command: 播放");
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            lv_obj_t *scr = lv_scr_act();
+            switch (work_mode)
+            {
+                case 0:
+                    // 几个特殊界面
+                    if (scr != get_ui_music_window() && scr != get_ui_music_play_window() && scr != get_ui_nature_sound_window() && scr != get_ui_bluetooth_window()) {
+                        if (bath_play_task_handle == NULL) {
+                            ESP_LOGI(TAG, "空闲模式, 非特殊界面, 未播放浴室音乐, 进音乐模式并打开通道并播放浴室音乐");
+                            assert(music_play_task_handle == NULL && nature_play_task_handle == NULL);
+                            bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
+                            xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+                            work_mode = 2;
+                            open_bath_channel();
+                            play_bath_music();
+                        } else {
+                            ESP_LOGI(TAG, "空闲模式, 非特殊界面, 正在播放浴室音乐, 拒绝播放指令");
+                            assert(bath_play_task_handle != NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
+                        }
                     } else {
-                        ESP_LOGI(TAG, "空闲模式, 非特殊界面, 正在播放浴室音乐, 拒绝播放指令");
-                        assert(bath_play_task_handle != NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                    }
-                } else {
-                    ESP_LOGE(TAG, "空闲模式, 不应该在音乐库, 播放, 自然之音, 蓝牙界面之一");
-                    assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                }
-                break;
-            case 1:
-                // 蓝牙界面
-                if (scr == get_ui_bluetooth_window()) {
-                    if (bluetooth_state == 2) {
-                        ESP_LOGI(TAG, "蓝牙模式, 蓝牙界面, 蓝牙已连接, 拒绝播放指令");
-                    } else {
-                        ESP_LOGI(TAG, "蓝牙模式, 蓝牙界面, 蓝牙未连接, 关闭功放并进入音乐模式并打开通道并播放浴室音乐");
-                        bluetooth_send_at_command("AT+CL0", CMD_CHANGE_CHANNEL);
-                        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
-                        bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
-                        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
-                        work_mode = 2;
-                        open_bath_channel();
-                        play_bath_music();
-                        pause_inactive_timer(); // 某时间后不再退出蓝牙界面
-                    }
-                }
-                // 剩下所有界面
-                else {
-                    ESP_LOGE(TAG, "蓝牙模式, 不应该在蓝牙界面之外");
-                    assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                }
-                break;
-            case 2:
-                // 音乐库界面
-                if (scr == get_ui_music_window()) {
-                    ESP_LOGI(TAG, "音乐模式, 音乐库界面, 拒绝播放指令");
-                    assert(music_play_task_handle != NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
-                }
-                // 播放界面
-                else if (scr == get_ui_music_play_window()) {
-                    ESP_LOGI(TAG, "音乐模式, 播放界面, 拒绝播放指令");
-                    assert(music_play_task_handle != NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
-                }
-                // 自然之音界面
-                else if (scr == get_ui_nature_sound_window()) {
-                    if (bath_play_task_handle == NULL && nature_play_task_handle == NULL) {
-                        ESP_LOGI(TAG, "音乐模式, 自然之音界面, 未播放任何东西, 打开通道并播放浴室音乐");
-                        open_bath_channel();
-                        play_bath_music();
-                    } else {
-                        ESP_LOGI(TAG, "音乐模式, 自然之音界面, 正在播放某音乐, 拒绝播放指令");
-                    }
-                }
-                // 蓝牙界面
-                else if (scr == get_ui_bluetooth_window()) {
-                    if (bluetooth_state == 2) {
-                        ESP_LOGE(TAG, "音乐模式, 蓝牙界面, 蓝牙已连接, 这不应该");
+                        ESP_LOGE(TAG, "空闲模式, 不应该在音乐库, 播放, 自然之音, 蓝牙界面之一");
                         assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                    } else {
-                        ESP_LOGI(TAG, "音乐模式, 蓝牙界面, 蓝牙未连接, 此时理应是在播放浴室音乐, 拒绝播放指令");
-                        assert(bath_play_task_handle != NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
                     }
-                } else {
-                    ESP_LOGI(TAG, "音乐模式, 非音乐库, 播放, 自然之音, 蓝牙界面之一, 此时应该在播放浴室音乐, 拒绝播放指令");
-                }
+                    break;
+                case 1:
+                    // 蓝牙界面
+                    if (scr == get_ui_bluetooth_window()) {
+                        if (bluetooth_state == 2) {
+                            ESP_LOGI(TAG, "蓝牙模式, 蓝牙界面, 蓝牙已连接, 拒绝播放指令");
+                        } else {
+                            ESP_LOGI(TAG, "蓝牙模式, 蓝牙界面, 蓝牙未连接, 关闭功放并进入音乐模式并打开通道并播放浴室音乐");
+                            bluetooth_send_at_command("AT+CL0", CMD_CHANGE_CHANNEL);
+                            xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+                            bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
+                            xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
+                            work_mode = 2;
+                            open_bath_channel();
+                            play_bath_music();
+                            pause_inactive_timer(); // 某时间后不再退出蓝牙界面
+                        }
+                    }
+                    // 剩下所有界面
+                    else {
+                        ESP_LOGE(TAG, "蓝牙模式, 不应该在蓝牙界面之外");
+                        assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
+                    }
+                    break;
+                case 2:
+                    // 音乐库界面
+                    if (scr == get_ui_music_window()) {
+                        ESP_LOGI(TAG, "音乐模式, 音乐库界面, 拒绝播放指令");
+                        assert(music_play_task_handle != NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
+                    }
+                    // 播放界面
+                    else if (scr == get_ui_music_play_window()) {
+                        ESP_LOGI(TAG, "音乐模式, 播放界面, 拒绝播放指令");
+                        assert(music_play_task_handle != NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
+                    }
+                    // 自然之音界面
+                    else if (scr == get_ui_nature_sound_window()) {
+                        if (bath_play_task_handle == NULL && nature_play_task_handle == NULL) {
+                            ESP_LOGI(TAG, "音乐模式, 自然之音界面, 未播放任何东西, 打开通道并播放浴室音乐");
+                            open_bath_channel();
+                            play_bath_music();
+                        } else {
+                            ESP_LOGI(TAG, "音乐模式, 自然之音界面, 正在播放某音乐, 拒绝播放指令");
+                        }
+                    }
+                    // 蓝牙界面
+                    else if (scr == get_ui_bluetooth_window()) {
+                        if (bluetooth_state == 2) {
+                            ESP_LOGE(TAG, "音乐模式, 蓝牙界面, 蓝牙已连接, 这不应该");
+                            assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
+                        } else {
+                            ESP_LOGI(TAG, "音乐模式, 蓝牙界面, 蓝牙未连接, 此时理应是在播放浴室音乐, 拒绝播放指令");
+                            assert(bath_play_task_handle != NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
+                        }
+                    } else {
+                        ESP_LOGI(TAG, "音乐模式, 非音乐库, 播放, 自然之音, 蓝牙界面之一, 此时应该在播放浴室音乐, 拒绝播放指令");
+                    }
+            }
+            xSemaphoreGive(rs485_handle_semaphore);
         }
     }
     // 停止播放
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x03}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 停止");
-        lv_obj_t *scr = lv_scr_act();
-        switch (work_mode) {
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            lv_obj_t *scr = lv_scr_act();
+            switch (work_mode) {
             case 0:
             case 1:
                 ESP_LOGI(TAG, "连音乐模式都不是, 拒绝停止指令");
@@ -309,57 +331,68 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         work_mode = 0;
                     }
                 }
+            }
+            xSemaphoreGive(rs485_handle_semaphore);
         }
     }
     // 上一首
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x04}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 上一首");
-        if (work_mode == 2) {
-            if (bath_play_task_handle != NULL) {
-                prev_bath_track();
-            } else if (music_play_task_handle != NULL) {
-                prevTrack(NULL);
-            } else if (nature_play_task_handle != NULL) {
-                ESP_LOGI(TAG, "正在播放自然之音, 拒绝上一首指令");
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            if (work_mode == 2) {
+                if (bath_play_task_handle != NULL) {
+                    prev_bath_track();
+                } else if (music_play_task_handle != NULL) {
+                    prevTrack(NULL);
+                } else if (nature_play_task_handle != NULL) {
+                    ESP_LOGI(TAG, "正在播放自然之音, 拒绝上一首指令");
+                } else {
+                    ESP_LOGE(TAG, "音乐模式, 但什么都不在播放");
+                }
             } else {
-                ESP_LOGE(TAG, "音乐模式, 但什么都不在播放");
+                ESP_LOGI(TAG, "并不在音乐模式, 拒绝上一首指令");
             }
-        } else {
-            ESP_LOGI(TAG, "并不在音乐模式, 拒绝上一首指令");
+            xSemaphoreGive(rs485_handle_semaphore);
         }
     }
     // 下一首
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x05}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 下一首");
-        if (work_mode == 2) {
-            if (bath_play_task_handle != NULL) {
-                next_bath_track();
-            } else if (music_play_task_handle) {
-                nextTrack(NULL);
-            } else if (nature_play_task_handle != NULL) {
-                ESP_LOGI(TAG, "正在播放自然之音, 拒绝下一首指令");
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            if (work_mode == 2) {
+                if (bath_play_task_handle != NULL) {
+                    next_bath_track();
+                } else if (music_play_task_handle) {
+                    nextTrack(NULL);
+                } else if (nature_play_task_handle != NULL) {
+                    ESP_LOGI(TAG, "正在播放自然之音, 拒绝下一首指令");
+                } else {
+                    ESP_LOGE(TAG, "音乐模式, 但什么都不在播放");
+                }
             } else {
-                ESP_LOGE(TAG, "音乐模式, 但什么都不在播放");
+                ESP_LOGI(TAG, "并不在音乐模式, 拒绝下一首指令");
             }
-        } else {
-            ESP_LOGI(TAG, "并不在音乐模式, 拒绝下一首指令");
+            xSemaphoreGive(rs485_handle_semaphore);
         }
     }
     // 播放/暂停
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x0C}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 播放/暂停");
-        if (work_mode == 2) {
-            if (bath_play_task_handle != NULL) {
-                playPause(NULL);
-            } else if (music_play_task_handle != NULL) {
-                playPause(NULL);
-            } else if (nature_play_task_handle != NULL) {
-                ESP_LOGI(TAG, "正在播放自然之音, 拒绝播放/暂停指令");
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            if (work_mode == 2) {
+                if (bath_play_task_handle != NULL) {
+                    playPause(NULL);
+                } else if (music_play_task_handle != NULL) {
+                    playPause(NULL);
+                } else if (nature_play_task_handle != NULL) {
+                    ESP_LOGI(TAG, "正在播放自然之音, 拒绝播放/暂停指令");
+                } else {
+                    ESP_LOGE(TAG, "音乐模式, 但什么都不在播放");
+                }
             } else {
-                ESP_LOGE(TAG, "音乐模式, 但什么都不在播放");
+                ESP_LOGI(TAG, "并不在音乐模式, 拒绝播放/暂停指令");
             }
-        } else {
-            ESP_LOGI(TAG, "并不在音乐模式, 拒绝播放/暂停指令");
+            xSemaphoreGive(rs485_handle_semaphore);
         }
     }
     // 查询MP
@@ -371,17 +404,19 @@ void process_command(rs485_packet_t *packet, size_t len) {
     
     // 时间同步
     else if (packet->command[0] == 0x78) {
-        uint32_t timestamp = (packet->command[1] << 24) | (packet->command[2] << 16) |
-                         (packet->command[3] << 8) | packet->command[4];
-        // 使用时间戳进行后续处理
-        printf("Received timestamp: %lu\n", timestamp);
-        global_time = timestamp + 8 * 3600;
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            uint32_t timestamp = (packet->command[1] << 24) | (packet->command[2] << 16) |
+                            (packet->command[3] << 8) | packet->command[4];
+            // 使用时间戳进行后续处理
+            printf("Received timestamp: %lu\n", timestamp);
+            global_time = timestamp + 8 * 3600;
 
-        // 启动定时器
-        if (update_time_task_handle == NULL) {
-            xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
+            // 启动定时器
+            if (update_time_task_handle == NULL) {
+                xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
+            }
+            xSemaphoreGive(rs485_handle_semaphore);
         }
-
     }
     // 未知指令
     else {
