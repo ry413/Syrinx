@@ -332,6 +332,9 @@ static void cleanBluetoothTask(void *pvParameter) {
     work_mode = 0;
     bluetooth_send_at_command("AT+CL0", CMD_CHANGE_CHANNEL);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 关闭提示音以防止进音乐模式时播放"tf卡模式"
+    bluetooth_send_at_command("AT+CN1", CMD_CHANGE_PROMPT_TONE);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE, pdTRUE, pdFALSE, portMAX_DELAY);
     // 删除蓝牙状态监听任务
     if (bluetooth_monitor_state_task_handle != NULL) {
         vTaskDelete(bluetooth_monitor_state_task_handle);
@@ -449,6 +452,10 @@ void initActions(lv_event_t *e) {
     // 查询设备状态
     bluetooth_send_at_command("AT+MV", CMD_GET_DEVICE_STATE);
     xEventGroupWaitBits(bt_event_group, EVENT_GET_DEVICE_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 关闭提示音
+    bluetooth_send_at_command("AT+CN1", CMD_CHANGE_PROMPT_TONE);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE, pdTRUE, pdFALSE, portMAX_DELAY);
+
     xSemaphoreGive(init_phase_semaphore);
 
     if (device_state == 2) {
@@ -513,9 +520,11 @@ void bluetoothScrLoaded(lv_event_t *e) {
     current_screen_volume_component = ui_Bluetooth_Window_Volume_adjust;
     update_header_volume();
 
+    // 进入蓝牙模式, 需要播放提示音
     bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
-    // 进入蓝牙模式
+    bluetooth_send_at_command("AT+CN2", CMD_CHANGE_PROMPT_TONE);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE, pdTRUE, pdFALSE, portMAX_DELAY);
     bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);
     work_mode = 1;

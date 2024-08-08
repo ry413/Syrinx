@@ -437,8 +437,11 @@ void bluetooth_monitor_task(void *pvParameters) {
                     case CMD_CHANGE_DIR:
                         xEventGroupSetBits(bt_event_group, EVENT_CHANGE_DIR);
                         break;
+                    case CMD_CHANGE_PROMPT_TONE:
+                        xEventGroupSetBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE);
+                        break;
                     default:
-                        ESP_LOGI(TAG, "Other CMD: %d", current_command);
+                        ESP_LOGE(TAG, "Other CMD: %d", current_command);
                 }
             } else if (strncmp(response, "QA+", 3) == 0) {
                 ESP_LOGI(TAG, "Volume: %s", response);
