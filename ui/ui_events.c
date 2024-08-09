@@ -114,7 +114,7 @@ static void update_progress(lv_timer_t *timer);
 static void initProgressBar(void);
 static void bluetooth_cfg_task(void *pvParameter);
 static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, uint32_t hour, uint32_t min);
-static void inactiveCallback(lv_timer_t *timer);
+static void inactive_callback(lv_timer_t *timer);
 static void bluetooth_monitor_state_task(void *pvParameter);
 static void changeMusicUpdateUI(void);
 static void update_header_volume(void);
@@ -347,36 +347,46 @@ static void cleanBluetoothTask(void *pvParameter) {
     }
     vTaskDelete(NULL);
 }
-// 在非main界面无操作一定时间后, 从xx界面回到main界面的回调
-static void inactiveCallback(lv_timer_t *timer) {
+// 不活动定时器的回调, 在非main界面无操作一定时间后, 从xx界面回到main界面
+static void inactive_callback(lv_timer_t *timer) {
     // 记录当前screen
     // lv_obj_t *prevScreen = lv_scr_act();
     // 关闭当前页的音量调节块
     closeVolumeAdjust(NULL);
     lv_scr_load(ui_Main_Window);
 
-    // pause_inactive_timer();  不在这写这个, 而是放在mainScrLoaded, 因为主动返回主界面也要停止这个timer
+    // del_inactive_timer();  不在这写这个, 而是放在mainScrLoaded, 因为主动返回主界面也要停止这个timer
 }
-// 重置inactive定时器
+// 创建不活动定时器
+void create_inactive_timer(void) {
+    if (inactive_timer == NULL) {
+        inactive_timer = lv_timer_create(inactive_callback, INACTIVE_TIME, NULL);
+    }
+}
+// 删除不活动定时器
+void del_inactive_timer(void) {
+    if (inactive_timer != NULL) {
+        lv_timer_del(inactive_timer);
+        inactive_timer = NULL;
+    }
+}
+// 重置不活动定时器
 void reset_inactive_timer(void) {
-    lv_timer_reset(inactive_timer);
-    lv_timer_resume(inactive_timer);
-}
-// 暂停inactive定时器(不应该显式resume它) 因为好像不存在lv_timer_stop
-void pause_inactive_timer(void) {
-    lv_timer_pause(inactive_timer);
+    if (inactive_timer != NULL) {
+        lv_timer_reset(inactive_timer);
+    }
 }
 // 感觉很危险的极性状态机
 static void bluetooth_monitor_state_task(void *pvParameter) {
     while (1) {
         if (bluetooth_state == 2) {
             printf("蓝牙已连接\n");
-            pause_inactive_timer();
+            del_inactive_timer();
             // 等待断开事件
             xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_DISCONNECTED, pdTRUE, pdFALSE, portMAX_DELAY);
         } else if (bluetooth_state == 1) {
             printf("等待连接中\n");
-            reset_inactive_timer();
+            create_inactive_timer();
             // 等待连接事件
             xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_CONNECTED, pdTRUE, pdFALSE, portMAX_DELAY);
         }
@@ -442,8 +452,10 @@ void initActions(lv_event_t *e) {
     // 等待上电的主动返回值被丢掉
     xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
 
-    inactive_timer = lv_timer_create(inactiveCallback, INACTIVE_TIME, NULL);
+    inactive_timer = lv_timer_create(inactive_callback, INACTIVE_TIME, NULL);
+    lv_timer_pause(inactive_timer);
     close_tf_card_notfound_msg_timer = lv_timer_create(close_tf_card_notfound_msg_timer_callback, 2000, NULL);
+    lv_timer_pause(close_tf_card_notfound_msg_timer);
 
     init_phase_semaphore = xSemaphoreCreateBinary();
     if (init_phase_semaphore == NULL) {
@@ -486,7 +498,7 @@ void mainScrLoaded(lv_event_t *e) {
     // 每次到主界面时, 重建一个背光定时器, 因为只有在主界面时才会进入待机模式
     init_backlight_timer(backlight_time_level_to_second(backlight_time_level));
     // 停止inactive定时器
-    pause_inactive_timer();
+    del_inactive_timer();
 }
 void musicScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Music_Time);
@@ -567,8 +579,7 @@ void idleScrLoaded(lv_event_t *e) {
     if (global_time > 0) update_current_time_label();
 }
 void settingsScrLoaded(lv_event_t *e) {
-    // 设置界面就不退了
-    pause_inactive_timer();
+
 }
 // ******************** 离开各界面后的回调 ********************
 
@@ -580,7 +591,7 @@ void leaveMainWindow(lv_event_t *e) {
     closeVolumeAdjust(NULL);
     // 处理特殊界面
     lv_obj_t *new_scr = lv_scr_act();
-    // 进入待机即正常待机
+    // 进入Idle界面即正常待机
     if (new_scr == ui_Idle_Window) {
         printf("is Idle\n");
     }
@@ -604,13 +615,12 @@ void leaveMainWindow(lv_event_t *e) {
         bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
         xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
         work_mode = 2;
-
-        reset_inactive_timer();
+        create_inactive_timer();
     }
-    // 通常都重置定时器, 无操作一定时间后回到主界面
+    // 通常都创建不活动定时器, 无操作一定时间后回到主界面
     else {
-        printf("ohter\n");
-        reset_inactive_timer();
+        printf("别的界面, 创建活动定时器\n");
+        create_inactive_timer();
     }
 }
 void leaveMusicWindow(lv_event_t *e) {
@@ -1701,7 +1711,6 @@ static void update_progress(lv_timer_t *timer) {
 static void initProgressBar(void) {
     // 创建定时器，每秒更新一次
     progressTimer = lv_timer_create(update_progress, 1000, NULL);
-
     lv_timer_pause(progressTimer);  // 初始化时暂停定时器
 }
 // 设置新的进度条
@@ -2101,8 +2110,8 @@ void attempt_enter_nature_window(lv_event_t *e) {
 }
 // 重复播放指定自然之音的任务
 static void selectNatureSoundTask(void *pvParameter) {
-    // 只要开始播放任意一个自然之音, 就停止这个定时器, 无论如何都不自动返回主界面, 仅能手动返回
-    pause_inactive_timer();
+    // 只要开始播放任意一个自然之音, 就删除不活动定时器, 无论如何都不自动返回主界面, 仅能手动返回
+    del_inactive_timer();
 
     char *sound_name = (char *)pvParameter;
 

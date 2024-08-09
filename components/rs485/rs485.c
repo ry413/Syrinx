@@ -137,49 +137,60 @@ void process_command(rs485_packet_t *packet, size_t len) {
     if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x01}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 插卡");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             set_backlight(backlight_level);
             // enable_touch();
             lv_obj_add_flag(get_ui_disabled_touch_range(), LV_OBJ_FLAG_HIDDEN);
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 拔卡
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x00, 0x26, 0x00}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 拔卡");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             set_backlight(0);
             // disabled_touch();
             // 触摸缓冲好像删不掉, 所以开一个遮罩防止在拔卡后积累触摸事件
             lv_obj_clear_flag(get_ui_disabled_touch_range(), LV_OBJ_FLAG_HIDDEN);
 
+            bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
+            xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
             lv_scr_load(get_ui_main_window());  // 回到主界面理应会删掉音乐播放任务和自然之音播放任务, 浴室的在这里删
             if (bath_play_task_handle != NULL) {
                 vTaskDelete(bath_play_task_handle);
                 bath_play_task_handle = NULL;
             }
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 睡眠模式
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x1E, 0x01, 0x0A, 0x00}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 睡眠模式");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             offScreen(NULL);
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 明亮模式
     else if (memcmp(packet->command, (uint8_t[]){0x80, 0x1E, 0x01, 0x01, 0x00}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 明亮模式");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             onScreen(NULL);
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 播放
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x02}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 播放");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             lv_obj_t *scr = lv_scr_act();
             switch (work_mode)
             {
@@ -217,7 +228,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
                             work_mode = 2;
                             open_bath_channel();
                             play_bath_music();
-                            pause_inactive_timer(); // 某时间后不再退出蓝牙界面
+                            del_inactive_timer(); // 删除不活动定时器, 不再自动退出蓝牙界面
                         }
                     }
                     // 剩下所有界面
@@ -261,12 +272,14 @@ void process_command(rs485_packet_t *packet, size_t len) {
                     }
             }
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 停止播放
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x03}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 停止");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             lv_obj_t *scr = lv_scr_act();
             switch (work_mode) {
             case 0:
@@ -311,7 +324,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);
                         work_mode = 1;
                         
-                        reset_inactive_timer();  // 回蓝牙模式后如果很久都不连接, 也要回主界面, 所以重置它
+                        create_inactive_timer();  // 回蓝牙模式后如果很久都不连接, 也要回主界面, 所以重建不活动定时器
                     } else {
                         ESP_LOGE(TAG, "音乐模式, 蓝牙界面, 也不在播放浴室音乐, 这不应该");
                         assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
@@ -333,12 +346,14 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 }
             }
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 上一首
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x04}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 上一首");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     prev_bath_track();
@@ -353,12 +368,14 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 ESP_LOGI(TAG, "并不在音乐模式, 拒绝上一首指令");
             }
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 下一首
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x05}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 下一首");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     next_bath_track();
@@ -373,12 +390,14 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 ESP_LOGI(TAG, "并不在音乐模式, 拒绝下一首指令");
             }
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 播放/暂停
     else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x0C}, (size_t)5) == 0) {
         ESP_LOGI(TAG, "Command: 播放/暂停");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     playPause(NULL);
@@ -393,6 +412,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 ESP_LOGI(TAG, "并不在音乐模式, 拒绝播放/暂停指令");
             }
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 查询MP
@@ -405,6 +425,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
     // 时间同步
     else if (packet->command[0] == 0x78) {
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
             uint32_t timestamp = (packet->command[1] << 24) | (packet->command[2] << 16) |
                             (packet->command[3] << 8) | packet->command[4];
             // 使用时间戳进行后续处理
@@ -416,6 +437,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
             }
             xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
         }
     }
     // 未知指令

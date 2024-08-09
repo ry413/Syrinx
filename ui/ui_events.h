@@ -92,7 +92,9 @@ void attempt_enter_nature_window(lv_event_t * e);
 void setWifiStateIcon(bool state);
 
 void reset_inactive_timer(void);
-void pause_inactive_timer(void);
+void create_inactive_timer(void);
+void del_inactive_timer(void);
+
 
 // 暴露给485那边用, 天呐, 有生之年必须把这些封装成music组件
 lv_obj_t * get_ui_main_window(void);
