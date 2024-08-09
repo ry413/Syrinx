@@ -15,7 +15,7 @@ struct wifi_config_params {
 extern bool wifi_is_connected;
 
 extern uint8_t wifi_enabled;
-extern char *wifi_name;
+extern char *wifi_ssid;
 extern char *wifi_password;
 
 extern EventGroupHandle_t wifi_event_group;

@@ -364,20 +364,20 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_flag(ui_Paused_Img_Placeholder, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Paused_Img_Placeholder, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Button5 = lv_btn_create(ui_Main_Window);
-    lv_obj_set_width(ui_Button5, 80);
-    lv_obj_set_height(ui_Button5, 80);
-    lv_obj_set_x(ui_Button5, 2);
-    lv_obj_set_y(ui_Button5, -142);
-    lv_obj_set_align(ui_Button5, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Button5, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Button5, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_Button5, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_Button5, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_color(ui_Button5, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_opa(ui_Button5, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_Setting_Btn = lv_btn_create(ui_Main_Window);
+    lv_obj_set_width(ui_Setting_Btn, 80);
+    lv_obj_set_height(ui_Setting_Btn, 80);
+    lv_obj_set_x(ui_Setting_Btn, 2);
+    lv_obj_set_y(ui_Setting_Btn, -142);
+    lv_obj_set_align(ui_Setting_Btn, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Setting_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_Setting_Btn, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_Setting_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_Setting_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_Setting_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_Setting_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_Setting_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_opa(ui_Setting_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Main_Header_Volume = ui_Header_Volume_create(ui_Main_Window);
     lv_obj_set_x(ui_Main_Header_Volume, 187);
@@ -431,7 +431,7 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Mode_Btn, ui_event_Mode_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wake_up_Btn, ui_event_Wake_up_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Guide_Btn, ui_event_Guide_Btn, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_Button5, ui_event_Button5, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Setting_Btn, ui_event_Settings_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_TFCardNotFoundMsg, ui_event_TFCardNotFoundMsg, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_On_Main_Screen_Range, ui_event_Main_On_Screen_Range, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Main_Window, ui_event_Main_Window, LV_EVENT_ALL, NULL);

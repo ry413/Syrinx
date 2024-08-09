@@ -15,7 +15,7 @@ extern "C" {
 #include "../timesync/timesync.h"
 #include "../../main/touch.h"
 
-#include "../../ui/ui_events.h"
+
 
 // RS485 配置参数
 #define RS485_UART_PORT      UART_NUM_1

@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#include "lvgl/lvgl.h"
+#include "../components/lvgl/lvgl.h"
 
 #include "ui_helpers.h"
 #include "components/ui_comp.h"
@@ -66,11 +66,10 @@ extern lv_obj_t * ui_Wifi_States_Icon;
 extern lv_obj_t * ui_Wifi_Img_Placeholder;
 extern lv_obj_t * ui_Music_Note_Img_Placeholder1;
 extern lv_obj_t * ui_Paused_Img_Placeholder;
-void ui_event_Disconnect_Wifi(lv_event_t * e);
 extern lv_obj_t * ui_Disconnect_Wifi;
 extern lv_obj_t * ui_Label1;
-void ui_event_Button5(lv_event_t * e);
-extern lv_obj_t * ui_Button5;
+void ui_event_Settings_Btn(lv_event_t * e);
+extern lv_obj_t * ui_Setting_Btn;
 extern lv_obj_t * ui_Main_Header_Volume;
 extern lv_obj_t * ui_Main_Window_Volume_adjust;
 void ui_event_Main_On_Screen_Range(lv_event_t * e);
@@ -446,11 +445,11 @@ void ui_Settings_Wifi_Window_screen_init(void);
 extern lv_obj_t * ui_Settings_Wifi_Window;
 extern lv_obj_t * ui_Header_Main1;
 extern lv_obj_t * ui_Header_Main_Text1;
-extern lv_obj_t * ui_Wifi_Name;
-extern lv_obj_t * ui_Wifi_Name_Text;
-extern lv_obj_t * ui_Wifi_Name_Line;
-void ui_event_Wifi_Name_Input(lv_event_t * e);
-extern lv_obj_t * ui_Wifi_Name_Input;
+extern lv_obj_t * ui_Wifi_SSID;
+extern lv_obj_t * ui_Wifi_SSID_Text;
+extern lv_obj_t * ui_Wifi_SSID_Line;
+void ui_event_Wifi_SSID_Input(lv_event_t * e);
+extern lv_obj_t * ui_Wifi_SSID_Input;
 extern lv_obj_t * ui_Wifi_Password;
 extern lv_obj_t * ui_Wifi_Password_Text;
 extern lv_obj_t * ui_Wifi_Password_Line;

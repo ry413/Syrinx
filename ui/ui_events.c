@@ -25,10 +25,12 @@
 #include "rs485.h"
 
 //////////////////// DEFINITIONS ////////////////////
-#define MAX_ITEMS_PER_LIST 5            // 每个MusicList里有几首歌
-#define MAX_LISTS 10                    // 假设最多有 10 个 MusicList
-#define INACTIVE_TIME 0.5 * 60 * 1000   // 无操作几分钟就返回主界面的几
-#define MAX_VOLUME_LIMIT 30             // 真实的音量上限
+#define MAX_ITEMS_PER_LIST 5                        // 每个MusicList里有几首歌
+#define MAX_LISTS 10                                // 假设最多有 10 个 MusicList
+#define INACTIVE_TIME 0.5 * 60 * 1000               // 无操作几分钟就返回主界面的几
+#define MAX_VOLUME_LIMIT 30                         // 真实的音量上限
+#define ENTER_SETTINGS_WINDOW_CLICK_COUNT 5         // 进入设置界面需要点击的次数
+#define ENTER_SETTINGS_WINDOW_CLICK_RESET_TIME 500  // 进入设置界面点击的间隔, 每两次点击间隔不能超过500ms
 
 //////////////////// GLOBAL VARIABLES ////////////////////
 
@@ -47,8 +49,8 @@ static lv_timer_t *inactive_timer;       // 不活动就返回主界面, 的定�
 static lv_timer_t *close_tf_card_notfound_msg_timer;    // 用来关闭"tf卡不存在"弹窗的定时器
 
 // 蓝牙名称与密码
-char *bluetoothName = NULL;
-char *bluetoothPassword = NULL;
+char *bluetooth_ui_name = NULL;
+char *bluetooth_ui_pass = NULL;
 
 // 当前音量
 int current_volume;
@@ -106,6 +108,7 @@ static uint32_t *music_durations = NULL;
 SemaphoreHandle_t init_phase_semaphore = NULL;
 
 static bool create_music_item_complete = false;     // 如果已插入卡, 但是没有刷新音乐列表就进音乐库什么的会出事
+
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
 // 真有必要写这些吗
 
@@ -240,7 +243,7 @@ static void create_music_item(void) {
     // 顺便初始化一下进度条
     initProgressBar();
 
-    // 显示tf卡图标
+    // 显示正常的tf卡图标(把X隐藏掉)
     lv_obj_add_flag(ui_tfcard_unavailable_the_X, LV_OBJ_FLAG_HIDDEN);
 
     // 收集bath里的歌的id
@@ -437,10 +440,13 @@ static void music_play_mode_task(void *pvParameter) {
         nextTrack(NULL);
     }
 }
-
+// 什么b命名?
+static void close_tf_card_notfound_msg_timer_callback_callback(void *Param) {
+    lv_obj_add_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
+}
 // 关闭"tf卡未插入"的弹窗的回调
 static void close_tf_card_notfound_msg_timer_callback(lv_timer_t *timer) {
-    lv_obj_add_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
+    lv_async_call(close_tf_card_notfound_msg_timer_callback_callback, NULL);
 }
 
 //////////////////// lvgl事件回调 ////////////////////
@@ -455,7 +461,6 @@ void initActions(lv_event_t *e) {
     inactive_timer = lv_timer_create(inactive_callback, INACTIVE_TIME, NULL);
     lv_timer_pause(inactive_timer);
     close_tf_card_notfound_msg_timer = lv_timer_create(close_tf_card_notfound_msg_timer_callback, 2000, NULL);
-    lv_timer_pause(close_tf_card_notfound_msg_timer);
 
     init_phase_semaphore = xSemaphoreCreateBinary();
     if (init_phase_semaphore == NULL) {
@@ -616,6 +621,10 @@ void leaveMainWindow(lv_event_t *e) {
         xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
         work_mode = 2;
         create_inactive_timer();
+    }
+    // 设置界面不创建不活动定时器
+    else if (new_scr == ui_Settings_Window) {
+
     }
     // 通常都创建不活动定时器, 无操作一定时间后回到主界面
     else {
@@ -805,7 +814,7 @@ void decBacklightTime(lv_event_t *e) {
     set_backlight_time_to_label(ui_Backlight_Time_Value, backlightTimeLevel);
 }
 // 进入熄屏
-static void offScreen_callback(void *param) {
+static void offScreen_callback(void *pvParameter) {
     printf("Sleep\n");
     // 关闭背光
     set_backlight(0);
@@ -821,7 +830,7 @@ void offScreen(lv_event_t *e) {
     lv_async_call(offScreen_callback, NULL);
 }
 // 从熄屏中醒来
-static void onScreen_callback(void *param) {
+static void onScreen_callback(void *pvParameter) {
     printf("Wakeup\n");
     // 恢复背光
     set_backlight(backlight_level);
@@ -843,11 +852,11 @@ void idleBackToMainWindow(lv_event_t *e) {
 // 更改蓝牙设置
 static void bluetooth_cfg_task(void *pvParameter) {
     char command[50];
-    snprintf(command, sizeof(command), "AT+BE%s", bluetoothPassword);
+    snprintf(command, sizeof(command), "AT+BE%s", bluetooth_ui_pass);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_PASSWORD);
     xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_SET_PASSWORD, pdTRUE, pdFALSE, 3000);
 
-    snprintf(command, sizeof(command), "AT+BD%s", bluetoothName);
+    snprintf(command, sizeof(command), "AT+BD%s", bluetooth_ui_name);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_NAME);
     // 等待模块重启
     xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
@@ -866,13 +875,13 @@ static void bluetooth_sync_cfg(void) {
     bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
     work_mode = 0;
-    bluetoothName = bluetooth_name;
-    lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetoothName);
-    lv_label_set_text(ui_Bluetooth_Name_Value, bluetoothName);
+    bluetooth_ui_name = bluetooth_name;
+    lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetooth_ui_name);
+    lv_label_set_text(ui_Bluetooth_Name_Value, bluetooth_ui_name);
 
-    bluetoothPassword = bluetooth_password;
-    lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetoothPassword);
-    lv_label_set_text(ui_Bluetooth_Password_Value, bluetoothPassword);
+    bluetooth_ui_pass = bluetooth_password;
+    lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
+    lv_label_set_text(ui_Bluetooth_Password_Value, bluetooth_ui_pass);
 }
 
 // 初始化蓝牙设置
@@ -885,16 +894,16 @@ void initBluetoothSettings(lv_event_t *e) {
 // 确认保存蓝牙设置
 void saveBluetoothSetting(lv_event_t *e) {
     const char *name = lv_textarea_get_text(ui_Bluetooth_Name_Input2);
-    bluetoothName = strdup(name);
+    bluetooth_ui_name = strdup(name);
     const char *password = lv_textarea_get_text(ui_Bluetooth_Password_Input2);
-    bluetoothPassword = strdup(password);
+    bluetooth_ui_pass = strdup(password);
     xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
 }
 // 取消保存蓝牙设置
 void cancelSaveBluetoothSetting(lv_event_t *e) {
     // 改完蓝牙设置后没点保存就退出界面, 就把原先的值设回来, 因为是textarea
-    lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetoothName);
-    lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetoothPassword);
+    lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetooth_ui_name);
+    lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
 }
 
 // ******************** 时间相关 ********************
@@ -1223,7 +1232,7 @@ void initSystemSettings(lv_event_t *e) {
 // 确认保存系统设置
 void saveSystemSettings(lv_event_t *e) {
     nvs_handle_t nvs_handle;
-    esp_err_t err = nvs_open("IDSettings", NVS_READWRITE, &nvs_handle);
+    esp_err_t err = nvs_open("SystemSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
         ESP_LOGE("saveIDSetting", "Failed to open NVS");
         return;
@@ -1288,6 +1297,8 @@ void verifyResetFactory(lv_event_t *e)
 
     nvs_handle_t nvs_handle;
 
+    // 重置所有nvs设置
+
     // 重置背光设置
     err = nvs_open("BLSettings", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
@@ -1308,7 +1319,7 @@ void verifyResetFactory(lv_event_t *e)
     if (err != ESP_OK) {
         ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
     } else {
-        ESP_LOGI("verifyResetFactory", "背光设置重置完成");
+        ESP_LOGI("verifyResetFactory", "背光设置重置为level: %ld, time: %ld", new_bk_level, new_bk_time_level);
     }
     nvs_close(nvs_handle);
 
@@ -1344,7 +1355,7 @@ void verifyResetFactory(lv_event_t *e)
     if (err != ESP_OK) {
         ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
     } else {
-        ESP_LOGI("verifyResetFactory", "声音设置重置完成");
+        ESP_LOGI("verifyResetFactory", "声音设置重置为default: %ld, max: %ld, bathChannel: %ld", new_default_volume, new_max_volume, new_bath_channel);
     }
     nvs_close(nvs_handle);
 
@@ -1370,7 +1381,7 @@ void verifyResetFactory(lv_event_t *e)
     if (err != ESP_OK) {
         ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
     } else {
-        ESP_LOGI("verifyResetFactory", "ID重置完成");
+        ESP_LOGI("verifyResetFactory", "ID重置为 %ld", new_id);
     }
     nvs_close(nvs_handle);
     system_id = new_id;
@@ -1384,7 +1395,7 @@ void verifyResetFactory(lv_event_t *e)
         return;
     }
     uint8_t new_enabled = 0;
-    char new_wifi_name[] = "12345678";
+    char new_wifi_ssid[] = "12345678";
     char new_wifi_password[] = "12345678";
     err = nvs_set_u8(nvs_handle, "enabled", new_enabled);
     if (err != ESP_OK) {
@@ -1392,7 +1403,7 @@ void verifyResetFactory(lv_event_t *e)
         nvs_close(nvs_handle);
         return;
     }
-    err = nvs_set_str(nvs_handle, "name", new_wifi_name);
+    err = nvs_set_str(nvs_handle, "name", new_wifi_ssid);
     if (err != ESP_OK) {
         ESP_LOGE("verifyResetFactory", "Failed to set name in NVS");
         nvs_close(nvs_handle);
@@ -1408,13 +1419,13 @@ void verifyResetFactory(lv_event_t *e)
     if (err != ESP_OK) {
         ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes");
     } else {
-        ESP_LOGI("verifyResetFactory", "WIFI设置重置完成");
+        ESP_LOGI("verifyResetFactory", "WIFI设置重置为enabled: %d, ssid: %s, pass: %s", new_enabled, new_wifi_ssid, new_wifi_password);
     }
     nvs_close(nvs_handle);
 
-    wifi_name = strdup(new_wifi_name);
+    wifi_ssid = strdup(new_wifi_ssid);
     wifi_password = strdup(new_wifi_password);
-    lv_textarea_set_text(ui_Wifi_Name_Input, wifi_name);
+    lv_textarea_set_text(ui_Wifi_SSID_Input, wifi_ssid);
     lv_textarea_set_text(ui_Wifi_Password_Input, wifi_password);
     if (new_enabled == 1) {
         lv_obj_clear_flag(ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN);
@@ -1424,13 +1435,14 @@ void verifyResetFactory(lv_event_t *e)
     }
 
 
-    // 重置蓝牙配置(不操作nvs)
-    bluetoothName = "Hotel";
-    lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetoothName);
-    bluetoothPassword = "0000";
-    lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetoothPassword);
+    // 重置蓝牙配置(虽然这个不操作nvs)
+    bluetooth_ui_name = "Hotel";
+    lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetooth_ui_name);
+    bluetooth_ui_pass = "0000";
+    lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
     xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
-    ESP_LOGI("verifyResetFactory", "蓝牙设置重置完成");
+    vTaskDelay(2000 / portTICK_PERIOD_MS);  // 等待蓝牙复位
+    ESP_LOGI("verifyResetFactory", "蓝牙设置重置为name: %s, pass: %s", bluetooth_ui_name, bluetooth_ui_pass);
 
 
     // 重置时间设置(不操作nvs)
@@ -1439,19 +1451,20 @@ void verifyResetFactory(lv_event_t *e)
     lv_textarea_set_text(ui_Date_Setting_Year2, "2022");
     lv_textarea_set_text(ui_Date_Setting_Month2, "04");
     lv_textarea_set_text(ui_Date_Setting_Day2, "13");
-    ESP_LOGI("verifyResetFactory", "时间设置重置完成");
+    ESP_LOGI("verifyResetFactory", "时间设置重置完成, 这个到底有什么用?");
 
-    lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN);
+    // 重置完也把音乐列表clear了, 要把状态和图标改掉
+    create_music_item_complete = false;
+    lv_obj_clear_flag(ui_tfcard_unavailable_the_X, LV_OBJ_FLAG_HIDDEN);
+
 }
 // 取消恢复出厂设置
 void cancelResetFactory(lv_event_t *e)
 {
 
 }
-
 // 曲目刷新
-void track_refresh_task_callback(void *param) {
+void track_refresh_task_callback(void *pvParameter) {
     lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
 }
@@ -1522,8 +1535,8 @@ void initWifiSettings(lv_event_t *e) {
             nvs_close(nvs_handle);
             return;
         }
-        wifi_name = tempWifiName;
-        lv_textarea_set_text(ui_Wifi_Name_Input, wifi_name);
+        wifi_ssid = tempWifiName;
+        lv_textarea_set_text(ui_Wifi_SSID_Input, wifi_ssid);
     } else {
         ESP_LOGW("initWifiSettings", "NVS中未找到'name', 将写入默认值 12345678");
         err = nvs_set_str(nvs_handle, "name", "12345678");
@@ -1532,8 +1545,8 @@ void initWifiSettings(lv_event_t *e) {
             nvs_close(nvs_handle);
             return;
         }
-        wifi_name = "12345678";
-        lv_textarea_set_text(ui_Wifi_Name_Input, wifi_name);
+        wifi_ssid = "12345678";
+        lv_textarea_set_text(ui_Wifi_SSID_Input, wifi_ssid);
     }
 
     // 读取Wifi密码
@@ -1586,16 +1599,16 @@ void initWifiSettings(lv_event_t *e) {
         lv_obj_clear_flag(ui_Wifi_States_Icon, LV_OBJ_FLAG_HIDDEN);
 
         // 连接WiFi并获得时间
-        start_wifi_connect_task(wifi_name, wifi_password);
+        start_wifi_connect_task(wifi_ssid, wifi_password);
     }
 }
 // 确认保存Wifi名称与密码
 void saveWifiSetting(lv_event_t *e) {
-    const char *name = lv_textarea_get_text(ui_Wifi_Name_Input);
+    const char *name = lv_textarea_get_text(ui_Wifi_SSID_Input);
     if (name != NULL) {
-        if (wifi_name != NULL)
-            free(wifi_name);
-        wifi_name = strdup(name);
+        if (wifi_ssid != NULL)
+            free(wifi_ssid);
+        wifi_ssid = strdup(name);
     }
     const char *password = lv_textarea_get_text(ui_Wifi_Password_Input);
     if (password != NULL) {
@@ -1655,39 +1668,25 @@ void saveWifiSetting(lv_event_t *e) {
         wifi_disconnect();
     }
 }
-static void update_wifi_icon_callback(void *param) {
-    bool state = *((bool *)param);
-    if (state) {
-        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
-    } else {
-        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
-    }
-    free(param);
-}
-// 给wifi.c调用的修改图标的函数
-void setWifiStateIcon(bool state) {
-    bool *state_param = (bool *)malloc(sizeof(bool));
-    if (state_param == NULL) {
-        ESP_LOGE("setWifiStateIcon", "Failed to allocate memory");
-        return;
-    }
-    *state_param = state;
-    lv_async_call(update_wifi_icon_callback, state_param);
-}
 
 // ******************** 音乐相关 ********************
 
 // 点击主界面的音乐库按钮时的回调
 void attempt_enter_music_window(lv_event_t *e) {
-    if (create_music_item_complete == true) {
-        lv_scr_load(ui_Music_Window);
-    } else {
+    if (device_state != 2) {
+        lv_label_set_text(ui_TFCardNotFoundMsgText, "TF卡未插入");
         lv_obj_clear_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
         lv_timer_reset(close_tf_card_notfound_msg_timer);
+    } else if (create_music_item_complete != true) {
+        lv_label_set_text(ui_TFCardNotFoundMsgText, "未刷新曲目");
+        lv_obj_clear_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
+        lv_timer_reset(close_tf_card_notfound_msg_timer);
+    } else {
+        lv_scr_load(ui_Music_Window);
     }
 }
 // 更新进度条与时间标签的回调函数
-static void update_progress_callback(void *param) {
+static void update_progress_callback(void *pvParameter) {
     if (currentPlayTime < current_music_duration) {
         currentPlayTime++;
         // 更新当前时间标签
@@ -1834,7 +1833,7 @@ void playSelectedMusic(lv_event_t *e) {
     playMusicWithCurrentIndex();
 }
 // 下一首音乐
-static void nextTrack_callback(void *param) {
+static void nextTrack_callback(void *pvParameter) {
     changeMusicUpdateUI();
 
     switch (play_mode) {
@@ -1868,7 +1867,7 @@ void nextTrack(lv_event_t *e) {
     lv_async_call(nextTrack_callback, NULL);
 }
 // 上一首音乐
-static void prevTrack_callback(void *param) {
+static void prevTrack_callback(void *pvParameter) {
     changeMusicUpdateUI();
     char *track_title;
 
@@ -1902,7 +1901,7 @@ void prevTrack(lv_event_t *e) {
     lv_async_call(prevTrack_callback, NULL);
 }
 // 播放/暂停
-static void playPause_callback(void *param) {
+static void playPause_callback(void *pvParameter) {
     bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE_TOGGLE);
     xEventGroupWaitBits(music_event_group, EVENT_PLAY_PAUSE_TOGGLE, pdTRUE, pdFALSE, portMAX_DELAY);
     // 如果是在播放音乐库音乐就修改UI
@@ -2101,11 +2100,16 @@ void close_music_EQ_Panel(lv_event_t * e) {
 
 // 点击主界面的自然之音按钮时的回调
 void attempt_enter_nature_window(lv_event_t *e) {
-    if (create_music_item_complete == true) {
-        lv_scr_load(ui_Nature_Sound_Window);
-    } else {
+    if (device_state != 2) {
+        lv_label_set_text(ui_TFCardNotFoundMsgText, "TF卡未插入");
         lv_obj_clear_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
         lv_timer_reset(close_tf_card_notfound_msg_timer);
+    } else if (create_music_item_complete != true) {
+        lv_label_set_text(ui_TFCardNotFoundMsgText, "未刷新曲目");
+        lv_obj_clear_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
+        lv_timer_reset(close_tf_card_notfound_msg_timer);
+    } else {
+        lv_scr_load(ui_Nature_Sound_Window);
     }
 }
 // 重复播放指定自然之音的任务
@@ -2197,24 +2201,24 @@ void selectSeaSound(lv_event_t *e) {
     xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }
 
+// ******************** 真的找不到分类 ********************
 
+// 试图进入设置界面
+void attempt_enter_settings_window(void) {
+    static uint8_t click_count = 0;
+    static uint32_t last_click_time = 0;
 
-// 救国
-lv_obj_t * get_ui_main_window(void) {
-    return ui_Main_Window;
-}
-lv_obj_t * get_ui_music_window(void) {
-    return ui_Music_Window;
-}
-lv_obj_t * get_ui_music_play_window(void) {
-    return ui_Music_Play_Window;
-}
-lv_obj_t * get_ui_nature_sound_window(void) {
-    return ui_Nature_Sound_Window;
-}
-lv_obj_t * get_ui_disabled_touch_range(void) {
-    return ui_Disabled_Touch_Range;
-}
-lv_obj_t * get_ui_bluetooth_window(void) {
-    return ui_Bluetooth_WIndow;
+    uint32_t current_time = lv_tick_get();
+
+    if (current_time - last_click_time > ENTER_SETTINGS_WINDOW_CLICK_RESET_TIME) {
+        click_count = 0; // 如果时间间隔超出设定的时间，重置点击计数
+    }
+
+    last_click_time = current_time;
+    click_count++;
+
+    if (click_count >= ENTER_SETTINGS_WINDOW_CLICK_COUNT) {
+        click_count = 0; // 达到点击次数后重置计数
+        lv_scr_load(ui_Settings_Window);
+    }
 }

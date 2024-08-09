@@ -12,7 +12,7 @@
 // 要改得把这个组件都改掉, 不管它了
 
 uint32_t backlight_level = 3;
-uint32_t backlight_time_level = 3;
+uint32_t backlight_time_level = 4;
 
 
 static lv_timer_t *backlight_timer;      // 背光定时器

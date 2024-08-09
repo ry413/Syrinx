@@ -29,46 +29,46 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Header_Main_Text1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Header_Main_Text1, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Wifi_Name = lv_obj_create(ui_Settings_Wifi_Window);
-    lv_obj_remove_style_all(ui_Wifi_Name);
-    lv_obj_set_width(ui_Wifi_Name, 325);
-    lv_obj_set_height(ui_Wifi_Name, 63);
-    lv_obj_set_x(ui_Wifi_Name, -63);
-    lv_obj_set_y(ui_Wifi_Name, -106);
-    lv_obj_set_align(ui_Wifi_Name, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_Wifi_Name, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_Wifi_SSID = lv_obj_create(ui_Settings_Wifi_Window);
+    lv_obj_remove_style_all(ui_Wifi_SSID);
+    lv_obj_set_width(ui_Wifi_SSID, 325);
+    lv_obj_set_height(ui_Wifi_SSID, 63);
+    lv_obj_set_x(ui_Wifi_SSID, -63);
+    lv_obj_set_y(ui_Wifi_SSID, -106);
+    lv_obj_set_align(ui_Wifi_SSID, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Wifi_SSID, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Wifi_Name_Text = lv_label_create(ui_Wifi_Name);
-    lv_obj_set_width(ui_Wifi_Name_Text, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Wifi_Name_Text, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Wifi_Name_Text, 4);
-    lv_obj_set_y(ui_Wifi_Name_Text, 4);
-    lv_obj_set_align(ui_Wifi_Name_Text, LV_ALIGN_LEFT_MID);
-    lv_label_set_text(ui_Wifi_Name_Text, "WIFI名称:");
-    lv_obj_set_style_text_color(ui_Wifi_Name_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Wifi_Name_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Wifi_Name_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_Wifi_SSID_Text = lv_label_create(ui_Wifi_SSID);
+    lv_obj_set_width(ui_Wifi_SSID_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Wifi_SSID_Text, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Wifi_SSID_Text, 4);
+    lv_obj_set_y(ui_Wifi_SSID_Text, 4);
+    lv_obj_set_align(ui_Wifi_SSID_Text, LV_ALIGN_LEFT_MID);
+    lv_label_set_text(ui_Wifi_SSID_Text, "WIFI名称:");
+    lv_obj_set_style_text_color(ui_Wifi_SSID_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Wifi_SSID_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Wifi_SSID_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Wifi_Name_Line = lv_obj_create(ui_Wifi_Name);
-    lv_obj_set_width(ui_Wifi_Name_Line, 325);
-    lv_obj_set_height(ui_Wifi_Name_Line, 3);
-    lv_obj_set_x(ui_Wifi_Name_Line, 0);
-    lv_obj_set_y(ui_Wifi_Name_Line, 30);
-    lv_obj_set_align(ui_Wifi_Name_Line, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_Wifi_Name_Line, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_Wifi_SSID_Line = lv_obj_create(ui_Wifi_SSID);
+    lv_obj_set_width(ui_Wifi_SSID_Line, 325);
+    lv_obj_set_height(ui_Wifi_SSID_Line, 3);
+    lv_obj_set_x(ui_Wifi_SSID_Line, 0);
+    lv_obj_set_y(ui_Wifi_SSID_Line, 30);
+    lv_obj_set_align(ui_Wifi_SSID_Line, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Wifi_SSID_Line, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Wifi_Name_Input = lv_textarea_create(ui_Wifi_Name);
-    lv_obj_set_width(ui_Wifi_Name_Input, 213);
-    lv_obj_set_height(ui_Wifi_Name_Input, LV_SIZE_CONTENT);    /// 43
-    lv_obj_set_x(ui_Wifi_Name_Input, 55);
-    lv_obj_set_y(ui_Wifi_Name_Input, 0);
-    lv_obj_set_align(ui_Wifi_Name_Input, LV_ALIGN_CENTER);
-    lv_textarea_set_max_length(ui_Wifi_Name_Input, 30);
-    lv_textarea_set_text(ui_Wifi_Name_Input, "12345678");
-    lv_textarea_set_placeholder_text(ui_Wifi_Name_Input, "WIFI Name");
-    lv_textarea_set_one_line(ui_Wifi_Name_Input, true);
-    lv_obj_clear_flag(ui_Wifi_Name_Input, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Wifi_Name_Input, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_Wifi_SSID_Input = lv_textarea_create(ui_Wifi_SSID);
+    lv_obj_set_width(ui_Wifi_SSID_Input, 213);
+    lv_obj_set_height(ui_Wifi_SSID_Input, LV_SIZE_CONTENT);    /// 43
+    lv_obj_set_x(ui_Wifi_SSID_Input, 55);
+    lv_obj_set_y(ui_Wifi_SSID_Input, 0);
+    lv_obj_set_align(ui_Wifi_SSID_Input, LV_ALIGN_CENTER);
+    lv_textarea_set_max_length(ui_Wifi_SSID_Input, 30);
+    lv_textarea_set_text(ui_Wifi_SSID_Input, "12345678");
+    lv_textarea_set_placeholder_text(ui_Wifi_SSID_Input, "WIFI Name");
+    lv_textarea_set_one_line(ui_Wifi_SSID_Input, true);
+    lv_obj_clear_flag(ui_Wifi_SSID_Input, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_text_font(ui_Wifi_SSID_Input, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -182,9 +182,9 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_label_set_text(ui_Wifi_Enter_Text, "保存");
     lv_obj_set_style_text_font(ui_Wifi_Enter_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_add_event_cb(ui_Wifi_Name_Input, ui_event_Wifi_Name_Input, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Wifi_SSID_Input, ui_event_Wifi_SSID_Input, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wifi_Password_Input, ui_event_Wifi_Password_Input, LV_EVENT_ALL, NULL);
-    lv_keyboard_set_textarea(ui_Wifi_Keyboard, ui_Wifi_Name_Input);
+    lv_keyboard_set_textarea(ui_Wifi_Keyboard, ui_Wifi_SSID_Input);
     lv_obj_add_event_cb(ui_BackToSettingsWindow2, ui_event_BackToSettingsWindow2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wifi_Switch2, ui_event_Wifi_Switch2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wifi_Enter_Btn, ui_event_Wifi_Enter_Btn, LV_EVENT_ALL, NULL);

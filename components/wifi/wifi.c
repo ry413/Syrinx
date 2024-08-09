@@ -6,7 +6,7 @@
 #include "esp_log.h"
 #include "string.h"
 #include "../timesync/timesync.h"
-#include "../../ui/ui_events.h"
+#include "../../ui/ui.h"
 
 
 #define MAX_RECONNECT_ATTEMPTS  5
@@ -16,7 +16,7 @@ EventGroupHandle_t wifi_event_group = NULL;
 
 bool wifi_is_connected = false;
 uint8_t wifi_enabled = 0;
-char *wifi_name = "12345678";
+char *wifi_ssid = "12345678";
 char *wifi_password = "12345678";
 static TaskHandle_t wifi_connect_task_handle = NULL;
 static bool should_reconnect = true;        // 断开后是否重连
@@ -71,6 +71,13 @@ void wifi_init(void) {
     wifi_event_group = xEventGroupCreate();
     ESP_LOGI(TAG, "WiFi initialized.");
 }
+static void update_wifi_icon_callback(void *Param) {
+    if (wifi_is_connected) {
+        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
+    } else {
+        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
+    }
+}
 static void wifi_connect_task(void *pvParameter) {
     struct wifi_config_params* params = (struct wifi_config_params*) pvParameter;
 
@@ -118,13 +125,13 @@ static void wifi_connect_task(void *pvParameter) {
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(TAG, "WiFi已连接 SSID:%s", params->ssid);
         wifi_is_connected = true;
-        setWifiStateIcon(true);
+        lv_async_call(update_wifi_icon_callback, NULL);
         obtain_time();
         srand(global_time);
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGW(TAG, "WiFi未连接 SSID:%s", params->ssid);
         wifi_is_connected = false;
-        setWifiStateIcon(false);
+        lv_async_call(update_wifi_icon_callback, NULL);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
         wifi_is_connected = false;

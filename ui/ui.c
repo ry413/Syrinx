@@ -58,8 +58,8 @@ lv_obj_t * ui_Wifi_Img_Placeholder;
 lv_obj_t * ui_Music_Note_Img_Placeholder1;
 lv_obj_t * ui_Paused_Img_Placeholder;
 lv_obj_t * ui_Label1;
-void ui_event_Button5(lv_event_t * e);
-lv_obj_t * ui_Button5;
+void ui_event_Settings_Btn(lv_event_t * e);
+lv_obj_t * ui_Setting_Btn;
 lv_obj_t * ui_Main_Header_Volume;
 lv_obj_t * ui_Main_Window_Volume_adjust;
 void ui_event_TFCardNotFoundMsg(lv_event_t * e);
@@ -446,11 +446,11 @@ void ui_Settings_Wifi_Window_screen_init(void);
 lv_obj_t * ui_Settings_Wifi_Window;
 lv_obj_t * ui_Header_Main1;
 lv_obj_t * ui_Header_Main_Text1;
-lv_obj_t * ui_Wifi_Name;
-lv_obj_t * ui_Wifi_Name_Text;
-lv_obj_t * ui_Wifi_Name_Line;
-void ui_event_Wifi_Name_Input(lv_event_t * e);
-lv_obj_t * ui_Wifi_Name_Input;
+lv_obj_t * ui_Wifi_SSID;
+lv_obj_t * ui_Wifi_SSID_Text;
+lv_obj_t * ui_Wifi_SSID_Line;
+void ui_event_Wifi_SSID_Input(lv_event_t * e);
+lv_obj_t * ui_Wifi_SSID_Input;
 lv_obj_t * ui_Wifi_Password;
 lv_obj_t * ui_Wifi_Password_Text;
 lv_obj_t * ui_Wifi_Password_Line;
@@ -645,12 +645,13 @@ void ui_event_Guide_Btn(lv_event_t * e)
         _ui_screen_change(&ui_Guide_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Guide_Window_screen_init);
     }
 }
-void ui_event_Button5(lv_event_t * e)
+void ui_event_Settings_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        _ui_screen_change(&ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
+        // _ui_screen_change(&ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
+        attempt_enter_settings_window();
     }
 }
 void ui_event_TFCardNotFoundMsg(lv_event_t * e)
@@ -950,6 +951,7 @@ void ui_event_Settings_Backlight_Btn2(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_flag_modify(ui_Backlight_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
 void ui_event_Backlight_Brightness_Dec_Btn(lv_event_t * e)
@@ -992,6 +994,7 @@ void ui_event_Backlight_Settings_Verify_Btn(lv_event_t * e)
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         saveBacklightSettings(e);
         _ui_flag_modify(ui_Backlight_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_Backlight_Settings_Cancel_Btn(lv_event_t * e)
@@ -1001,6 +1004,7 @@ void ui_event_Backlight_Settings_Cancel_Btn(lv_event_t * e)
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         cancelSaveBacklightSettings(e);
         _ui_flag_modify(ui_Backlight_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_Settings_Bluetooth_Btn2(lv_event_t * e)
@@ -1026,6 +1030,7 @@ void ui_event_Settings_Volume_Btn(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_flag_modify(ui_Volume_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
 void ui_event_Settings_Wifi_Btn(lv_event_t * e)
@@ -1075,6 +1080,7 @@ void ui_event_Volume_Settings_Verify_Btn(lv_event_t * e)
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         saveVolumeSettings(e);
         _ui_flag_modify(ui_Volume_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_Volume_Settings_Cancel_Btn(lv_event_t * e)
@@ -1084,6 +1090,7 @@ void ui_event_Volume_Settings_Cancel_Btn(lv_event_t * e)
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         cancelSaveVolumeSettings(e);
         _ui_flag_modify(ui_Volume_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_BackToMainWindowBtn8(lv_event_t * e)
@@ -1092,7 +1099,6 @@ void ui_event_BackToMainWindowBtn8(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_screen_change(&ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
-        _ui_flag_modify(ui_Volume_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_Bluetooth_Name_Input2(lv_event_t * e)
@@ -1185,12 +1191,12 @@ void ui_event_Time_Enter_Btn(lv_event_t * e)
         saveTimeSetting(e);
     }
 }
-void ui_event_Wifi_Name_Input(lv_event_t * e)
+void ui_event_Wifi_SSID_Input(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        _ui_keyboard_set_target(ui_Wifi_Keyboard,  ui_Wifi_Name_Input);
+        _ui_keyboard_set_target(ui_Wifi_Keyboard,  ui_Wifi_SSID_Input);
     }
 }
 void ui_event_Wifi_Password_Input(lv_event_t * e)
@@ -1231,6 +1237,7 @@ void ui_event_Settings_System_Btn(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_flag_modify(ui_System_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
 void ui_event_System_ID_Dec_Btn(lv_event_t * e)
@@ -1292,6 +1299,7 @@ void ui_event_System_Settings_Verify_Btn(lv_event_t * e)
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         saveSystemSettings(e);
         _ui_flag_modify(ui_System_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_System_Settings_Cancel_Btn(lv_event_t * e)
@@ -1301,6 +1309,7 @@ void ui_event_System_Settings_Cancel_Btn(lv_event_t * e)
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         cancelSaveSystemSettings(e);
         _ui_flag_modify(ui_System_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_BackToMusicWindowBtn9(lv_event_t * e)

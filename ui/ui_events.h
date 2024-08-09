@@ -88,22 +88,10 @@ void musicPlayScrLoaded(lv_event_t * e);
 void attempt_enter_music_window(lv_event_t * e);
 void attempt_enter_nature_window(lv_event_t * e);
 
-
-void setWifiStateIcon(bool state);
-
 void reset_inactive_timer(void);
 void create_inactive_timer(void);
 void del_inactive_timer(void);
-
-
-// 暴露给485那边用, 天呐, 有生之年必须把这些封装成music组件
-lv_obj_t * get_ui_main_window(void);
-lv_obj_t * get_ui_music_window(void);
-lv_obj_t * get_ui_music_play_window(void);
-lv_obj_t * get_ui_nature_sound_window(void);
-lv_obj_t * get_ui_disabled_touch_range(void);
-lv_obj_t * get_ui_bluetooth_window(void);
-
+void attempt_enter_settings_window(void);
 
 #ifdef __cplusplus
 } /*extern "C"*/

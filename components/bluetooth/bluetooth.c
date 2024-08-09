@@ -13,6 +13,7 @@
 #include <wchar.h>
 #include "ctype.h"
 #include "nvs.h"
+#include "../../ui/ui.h"
 
 
 #define UART_PORT_NUM      UART_NUM_0
@@ -177,18 +178,21 @@ void add_file_name(char **temp_file_names, const char *file_name) {
 // 读取所有音乐文件名并储存于nvs中
 void get_all_file_names(void) {
     // 切换到音乐模式
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (1/12)");
     bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
     work_mode = 2;
-    // 切换到音乐模式之后, 似乎需要等待两秒, M2才能得到数值
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (2/12)");
     // 必须进入目录才能保证得到对的M2数值
     bluetooth_send_at_command("AT+M602", CMD_CHANGE_DIR);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
-    // M6之后也得等一会才能M2
     bluetooth_send_at_command("AT+M2", CMD_GET_DIR_FILE_COUNT);
     xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
     music_files_count = current_dir_files_count;
+
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (3/12)");
     // 再弄个bath目录的文件数
     bluetooth_send_at_command("AT+M601", CMD_CHANGE_DIR);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
@@ -198,6 +202,7 @@ void get_all_file_names(void) {
 
     printf("music: %ld, bath: %ld\n", music_files_count, bath_files_count);
 
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (4/12)");
     // 储存文件数
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("filenames", NVS_READWRITE, &nvs_handle);
@@ -217,7 +222,8 @@ void get_all_file_names(void) {
         return;
     }
 
-    // 自然之音的四首歌也放这个数组里, 这里面将分别装music, bath, theme三个目录的文件名
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (5/12)");
+    // 分配内存, 这里面将分别装music, bath, theme三个目录的文件名, theme(4首)就是自然之音
     temp_file_names = (char **)malloc((music_files_count + bath_files_count + 4) * sizeof(char *));
     if ((temp_file_names == NULL)) {
         ESP_LOGE(TAG, "Failed to allocate memory for file_namess");
@@ -234,14 +240,17 @@ void get_all_file_names(void) {
             return;
         }
     }
-    
+
     // 获取各个目录的文件名列表
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (6/12)");
     bluetooth_send_at_command("AT+M402", CMD_GET_DIR_FILE_NAMES);    // music
     xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
 
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (7/12)");
     bluetooth_send_at_command("AT+M401", CMD_GET_DIR_FILE_NAMES);    // bath
     xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
 
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (8/12)");
     bluetooth_send_at_command("AT+M404", CMD_GET_DIR_FILE_NAMES);    // theme
     xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
 
@@ -269,16 +278,19 @@ void get_all_file_names(void) {
     // bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
     // xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
 
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (9/12)");
     // 宣布初始化完毕
     printf("\n GET FILE NAME LIST END\n");
     xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
 }
 // 获得音乐库中所有歌的总时长并储存到nvs中
 void get_all_music_duration(void) {
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (10/12)");
     bluetooth_send_at_command("AT+M602", CMD_CHANGE_DIR);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
 
     // 获得durations
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (11/12)");
     uint32_t tmp_music_durations[music_files_count];
     for (int i = 0; i < music_files_count; i++) {
         bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
@@ -289,6 +301,7 @@ void get_all_music_duration(void) {
     }
 
     // 储存durations到nvs里
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (12/12)");
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("music_durations", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
@@ -476,8 +489,30 @@ void bluetooth_monitor_task(void *pvParameters) {
                 sscanf(response, "MV+%d", &device_state);
                 xEventGroupSetBits(bt_event_group, EVENT_GET_DEVICE_STATE);
             }
+            // 版本号
             else if (strncmp(response, "QV+", 3) == 0) {
-                // 版本号
+                char *bt_ver_start = strstr(response, "QV+V-");
+                char *bt_ver_date_start = strstr(response, "VER:");
+
+                if (bt_ver_start && bt_ver_date_start) {
+                    bt_ver_start += 5;
+                    bt_ver_date_start += 4;
+
+                    char bt_version[10];
+                    sscanf(bt_ver_start, "%s", bt_version);
+                    
+                    char month[4];
+                    int day, year;
+                    sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
+
+                    char final_version[50];
+                    char *esp32_version = lv_label_get_text(ui_System_Version_Text);
+
+                    snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
+                    lv_label_set_text(ui_System_Version_Text, final_version);
+                } else {
+                    ESP_LOGE(TAG, "版本号错误?");
+                }
             } else if (strncmp(response, "QT+", 3) == 0) {
                 // 这什么啊, 反正没用
             }
