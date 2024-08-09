@@ -88,12 +88,12 @@ void prev_bath_track(void) {
 // 持续播放浴室音乐的任务
 void play_bath_music_task(void *pvParameters) {
     while (1) {
-        next_bath_track();
         xEventGroupWaitBits(bt_event_group, EVENT_END_PLAY, pdTRUE, pdFALSE, portMAX_DELAY);
+        next_bath_track();
     }
 }
-// 随机播放浴室音乐
-void play_bath_music(void) {
+// 洗牌并创建浴室播放任务
+void create_bath_play_task(void) {
     // 洗牌
     srand(global_time);
     for (int i = bath_files_count - 1; i > 0; i--) {
@@ -203,8 +203,10 @@ void process_command(rs485_packet_t *packet, size_t len) {
                             bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
                             xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
                             work_mode = 2;
+                            vTaskDelay(2000 / portTICK_PERIOD_MS);
                             open_bath_channel();
-                            play_bath_music();
+                            next_bath_track();
+                            create_bath_play_task();
                         } else {
                             ESP_LOGI(TAG, "空闲模式, 非特殊界面, 正在播放浴室音乐, 拒绝播放指令");
                             assert(bath_play_task_handle != NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
@@ -227,7 +229,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
                             xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
                             work_mode = 2;
                             open_bath_channel();
-                            play_bath_music();
+                            next_bath_track();
+                            create_bath_play_task();
                             del_inactive_timer(); // 删除不活动定时器, 不再自动退出蓝牙界面
                         }
                     }
@@ -253,7 +256,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         if (bath_play_task_handle == NULL && nature_play_task_handle == NULL) {
                             ESP_LOGI(TAG, "音乐模式, 自然之音界面, 未播放任何东西, 打开通道并播放浴室音乐");
                             open_bath_channel();
-                            play_bath_music();
+                            next_bath_track();
+                            create_bath_play_task();
                         } else {
                             ESP_LOGI(TAG, "音乐模式, 自然之音界面, 正在播放某音乐, 拒绝播放指令");
                         }
