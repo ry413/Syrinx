@@ -96,6 +96,8 @@ extern int play_state;
 
 extern int device_state;
 
+extern uint32_t bath_channel_bit;   // 浴室功放通道, 代表AT+CL%d
+
 
 void get_all_file_names(void);
 void get_all_music_duration(void);
@@ -105,4 +107,6 @@ esp_err_t bluetooth_send_at_command(const char *command, command_type_t cmd_type
 esp_err_t bluetooth_wait_for_response(char *response, size_t max_len);
 void bluetooth_monitor_task(void *pvParameters);
 
+void open_living_room_channel(void);
+void open_bath_channel(void);
 #endif // BLUETOOTH_H

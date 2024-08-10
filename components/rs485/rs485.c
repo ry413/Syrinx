@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "string.h"
 #include "../../ui/ui.h"
+#include "rs485.h"
 
 static const char *TAG = "rs485";
 
@@ -11,6 +12,9 @@ TaskHandle_t bath_play_task_handle = NULL;
 TaskHandle_t music_play_task_handle = NULL;
 TaskHandle_t nature_play_task_handle = NULL;
 static SemaphoreHandle_t rs485_handle_semaphore = NULL; // 防止同时处理多条485
+
+
+
 
 int current_bath_playing_index = 0;
 
@@ -53,12 +57,6 @@ uint8_t calculate_checksum(rs485_packet_t *packet) {
         checksum += packet->command[i];
     }
     return checksum & 0xFF;
-}
-void open_bath_channel(void) {
-    char command[32];
-    snprintf(command, sizeof(command), "AT+CL%ld", bath_channel_bit);
-    bluetooth_send_at_command(command, CMD_CHANGE_CHANNEL);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
 }
 void play_bath_music_with_index(int index) {
     char command[20];
@@ -321,8 +319,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         vTaskDelete(bath_play_task_handle);
                         bath_play_task_handle = NULL;
                         assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                        bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
-                        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+                        open_living_room_channel();
                         bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
                         xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);
                         work_mode = 1;
@@ -464,7 +461,7 @@ void rs485_monitor_task(void *pvParameter) {
     rs485_packet_t packet;
     while (1) {
         int len = uart_read_bytes(RS485_UART_PORT, (uint8_t*)&packet, PACKET_SIZE, portMAX_DELAY);
-        print_rs485_packet(&packet);
+        // print_rs485_packet(&packet);
         if (len > 0) {
             process_command(&packet, len);
         } else if (len < 0) {

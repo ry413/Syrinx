@@ -21,6 +21,7 @@ extern uint32_t LV_EVENT_GET_COMP_CHILD;
 #include "ui_comp_music_item.h"
 #include "ui_comp_music_list.h"
 #include "ui_comp_volumeadjustdisabledrange.h"
+#include "ui_comp_timeselector.h"
 
 #ifdef __cplusplus
 } /*extern "C"*/

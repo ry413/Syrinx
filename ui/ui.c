@@ -209,6 +209,21 @@ lv_obj_t * ui_Wakeup_Time_Line;
 void ui_event_Wakeup_Time_Btn(lv_event_t * e);
 lv_obj_t * ui_Wakeup_Time_Btn;
 lv_obj_t * ui_Wakeup_Time_Decora_Icon;
+lv_obj_t * ui_AlarmClockTime;
+lv_obj_t * ui_AlarmClockTimePanel;
+lv_obj_t * ui_AlarmClockTimeText;
+lv_obj_t * ui_AlarmClockTimeHour;
+lv_obj_t * ui_AlarmClockTimeDecora;
+lv_obj_t * ui_AlarmClockTimeMin;
+void ui_event_ui_AlarmClockSwitch(lv_event_t * e);
+lv_obj_t * ui_AlarmClockSwitch;
+lv_obj_t * ui_AlarmClockTimeSelector;
+void ui_event_ui_AlarmClockTimeVerifyBtn(lv_event_t * e);
+lv_obj_t * ui_AlarmClockTimeVerifyBtn;
+lv_obj_t * ui_AlarmClockTimeVerifyBtnText;
+void ui_event_ui_AlarmClockTimeCancelBtn(lv_event_t * e);
+lv_obj_t * ui_AlarmClockTimeCancelBtn;
+lv_obj_t * ui_AlarmClockTimeCancelBtnText;
 void ui_event_BackToMainWindowBtn5(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn5;
 lv_obj_t * ui_Wakeup_Header_Volume;
@@ -899,14 +914,14 @@ void ui_event_Wake_up_Window(lv_event_t * e)
 //         _ui_flag_modify(ui_Backlight_Time_Panel2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
 //     }
 // }
-// void ui_event_Wakeup_Time_Btn(lv_event_t * e)
-// {
-//     lv_event_code_t event_code = lv_event_get_code(e);
-//     lv_obj_t * target = lv_event_get_target(e);
-//     if(event_code == LV_EVENT_SHORT_CLICKED) {
-//         _ui_flag_modify(ui_Backlight_Time_Panel2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
-//     }
-// }
+void ui_event_Wakeup_Time_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        _ui_flag_modify(ui_AlarmClockTime, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+    }
+}
 void ui_event_BackToMainWindowBtn5(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);

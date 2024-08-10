@@ -29,6 +29,8 @@ static QueueHandle_t uart_queue;
 EventGroupHandle_t bt_event_group = NULL;
 EventGroupHandle_t music_event_group = NULL;
 
+uint32_t bath_channel_bit = 3;
+
 
 
 char **temp_file_names = NULL;  // 储存文件名的数组
@@ -555,3 +557,23 @@ void bluetooth_monitor_task(void *pvParameters) {
     }
 }
 
+// 打开浴室通道
+void open_bath_channel(void) {
+    char command[32];
+    snprintf(command, sizeof(command), "AT+CL%ld", bath_channel_bit);
+    bluetooth_send_at_command(command, CMD_CHANGE_CHANNEL);
+    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+}
+// 打开与浴室通道相反的客厅通道
+void open_living_room_channel(void) {
+    if (bath_channel_bit == 2) {
+        bluetooth_send_at_command("AT+CL1", CMD_CHANGE_CHANNEL);
+        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+    } else if (bath_channel_bit == 1){
+        bluetooth_send_at_command("AT+CL2", CMD_CHANGE_CHANNEL);
+        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+    } else {
+        bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
+        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+    }
+}

@@ -165,8 +165,126 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_set_y(ui_Wakeup_Window_Volume_adjust, 0);
     lv_obj_add_flag(ui_Wakeup_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
+
+    ui_AlarmClockTime = lv_obj_create(ui_Wake_up_Window);
+    lv_obj_remove_style_all(ui_AlarmClockTime);
+    lv_obj_set_width( ui_AlarmClockTime, 480);
+    lv_obj_set_height( ui_AlarmClockTime, 480);
+    lv_obj_set_align( ui_AlarmClockTime, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_AlarmClockTime, LV_OBJ_FLAG_HIDDEN );
+    lv_obj_clear_flag( ui_AlarmClockTime, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_AlarmClockTimePanel = lv_obj_create(ui_AlarmClockTime);
+    lv_obj_set_width( ui_AlarmClockTimePanel, 340);
+    lv_obj_set_height( ui_AlarmClockTimePanel, 360);
+    lv_obj_set_align( ui_AlarmClockTimePanel, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_AlarmClockTimePanel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_set_style_border_color(ui_AlarmClockTimePanel, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_AlarmClockTimePanel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
+    ui_AlarmClockTimeText = lv_obj_create(ui_AlarmClockTimePanel);
+    lv_obj_remove_style_all(ui_AlarmClockTimeText);
+    lv_obj_set_width( ui_AlarmClockTimeText, 100);
+    lv_obj_set_height( ui_AlarmClockTimeText, 50);
+    lv_obj_set_x( ui_AlarmClockTimeText, -97 );
+    lv_obj_set_y( ui_AlarmClockTimeText, -140 );
+    lv_obj_set_align( ui_AlarmClockTimeText, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_AlarmClockTimeText, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_AlarmClockTimeHour = lv_label_create(ui_AlarmClockTimeText);
+    lv_obj_set_width( ui_AlarmClockTimeHour, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_AlarmClockTimeHour, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_AlarmClockTimeHour, 8 );
+    lv_obj_set_y( ui_AlarmClockTimeHour, 0 );
+    lv_obj_set_align( ui_AlarmClockTimeHour, LV_ALIGN_LEFT_MID );
+    lv_label_set_text(ui_AlarmClockTimeHour,"24");
+    lv_obj_set_style_text_font(ui_AlarmClockTimeHour, &lv_font_montserrat_30, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_AlarmClockTimeDecora = lv_label_create(ui_AlarmClockTimeText);
+    lv_obj_set_width( ui_AlarmClockTimeDecora, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_AlarmClockTimeDecora, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_AlarmClockTimeDecora, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_AlarmClockTimeDecora,":");
+    lv_obj_set_style_text_font(ui_AlarmClockTimeDecora, &lv_font_montserrat_30, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_AlarmClockTimeMin = lv_label_create(ui_AlarmClockTimeText);
+    lv_obj_set_width( ui_AlarmClockTimeMin, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_AlarmClockTimeMin, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_AlarmClockTimeMin, 58 );
+    lv_obj_set_y( ui_AlarmClockTimeMin, 0 );
+    lv_obj_set_align( ui_AlarmClockTimeMin, LV_ALIGN_LEFT_MID );
+    lv_label_set_text(ui_AlarmClockTimeMin,"42");
+    lv_obj_set_style_text_font(ui_AlarmClockTimeMin, &lv_font_montserrat_30, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_AlarmClockSwitch = lv_switch_create(ui_AlarmClockTimePanel);
+    lv_obj_set_width( ui_AlarmClockSwitch, 65);
+    lv_obj_set_height( ui_AlarmClockSwitch, 30);
+    lv_obj_set_x( ui_AlarmClockSwitch, 102 );
+    lv_obj_set_y( ui_AlarmClockSwitch, -139 );
+    lv_obj_set_align( ui_AlarmClockSwitch, LV_ALIGN_CENTER );
+
+    ui_AlarmClockTimeSelector = ui_TimeSelector_create(ui_AlarmClockTimePanel);
+    lv_obj_set_x( ui_AlarmClockTimeSelector, 0 );
+    lv_obj_set_y( ui_AlarmClockTimeSelector, 0 );
+    
+    ui_AlarmClockTimeVerifyBtn = lv_obj_create(ui_AlarmClockTimePanel);
+    lv_obj_set_width(ui_AlarmClockTimeVerifyBtn, 170);
+    lv_obj_set_height(ui_AlarmClockTimeVerifyBtn, 60);
+    lv_obj_set_x(ui_AlarmClockTimeVerifyBtn, -85);
+    lv_obj_set_y(ui_AlarmClockTimeVerifyBtn, 150);
+    lv_obj_set_align(ui_AlarmClockTimeVerifyBtn, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(ui_AlarmClockTimeVerifyBtn, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(ui_AlarmClockTimeVerifyBtn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_AlarmClockTimeVerifyBtn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_radius(ui_AlarmClockTimeVerifyBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_AlarmClockTimeVerifyBtn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_AlarmClockTimeVerifyBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_AlarmClockTimeVerifyBtn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_AlarmClockTimeVerifyBtn, 100, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_AlarmClockTimeVerifyBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_AlarmClockTimeVerifyBtn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(ui_AlarmClockTimeVerifyBtn, 30, LV_PART_MAIN | LV_STATE_PRESSED);
+
+    ui_AlarmClockTimeVerifyBtnText = lv_label_create(ui_AlarmClockTimeVerifyBtn);
+    lv_obj_set_width(ui_AlarmClockTimeVerifyBtnText, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_AlarmClockTimeVerifyBtnText, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_AlarmClockTimeVerifyBtnText, 4);
+    lv_obj_set_y(ui_AlarmClockTimeVerifyBtnText, -2);
+    lv_obj_set_align(ui_AlarmClockTimeVerifyBtnText, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_AlarmClockTimeVerifyBtnText, "确认");
+    lv_obj_set_style_text_font(ui_AlarmClockTimeVerifyBtnText, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_AlarmClockTimeCancelBtn = lv_obj_create(ui_AlarmClockTimePanel);
+    lv_obj_set_width(ui_AlarmClockTimeCancelBtn, 170);
+    lv_obj_set_height(ui_AlarmClockTimeCancelBtn, 60);
+    lv_obj_set_x(ui_AlarmClockTimeCancelBtn, 85);
+    lv_obj_set_y(ui_AlarmClockTimeCancelBtn, 150);
+    lv_obj_set_align(ui_AlarmClockTimeCancelBtn, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(ui_AlarmClockTimeCancelBtn, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(ui_AlarmClockTimeCancelBtn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_AlarmClockTimeCancelBtn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_radius(ui_AlarmClockTimeCancelBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_AlarmClockTimeCancelBtn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_AlarmClockTimeCancelBtn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_AlarmClockTimeCancelBtn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_AlarmClockTimeCancelBtn, 100, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_AlarmClockTimeCancelBtn, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_AlarmClockTimeCancelBtn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(ui_AlarmClockTimeCancelBtn, 30, LV_PART_MAIN | LV_STATE_PRESSED);
+
+    ui_AlarmClockTimeCancelBtnText = lv_label_create(ui_AlarmClockTimeCancelBtn);
+    lv_obj_set_width(ui_AlarmClockTimeCancelBtnText, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_AlarmClockTimeCancelBtnText, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_AlarmClockTimeCancelBtnText, 4);
+    lv_obj_set_y(ui_AlarmClockTimeCancelBtnText, -2);
+    lv_obj_set_align(ui_AlarmClockTimeCancelBtnText, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_AlarmClockTimeCancelBtnText, "取消");
+    lv_obj_set_style_text_font(ui_AlarmClockTimeCancelBtnText, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
     // lv_obj_add_event_cb(ui_Custom_Ringtone_Btn, ui_event_Custom_Ringtone_Btn, LV_EVENT_ALL, NULL);
-    // lv_obj_add_event_cb(ui_Wakeup_Time_Btn, ui_event_Wakeup_Time_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Wakeup_Time_Btn, ui_event_Wakeup_Time_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BackToMainWindowBtn5, ui_event_BackToMainWindowBtn5, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wake_up_Window, ui_event_Wake_up_Window, LV_EVENT_ALL, NULL);
 

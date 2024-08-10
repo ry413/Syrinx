@@ -1025,7 +1025,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_x( ui_System_Version_Text, 4 );
     lv_obj_set_y( ui_System_Version_Text, -123 );
     lv_obj_set_align( ui_System_Version_Text, LV_ALIGN_LEFT_MID );
-    lv_label_set_text(ui_System_Version_Text,"v0.4.6-Janus");
+    lv_label_set_text(ui_System_Version_Text,"v0.4.7-Janus");
 
     ui_System_Parting_Line1 = lv_obj_create(ui_System_Settings_Panel);
     lv_obj_set_width( ui_System_Parting_Line1, 300);
@@ -1327,6 +1327,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_img_recolor_opa(ui_BackToMainWindowBtn8, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
     lv_obj_add_event_cb(ui_Settings_Window, ui_event_Settings_Window, LV_EVENT_ALL, NULL);
+
     lv_obj_add_event_cb(ui_Settings_Backlight_Btn2, ui_event_Settings_Backlight_Btn2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Brightness_Add_Btn, ui_event_Backlight_Brightness_Add_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Brightness_Dec_Btn, ui_event_Backlight_Brightness_Dec_Btn, LV_EVENT_ALL, NULL);
@@ -1334,8 +1335,11 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Backlight_Time_Dec_Btn, ui_event_Backlight_Time_Dec_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Settings_Verify_Btn, ui_event_Backlight_Settings_Verify_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Settings_Cancel_Btn, ui_event_Backlight_Settings_Cancel_Btn, LV_EVENT_ALL, NULL);
+    
     lv_obj_add_event_cb(ui_Settings_Bluetooth_Btn2, ui_event_Settings_Bluetooth_Btn2, LV_EVENT_ALL, NULL);
+
     lv_obj_add_event_cb(ui_Settings_Time_Btn2, ui_event_Settings_Time_Btn2, LV_EVENT_ALL, NULL);
+    
     lv_obj_add_event_cb(ui_Settings_Volume_Btn, ui_event_Settings_Volume_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Max_Volume_Dec_Btn, ui_event_Max_Volume_Dec_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Max_Volume_Add_Btn, ui_event_Max_Volume_Add_Btn, LV_EVENT_ALL, NULL);
@@ -1343,7 +1347,9 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Default_Volume_Add_Btn, ui_event_Default_Volume_Add_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Volume_Settings_Verify_Btn, ui_event_Volume_Settings_Verify_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Volume_Settings_Cancel_Btn, ui_event_Volume_Settings_Cancel_Btn, LV_EVENT_ALL, NULL);
+    
     lv_obj_add_event_cb(ui_Settings_Wifi_Btn, ui_event_Settings_Wifi_Btn, LV_EVENT_ALL, NULL);
+
     lv_obj_add_event_cb(ui_Settings_System_Btn, ui_event_Settings_System_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_ID_Add_Btn, ui_event_System_ID_Add_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_ID_Dec_Btn, ui_event_System_ID_Dec_Btn, LV_EVENT_ALL, NULL);
@@ -1353,6 +1359,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Cancel_Reset_Btn, ui_event_Cancel_Reset_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_Settings_Verify_Btn, ui_event_System_Settings_Verify_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_System_Settings_Cancel_Btn, ui_event_System_Settings_Cancel_Btn, LV_EVENT_ALL, NULL);
+    
     lv_obj_add_event_cb(ui_BackToMainWindowBtn8, ui_event_BackToMainWindowBtn8, LV_EVENT_ALL, NULL);
 
 }

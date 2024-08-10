@@ -55,10 +55,8 @@ char *bluetooth_ui_pass = NULL;
 // 当前音量
 int current_volume;
 // 默认音量与最大音量
-uint32_t defaultVolume = 6;
+uint32_t defaultVolume = 8;
 uint32_t maxVolume = 15;
-// 浴室功放通道
-uint32_t bath_channel_bit = 3;
 // 调节音量时的防抖定时器
 static TimerHandle_t volume_timer = NULL;
 
@@ -538,8 +536,7 @@ void bluetoothScrLoaded(lv_event_t *e) {
     update_header_volume();
 
     // 进入蓝牙模式, 需要播放提示音
-    bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+    open_living_room_channel();
     bluetooth_send_at_command("AT+CN0", CMD_CHANGE_PROMPT_TONE);
     xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE, pdTRUE, pdFALSE, portMAX_DELAY);
     bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
@@ -835,7 +832,6 @@ static void onScreen_callback(void *pvParameter) {
     // 恢复背光
     set_backlight(backlight_level);
     lv_obj_add_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
-    // reset_backlight_timer();
 }
 void onScreen(lv_event_t *e) {
     // 确保在主线程中执行 UI 更新
@@ -1068,31 +1064,46 @@ void initVolumeSettings(lv_event_t *e) {
 }
 // 增加默认音量
 void addDefaultVolume(lv_event_t *e) {
-    const char *text = lv_label_get_text(ui_Default_Volume_Value);
-    int defaultVolume = atoi(text);
-    defaultVolume = (defaultVolume < 15) ? defaultVolume + 1 : 15;
-    lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", defaultVolume);
+    // 如果默认音量试图比最大音量高, 拒绝
+    const char *text = lv_label_get_text(ui_Max_Volume_Value);
+    int tmp_max_volume = atoi(text);
+    text = lv_label_get_text(ui_Default_Volume_Value);
+    int tmp_default_volume = atoi(text);
+
+    if (tmp_default_volume >= tmp_max_volume) {
+        return;
+    }
+    tmp_default_volume = (tmp_default_volume < 15) ? tmp_default_volume + 1 : 15;
+    lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", tmp_default_volume);
 }
 // 减少默认音量
 void decDefaultVolume(lv_event_t *e) {
     const char *text = lv_label_get_text(ui_Default_Volume_Value);
-    int defaultVolume = atoi(text);
-    defaultVolume = (defaultVolume > 1) ? defaultVolume - 1 : 1;
-    lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", defaultVolume);
+    int tmp_default_volume = atoi(text);
+    tmp_default_volume = (tmp_default_volume > 1) ? tmp_default_volume - 1 : 1;
+    lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", tmp_default_volume);
 }
 // 增加最大音量
 void addMaxVolume(lv_event_t *e) {
     const char *text = lv_label_get_text(ui_Max_Volume_Value);
-    int maxVolume = atoi(text);
-    maxVolume = (maxVolume < 15) ? maxVolume + 1 : 15;
-    lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", maxVolume);
+    int tmp_max_volume = atoi(text);
+    tmp_max_volume = (tmp_max_volume < 15) ? tmp_max_volume + 1 : 15;
+    lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", tmp_max_volume);
 }
 // 减少最大音量
 void decMaxVolume(lv_event_t *e) {
     const char *text = lv_label_get_text(ui_Max_Volume_Value);
-    int maxVolume = atoi(text);
-    maxVolume = (maxVolume > 1) ? maxVolume - 1 : 1;
-    lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", maxVolume);
+    int tmp_max_volume = atoi(text);
+    tmp_max_volume = (tmp_max_volume > 1) ? tmp_max_volume - 1 : 1;
+    lv_label_set_text_fmt(ui_Max_Volume_Value, "%d", tmp_max_volume);
+
+    // 如果最大音量比默认音量还低, 就顺便把默认音量也减少
+    text = lv_label_get_text(ui_Default_Volume_Value);
+    int tmp_default_volume = atoi(text);
+    if (tmp_default_volume > tmp_max_volume) {
+        tmp_default_volume--;
+        lv_label_set_text_fmt(ui_Default_Volume_Value, "%d", tmp_default_volume);
+    }
 }
 // 确认保存音量设置
 void saveVolumeSettings(lv_event_t *e) {
@@ -1120,6 +1131,11 @@ void saveVolumeSettings(lv_event_t *e) {
         nvs_close(nvs_handle);
         return;
     }
+    if (current_volume > maxVolume) {
+        current_volume = maxVolume;
+    }
+    update_header_volume();
+    volume_timer_callback(NULL);
     // 浴室通道
     bool left_switch_checked = lv_obj_get_state(ui_Bath_Play_Left_Channel_Switch) & LV_STATE_CHECKED;
     bool right_switch_checked = lv_obj_get_state(ui_Bath_Play_Right_Channel_Switch) & LV_STATE_CHECKED;
@@ -1144,6 +1160,10 @@ void saveVolumeSettings(lv_event_t *e) {
         ESP_LOGE("saveVolumeSettings", "Failed to commit NVS changes");
     }
     nvs_close(nvs_handle);
+    // 如果在播放浴室音乐就即时更改通道, 音乐库和自然之音则不可能在播放时还能在设置界面
+    if (bath_play_task_handle != NULL) {
+        open_bath_channel();
+    }
 }
 // 取消保存声音设置
 void cancelSaveVolumeSettings(lv_event_t *e) {
@@ -1306,7 +1326,7 @@ void verifyResetFactory(lv_event_t *e)
         return;
     }
     uint32_t new_bk_level = 3;
-    uint32_t new_bk_time_level = 3;
+    uint32_t new_bk_time_level = 4;
     err = nvs_set_u32(nvs_handle, "level", new_bk_level);
     if (err != ESP_OK) {
         ESP_LOGE("verifyResetFactory", "Failed to set default value for 'level': %s", esp_err_to_name(err));
@@ -1336,7 +1356,7 @@ void verifyResetFactory(lv_event_t *e)
         ESP_LOGE("verifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
-    uint32_t new_default_volume = 10;
+    uint32_t new_default_volume = 8;
     uint32_t new_max_volume = 15;
     uint32_t new_bath_channel = 3; 
     err = nvs_set_u32(nvs_handle, "defaultVolume", new_default_volume);
@@ -1792,9 +1812,8 @@ void nextMusicList(lv_event_t *e) {
 }
 // 播放Music List中被点击的音乐
 void playSelectedMusic(lv_event_t *e) {
-    // 在这一步才打开双通道
-    bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+    // 在这一步才打开客厅通道
+    open_living_room_channel();
 
     // 更新UI
     changeMusicUpdateUI();
@@ -2129,8 +2148,7 @@ static void selectNatureSoundTask(void *pvParameter) {
     if (id == -1) {
         ESP_LOGE("selectNatureSoundTask", "未找到自然之音, name: %s", sound_name);
     }
-    bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+    open_living_room_channel();
 
     char command[32];
     snprintf(command, sizeof(command), "AT+AF%02d", id);

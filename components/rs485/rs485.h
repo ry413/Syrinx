@@ -37,7 +37,6 @@ void rs485_monitor_task(void *pvParameter);
 extern TaskHandle_t bath_play_task_handle;
 extern TaskHandle_t music_play_task_handle;    // 这些实际上不应该放这, 但是放ui_events.h里会导致idf爆炸, 有生之年应该要解耦一下
 extern TaskHandle_t nature_play_task_handle;
-extern uint32_t bath_channel_bit;   // 浴室功放通道
 
 
 #ifdef __cplusplus

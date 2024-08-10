@@ -508,7 +508,7 @@ static void monitor_task(void *pvParameter)
 {
 	while(1)
 	{
-		vTaskDelay(5000 / portTICK_PERIOD_MS);
+		vTaskDelay(500000 / portTICK_PERIOD_MS);
     	ESP_LOGI(TAG,"-INTERNAL RAM left %dKB",heap_caps_get_free_size( MALLOC_CAP_INTERNAL )/1024);
         ESP_LOGI(TAG, "-     DMA left %dkB",heap_caps_get_free_size( MALLOC_CAP_DMA )/1024);
 		#ifdef CONFIG_SPIRAM
