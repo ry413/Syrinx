@@ -40,6 +40,18 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Header_Main_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Header_Main_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_Header_Error_Text = lv_label_create(ui_Header_Main);
+    lv_obj_set_width(ui_Header_Error_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Header_Error_Text, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Header_Error_Text, LV_ALIGN_CENTER);
+    lv_obj_set_x(ui_Header_Error_Text, 80);
+    lv_obj_set_y(ui_Header_Error_Text, 0);
+    lv_label_set_text(ui_Header_Error_Text, "");
+    lv_obj_set_style_text_color(ui_Header_Error_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Header_Error_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Error_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
     ui_Menu_Items = lv_obj_create(ui_Main_Window);
     lv_obj_remove_style_all(ui_Menu_Items);
     lv_obj_set_width(ui_Menu_Items, 480);
@@ -303,6 +315,16 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Guide_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Guide_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_bath_sound_icon = lv_img_create(ui_Main_Window);
+    lv_img_set_src(ui_bath_sound_icon, &ui_img_bath_sound_png);
+    lv_obj_set_width(ui_bath_sound_icon, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_bath_sound_icon, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_bath_sound_icon, -157);
+    lv_obj_set_y(ui_bath_sound_icon, -224);
+    lv_obj_set_align(ui_bath_sound_icon, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_bath_sound_icon, LV_OBJ_FLAG_ADV_HITTEST | LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_bath_sound_icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
     ui_tfcard_States_Icon = lv_img_create(ui_Main_Window);
     lv_img_set_src(ui_tfcard_States_Icon, &ui_img_607840074);
     lv_obj_set_width(ui_tfcard_States_Icon, LV_SIZE_CONTENT);   /// 1
@@ -323,6 +345,8 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_text_color(ui_tfcard_unavailable_the_X, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
     lv_obj_set_style_text_opa(ui_tfcard_unavailable_the_X, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_tfcard_unavailable_the_X, &ui_font_MSBlack22, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    
 
     ui_Wifi_States_Icon = lv_img_create(ui_Main_Window);
     lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
@@ -425,6 +449,22 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_TFCardNotFoundMsgText,"TF卡未插入或未刷新曲目");
     lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
+    ui_esp32_restart_btn = lv_btn_create(ui_Main_Window);
+    
+    lv_obj_set_width(ui_esp32_restart_btn, 100);
+    lv_obj_set_height(ui_esp32_restart_btn, 50);
+    lv_obj_set_x(ui_esp32_restart_btn, -137);
+    lv_obj_set_y(ui_esp32_restart_btn, -153);
+    lv_obj_set_align(ui_esp32_restart_btn, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(ui_esp32_restart_btn, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(ui_esp32_restart_btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+    lv_obj_add_flag(ui_esp32_restart_btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_esp32_restart_btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+
+
+
+
     lv_obj_add_event_cb(ui_Music_Btn, ui_event_Music_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Nature_Sound_Btn, ui_event_Nature_Sound_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Bluetooth_Btn, ui_event_Bluetooth_Btn, LV_EVENT_ALL, NULL);
@@ -436,4 +476,5 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_event_cb(ui_On_Main_Screen_Range, ui_event_Main_On_Screen_Range, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Main_Window, ui_event_Main_Window, LV_EVENT_ALL, NULL);
 
+    lv_obj_add_event_cb(ui_esp32_restart_btn, ui_event_esp32_restart_btn, LV_EVENT_ALL, NULL);
 }

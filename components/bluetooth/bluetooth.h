@@ -70,7 +70,7 @@ extern EventGroupHandle_t bt_event_group;           // 除了音乐播放相关�
 #define EVENT_BLUETOOTH_CONNECTED (1 << 12)         // 蓝牙已连接
 #define EVENT_BLUETOOTH_DISCONNECTED (1 << 13)      // 蓝牙已断开
 #define EVENT_END_PLAY (1 << 14)                    // 播放已结束
-#define EVENT_STARTUP_SUCCESS (1 << 15)             // 模块已上电并丢掉了返回值
+#define EVENT_STARTUP_SUCCESS (1 << 15)             // 模块已复位
 #define EVENT_GET_DIR_FILE_NAMES (1 << 16)          // 已获取当前目录下所有音频文件名
 #define EVENT_ALL_DURATION_COMPLETE (1 << 17)       // 已获取完音乐库每首歌的总时长
 #define EVENT_GET_DEVICE_STATE (1 << 18)            // 已获取设备状态
@@ -98,6 +98,8 @@ extern int device_state;
 
 extern uint32_t bath_channel_bit;   // 浴室功放通道, 代表AT+CL%d
 
+extern char final_version[50];
+
 
 void get_all_file_names(void);
 void get_all_music_duration(void);
@@ -109,4 +111,26 @@ void bluetooth_monitor_task(void *pvParameters);
 
 void open_living_room_channel(void);
 void open_bath_channel(void);
+
+void show_error_info(void);
+
+void AT_MV(void);
+void AT_CL(int channel);
+void AT_CM(int mode);
+void AT_M6(int dir_id);
+void AT_M4(int m4_targer);
+void AT_M2(void);
+void AT_MT(void);
+void AT_CC(void);
+void AT_AF(int music_id);
+void AT_CN(int cmd);
+void AT_AA0(void);
+void AT_TD(void);
+void AT_TE(void);
+void AT_BD(char *name);
+void AT_BE(char *pass);
+void AT_CA(int volume);
+void AT_CQ(int equalizer);
+void AT_CB(void);
+
 #endif // BLUETOOTH_H

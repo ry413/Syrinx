@@ -29,7 +29,7 @@ void obtain_time(void);
 void set_time_label(lv_obj_t * label);
 void set_date_label(lv_obj_t * label);
 void update_time_task(void *pvParameter);
-
+time_t calculate_timer_length(int hour, int min);
 #ifdef __cplusplus
 }
 #endif

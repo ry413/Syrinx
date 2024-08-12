@@ -38,6 +38,8 @@ extern TaskHandle_t bath_play_task_handle;
 extern TaskHandle_t music_play_task_handle;    // 这些实际上不应该放这, 但是放ui_events.h里会导致idf爆炸, 有生之年应该要解耦一下
 extern TaskHandle_t nature_play_task_handle;
 
+void show_bath_sound_icon_callback(void *param);
+void hide_bath_sound_icon_callback(void *param);
 
 #ifdef __cplusplus
 }

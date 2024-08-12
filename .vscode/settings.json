@@ -65,7 +65,8 @@
         "queue.h": "c",
         "ui_comp_volumeadjustdisabledrange.h": "c",
         "cstdint": "c",
-        "lv_roller.h": "c"
+        "lv_roller.h": "c",
+        "numbers": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

@@ -4,9 +4,25 @@
 // Project name: SquareLine_Project
 
 #include "../ui.h"
+#include "stdio.h"
 
 
 // COMPONENT TimeSelector
+
+
+
+void ui_event_comp_TimeSelector_HourSelector( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    int user_data = (int)lv_event_get_user_data(e);
+    lv_obj_set_user_data(target, (void *)user_data);
+}
+void ui_event_comp_TimeSelector_MinSelector( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    int user_data = (int)lv_event_get_user_data(e);
+    lv_obj_set_user_data(target, (void *)user_data);
+}
 
 lv_obj_t *ui_TimeSelector_create(lv_obj_t *comp_parent) {
 
@@ -23,12 +39,13 @@ lv_obj_set_style_border_opa(cui_TimeSelector, 0, LV_PART_MAIN| LV_STATE_DEFAULT)
 
 lv_obj_t *cui_HourSelector;
 cui_HourSelector = lv_roller_create(cui_TimeSelector);
-lv_roller_set_options( cui_HourSelector, "      00      \n01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23", LV_ROLLER_MODE_INFINITE );
+lv_roller_set_options( cui_HourSelector, "        00        \n01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23", LV_ROLLER_MODE_INFINITE );
 lv_obj_set_height( cui_HourSelector, 210);
 lv_obj_set_width( cui_HourSelector, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_x( cui_HourSelector, -70 );
+lv_obj_set_x( cui_HourSelector, -85 );
 lv_obj_set_y( cui_HourSelector, 0 );
 lv_obj_set_align( cui_HourSelector, LV_ALIGN_CENTER );
+lv_obj_add_flag( cui_HourSelector, LV_OBJ_FLAG_EVENT_BUBBLE );
 lv_obj_set_style_text_font(cui_HourSelector, &lv_font_montserrat_24, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_color(cui_HourSelector, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_border_opa(cui_HourSelector, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -42,8 +59,8 @@ lv_obj_t *cui_HourText;
 cui_HourText = lv_label_create(cui_TimeSelector);
 lv_obj_set_width( cui_HourText, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( cui_HourText, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( cui_HourText, -45 );
-lv_obj_set_y( cui_HourText, 1 );
+lv_obj_set_x( cui_HourText, -55 );
+lv_obj_set_y( cui_HourText, 2 );
 lv_obj_set_align( cui_HourText, LV_ALIGN_CENTER );
 lv_label_set_text(cui_HourText,"时");
 lv_obj_set_style_text_font(cui_HourText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -127,12 +144,13 @@ lv_obj_set_style_border_opa(cui_HourOverlayUnder2, 0, LV_PART_MAIN| LV_STATE_DEF
 
 lv_obj_t *cui_MinSelector;
 cui_MinSelector = lv_roller_create(cui_TimeSelector);
-lv_roller_set_options( cui_MinSelector, "      00      \n01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50\n51\n52\n53\n54\n55\n56\n57\n58\n59", LV_ROLLER_MODE_INFINITE );
+lv_roller_set_options( cui_MinSelector, "        00        \n01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50\n51\n52\n53\n54\n55\n56\n57\n58\n59", LV_ROLLER_MODE_INFINITE );
 lv_obj_set_height( cui_MinSelector, 210);
 lv_obj_set_width( cui_MinSelector, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_x( cui_MinSelector, 70 );
-lv_obj_set_y( cui_MinSelector, -1 );
+lv_obj_set_x( cui_MinSelector, 85 );
+lv_obj_set_y( cui_MinSelector, 0 );
 lv_obj_set_align( cui_MinSelector, LV_ALIGN_CENTER );
+lv_obj_add_flag( cui_MinSelector, LV_OBJ_FLAG_EVENT_BUBBLE );
 lv_obj_set_style_text_font(cui_MinSelector, &lv_font_montserrat_24, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_color(cui_MinSelector, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_border_opa(cui_MinSelector, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -146,8 +164,8 @@ lv_obj_t *cui_MinText;
 cui_MinText = lv_label_create(cui_TimeSelector);
 lv_obj_set_width( cui_MinText, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( cui_MinText, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( cui_MinText, 95 );
-lv_obj_set_y( cui_MinText, 1 );
+lv_obj_set_x( cui_MinText, 115 );
+lv_obj_set_y( cui_MinText, 2 );
 lv_obj_set_align( cui_MinText, LV_ALIGN_CENTER );
 lv_label_set_text(cui_MinText,"分");
 lv_obj_set_style_text_font(cui_MinText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -162,7 +180,6 @@ lv_obj_set_y( cui_MinOverlay, 0 );
 lv_obj_set_align( cui_MinOverlay, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(cui_MinOverlay,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(cui_MinOverlay, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-lv_obj_add_flag( cui_MinOverlay, LV_OBJ_FLAG_HIDDEN );
 lv_obj_clear_flag( cui_MinOverlay, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 lv_obj_t *cui_MinOverlayTop2;
@@ -258,6 +275,8 @@ children[UI_COMP_TIMESELECTOR_MINOVERLAY_MINOVERLAYUNDER2] = cui_MinOverlayUnder
 children[UI_COMP_TIMESELECTOR_PARTLINE] = cui_PartLine;
 lv_obj_add_event_cb(cui_TimeSelector, get_component_child_event_cb, LV_EVENT_GET_COMP_CHILD, children);
 lv_obj_add_event_cb(cui_TimeSelector, del_component_child_event_cb, LV_EVENT_DELETE, children);
+lv_obj_add_event_cb(cui_HourSelector, ui_event_comp_TimeSelector_HourSelector, LV_EVENT_ALL, (void *)1);
+lv_obj_add_event_cb(cui_MinSelector, ui_event_comp_TimeSelector_MinSelector, LV_EVENT_ALL, (void *)2);
 ui_comp_TimeSelector_create_hook(cui_TimeSelector);
 return cui_TimeSelector; 
 }

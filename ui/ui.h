@@ -25,6 +25,7 @@ extern lv_obj_t * ui_Main_Window;
 extern lv_obj_t * ui_Header_Main;
 extern lv_obj_t * ui_Header_Main_Time;
 extern lv_obj_t * ui_Header_Main_Text;
+extern lv_obj_t * ui_Header_Error_Text;
 extern lv_obj_t * ui_Menu_Items;
 extern lv_obj_t * ui_Music;
 void ui_event_Music_Btn(lv_event_t * e);
@@ -56,12 +57,15 @@ void ui_event_Guide_Btn(lv_event_t * e);
 extern lv_obj_t * ui_Guide_Btn;
 extern lv_obj_t * ui_Guide_Icon;
 extern lv_obj_t * ui_Guide_Text;
+extern lv_obj_t * ui_bath_sound_icon;
 extern lv_obj_t * ui_tfcard_States_Icon;
 extern lv_obj_t * ui_tfcard_unavailable_the_X;
 void ui_event_TFCardNotFoundMsg(lv_event_t * e);
 extern lv_obj_t * ui_TFCardNotFoundMsg;
 extern lv_obj_t * ui_TFCardNotFoundMsgPanel;
 extern lv_obj_t * ui_TFCardNotFoundMsgText;
+void ui_event_esp32_restart_btn(lv_event_t * e);
+extern lv_obj_t * ui_esp32_restart_btn;
 extern lv_obj_t * ui_Wifi_States_Icon;
 extern lv_obj_t * ui_Wifi_Img_Placeholder;
 extern lv_obj_t * ui_Music_Note_Img_Placeholder1;
@@ -221,9 +225,12 @@ extern lv_obj_t * ui_AlarmClockTimeText;
 extern lv_obj_t * ui_AlarmClockTimeHour;
 extern lv_obj_t * ui_AlarmClockTimeDecora;
 extern lv_obj_t * ui_AlarmClockTimeMin;
-void ui_event_ui_AlarmClockSwitch(lv_event_t * e);
+extern lv_obj_t * ui_alarm_clock_countdown_time_text;
 extern lv_obj_t * ui_AlarmClockSwitch;
+void ui_event_AlarmClockTimeSelector(lv_event_t * e);
 extern lv_obj_t * ui_AlarmClockTimeSelector;
+extern lv_obj_t * ui_alarm_clock_hour_roller;
+extern lv_obj_t * ui_alarm_clock_min_roller;
 void ui_event_ui_AlarmClockTimeVerifyBtn(lv_event_t * e);
 extern lv_obj_t * ui_AlarmClockTimeVerifyBtn;
 extern lv_obj_t * ui_AlarmClockTimeVerifyBtnText;
@@ -603,11 +610,13 @@ LV_IMG_DECLARE(ui_img_542920328);    // assets/丽枫UI/上一首.png
 LV_IMG_DECLARE(ui_img_899744137);    // assets/丽枫UI/播放.png
 LV_IMG_DECLARE(ui_img_542960551);    // assets/丽枫UI/下一首.png
 LV_IMG_DECLARE(ui_img_607840074);    // assets/丽枫UI/tfcard.png
+LV_IMG_DECLARE(ui_img_bath_sound_png);    // assets/bath_sound.png
 
 
 
 LV_FONT_DECLARE(ui_font_Font100);
 LV_FONT_DECLARE(ui_font_Font30);
+LV_FONT_DECLARE(ui_font_LanTing12);
 LV_FONT_DECLARE(ui_font_LanTing18);
 LV_FONT_DECLARE(ui_font_LanTIng20);
 LV_FONT_DECLARE(ui_font_LanTingFine16);

@@ -17,6 +17,7 @@ lv_obj_t * ui_Main_Window;
 lv_obj_t * ui_Header_Main;
 lv_obj_t * ui_Header_Main_Time;
 lv_obj_t * ui_Header_Main_Text;
+lv_obj_t * ui_Header_Error_Text;
 lv_obj_t * ui_Menu_Items;
 lv_obj_t * ui_Music;
 void ui_event_Music_Btn(lv_event_t * e);
@@ -48,11 +49,14 @@ void ui_event_Guide_Btn(lv_event_t * e);
 lv_obj_t * ui_Guide_Btn;
 lv_obj_t * ui_Guide_Icon;
 lv_obj_t * ui_Guide_Text;
+lv_obj_t * ui_bath_sound_icon;
 lv_obj_t * ui_tfcard_States_Icon;
 lv_obj_t * ui_tfcard_unavailable_the_X;
 lv_obj_t * ui_TFCardNotFoundMsg;
 lv_obj_t * ui_TFCardNotFoundMsgPanel;
 lv_obj_t * ui_TFCardNotFoundMsgText;
+void ui_event_esp32_restart_btn(lv_event_t * e);
+lv_obj_t * ui_esp32_restart_btn;
 lv_obj_t * ui_Wifi_States_Icon;
 lv_obj_t * ui_Wifi_Img_Placeholder;
 lv_obj_t * ui_Music_Note_Img_Placeholder1;
@@ -215,9 +219,11 @@ lv_obj_t * ui_AlarmClockTimeText;
 lv_obj_t * ui_AlarmClockTimeHour;
 lv_obj_t * ui_AlarmClockTimeDecora;
 lv_obj_t * ui_AlarmClockTimeMin;
-void ui_event_ui_AlarmClockSwitch(lv_event_t * e);
+lv_obj_t * ui_alarm_clock_countdown_time_text;
 lv_obj_t * ui_AlarmClockSwitch;
 lv_obj_t * ui_AlarmClockTimeSelector;
+lv_obj_t * ui_alarm_clock_hour_roller;
+lv_obj_t * ui_alarm_clock_min_roller;
 void ui_event_ui_AlarmClockTimeVerifyBtn(lv_event_t * e);
 lv_obj_t * ui_AlarmClockTimeVerifyBtn;
 lv_obj_t * ui_AlarmClockTimeVerifyBtnText;
@@ -685,6 +691,14 @@ void ui_event_Main_On_Screen_Range(lv_event_t * e)
         onScreen(e);
     }
 }
+void ui_event_esp32_restart_btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        esp32_restart(e);
+    }
+}
 void ui_event_Music_On_Screen_Range(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -922,6 +936,37 @@ void ui_event_Wakeup_Time_Btn(lv_event_t * e)
         _ui_flag_modify(ui_AlarmClockTime, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
+void ui_event_AlarmClockTimeSelector(lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        int user_data = lv_obj_get_user_data(target);
+        if (user_data == 1) {
+            change_alarm_clock_hour(e);
+        } else if (user_data == 2) {
+            change_alarm_clock_min(e);
+        }
+    }
+}
+
+void ui_event_ui_AlarmClockTimeVerifyBtn(lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        save_alarm_clock(e);
+        _ui_flag_modify(ui_AlarmClockTime, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
+
+void ui_event_ui_AlarmClockTimeCancelBtn(lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        cancel_save_alarm_clock(e);
+        _ui_flag_modify(ui_AlarmClockTime, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
+
 void ui_event_BackToMainWindowBtn5(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -1333,6 +1378,7 @@ void ui_event_BackToMusicWindowBtn9(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_screen_change(&ui_Music_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Music_Window_screen_init);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_Play_Mode_Btn(lv_event_t * e)

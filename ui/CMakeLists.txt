@@ -60,8 +60,10 @@ SET(SOURCES components/ui_comp_header_volume.c
     images/ui_img_542920328.c
     images/ui_img_899744137.c
     images/ui_img_542960551.c
+    images/ui_img_bath_sound_png.c
     fonts/ui_font_Font100.c
     fonts/ui_font_Font30.c
+    fonts/ui_font_LanTing12.c
     fonts/ui_font_LanTing18.c
     fonts/ui_font_LanTIng20.c
     fonts/ui_font_LanTingFine16.c

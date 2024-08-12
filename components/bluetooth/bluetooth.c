@@ -31,6 +31,7 @@ EventGroupHandle_t music_event_group = NULL;
 
 uint32_t bath_channel_bit = 3;
 
+int at_error_code = -1;
 
 
 char **temp_file_names = NULL;  // 储存文件名的数组
@@ -46,6 +47,8 @@ int bluetooth_state = 0;        // 蓝牙状态
 int work_mode = 0;              // 工作模式, 0: 空闲, 1: 蓝牙, 2: 音乐
 int play_state = 0;
 int device_state = 0;
+
+char final_version[50];
 
 command_type_t current_command = CMD_NONE;
 
@@ -129,6 +132,7 @@ esp_err_t bluetooth_init(void) {
     bt_event_group = xEventGroupCreate();
     music_event_group = xEventGroupCreate();
     
+
     ESP_LOGI(TAG, "UART 0 初始化成功");
     return ESP_OK;
 }
@@ -181,25 +185,20 @@ void add_file_name(char **temp_file_names, const char *file_name) {
 void get_all_file_names(void) {
     // 切换到音乐模式
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (1/12)");
-    bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
-    work_mode = 2;
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-
+    AT_CM(2);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (2/12)");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
     // 必须进入目录才能保证得到对的M2数值
-    bluetooth_send_at_command("AT+M602", CMD_CHANGE_DIR);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
-    bluetooth_send_at_command("AT+M2", CMD_GET_DIR_FILE_COUNT);
-    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
+    AT_M6(2);
+    AT_M2();
     music_files_count = current_dir_files_count;
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (3/12)");
     // 再弄个bath目录的文件数
-    bluetooth_send_at_command("AT+M601", CMD_CHANGE_DIR);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
-    bluetooth_send_at_command("AT+M2", CMD_GET_DIR_FILE_COUNT);
-    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, portMAX_DELAY);
+    AT_M6(1);
+    AT_M2();
     bath_files_count = current_dir_files_count;
 
     printf("music: %ld, bath: %ld\n", music_files_count, bath_files_count);
@@ -245,16 +244,9 @@ void get_all_file_names(void) {
 
     // 获取各个目录的文件名列表
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (6/12)");
-    bluetooth_send_at_command("AT+M402", CMD_GET_DIR_FILE_NAMES);    // music
-    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
-
-    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (7/12)");
-    bluetooth_send_at_command("AT+M401", CMD_GET_DIR_FILE_NAMES);    // bath
-    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
-
-    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (8/12)");
-    bluetooth_send_at_command("AT+M404", CMD_GET_DIR_FILE_NAMES);    // theme
-    xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
+    AT_M4(2);
+    AT_M4(1);
+    AT_M4(4);
 
     // 储存文件名们到nvs里
     for (int i = 0; i < (music_files_count + bath_files_count + 4); i++) {
@@ -277,8 +269,7 @@ void get_all_file_names(void) {
     nvs_close(nvs_handle);
 
     // 不回到空闲模式, 因为接下来要同步歌的总时长
-    // bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
-    // xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
+    // AT_CM(0);
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (9/12)");
     // 宣布初始化完毕
@@ -288,18 +279,15 @@ void get_all_file_names(void) {
 // 获得音乐库中所有歌的总时长并储存到nvs中
 void get_all_music_duration(void) {
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (10/12)");
-    bluetooth_send_at_command("AT+M602", CMD_CHANGE_DIR);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, portMAX_DELAY);
+    AT_M6(2);
 
     // 获得durations
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (11/12)");
     uint32_t tmp_music_durations[music_files_count];
     for (int i = 0; i < music_files_count; i++) {
-        bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
-        xEventGroupWaitBits(music_event_group, EVENT_GET_DURATION, pdTRUE, pdFALSE, portMAX_DELAY);
+        AT_MT();
         tmp_music_durations[i] = current_music_duration;
-        bluetooth_send_at_command("AT+CC", CMD_NEXT_TRACK);
-        xEventGroupWaitBits(music_event_group, EVENT_NEXT_TRACK, pdTRUE, pdFALSE, portMAX_DELAY);
+        AT_CC();
     }
 
     // 储存durations到nvs里
@@ -327,8 +315,7 @@ void get_all_music_duration(void) {
     }
     
     nvs_close(nvs_handle);
-    bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
+    AT_CM(0);
     printf("GET ALL MUSIC DURATION END\n");
     xEventGroupSetBits(bt_event_group, EVENT_ALL_DURATION_COMPLETE);
 }
@@ -507,20 +494,17 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char final_version[50];
-                    char *esp32_version = lv_label_get_text(ui_System_Version_Text);
+                    char *esp32_version = "v0.5.0-Vulcan";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
-                    lv_label_set_text(ui_System_Version_Text, final_version);
                 } else {
                     ESP_LOGE(TAG, "版本号错误?");
                 }
-            } else if (strncmp(response, "QT+", 3) == 0) {
-                // 这什么啊, 反正没用
+            } else if (strncmp(response, "QN+", 3) == 0) {
+                // 提示音状态, 谁会用啊
             }
-            // QN是提示音相关的查询结果, 不过这里并没有在乎它的正经用法.
-            // 上电后主动返回的四条返回值, 这个QN是最后一条, 所以这里拿来当作开机结束的事件
-            else if (strncmp(response, "QN+", 3) == 0) {
+            // 上电后主动返回的四条返回值有个QT, 是波特率, 拿来当作复位后的通知
+            else if (strncmp(response, "QT+", 3) == 0) {
                 xEventGroupSetBits(bt_event_group, EVENT_STARTUP_SUCCESS);
             }
             // 这个是M4响应的一堆文件名的处理
@@ -543,6 +527,9 @@ void bluetooth_monitor_task(void *pvParameters) {
                 printf("UTF8编码的字符串: %s\n", utf8);
                 add_file_name(temp_file_names, utf8);
                 free(utf8);
+            } else if (strncmp(response, "ERR", 3) == 0) {
+                ESP_LOGE("ERROR", "AT: %s", response);
+                sscanf(response, "ERR%d", &at_error_code);
             } else {
                 // 设置蓝牙名称会复位, 返回个不知道什么东西
                 if (current_command == CMD_BLUETOOTH_SET_NAME) {
@@ -559,21 +546,212 @@ void bluetooth_monitor_task(void *pvParameters) {
 
 // 打开浴室通道
 void open_bath_channel(void) {
-    char command[32];
-    snprintf(command, sizeof(command), "AT+CL%ld", bath_channel_bit);
-    bluetooth_send_at_command(command, CMD_CHANGE_CHANNEL);
-    xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+    AT_CL(bath_channel_bit);
 }
 // 打开与浴室通道相反的客厅通道
 void open_living_room_channel(void) {
     if (bath_channel_bit == 2) {
-        bluetooth_send_at_command("AT+CL1", CMD_CHANGE_CHANNEL);
-        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+        AT_CL(1);
     } else if (bath_channel_bit == 1){
-        bluetooth_send_at_command("AT+CL2", CMD_CHANGE_CHANNEL);
-        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+        AT_CL(2);
     } else {
-        bluetooth_send_at_command("AT+CL3", CMD_CHANGE_CHANNEL);
-        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
+        AT_CL(3);
+    }
+}
+
+static void show_error_info_callback(void *param) {
+    if (at_error_code == -1) {
+        ESP_LOGE(TAG, "%02d Timeout", current_command);
+        lv_label_set_text_fmt(ui_Header_Error_Text, "%02dto", current_command);
+    } else {
+        lv_label_set_text_fmt(ui_Header_Error_Text, "%02dERR%d", current_command, at_error_code);
+        ESP_LOGE(TAG, "%02dERR%d", current_command, at_error_code);
+        at_error_code = -1;
+    }
+}
+void show_error_info(void) {
+    lv_async_call(show_error_info_callback, NULL);
+}
+
+// 查询设备状态(tf卡在不在)
+void AT_MV(void) {
+    bluetooth_send_at_command("AT+MV", CMD_GET_DEVICE_STATE);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DEVICE_STATE, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_GET_DEVICE_STATE)) {
+        show_error_info();
+    }
+}
+
+// 切换功放
+void AT_CL(int channel) {
+    char command[10];
+    snprintf(command, sizeof(command), "AT+CL%d", channel);
+    bluetooth_send_at_command(command, CMD_CHANGE_CHANNEL);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_CHANGE_CHANNEL)) {
+        show_error_info();
+    }
+}
+
+// 切换工作模式
+void AT_CM(int mode) {
+    EventBits_t bits = 0;
+
+    if (mode == 0) {
+        bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+    } else if (mode == 1) {
+        bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+    } else if (mode == 2) {
+        bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+    } else {
+        ESP_LOGE(TAG, "Error mode: %d", mode);
+        return;
+    }
+    
+    if (bits != 0) {
+        work_mode = mode;
+    } else {
+        show_error_info();
+    }
+}
+// 获得当前目录下的曲目数
+void AT_M2(void) {
+    bluetooth_send_at_command("AT+M2", CMD_GET_DIR_FILE_COUNT);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_GET_DIR_FILE_COUNT)) {
+        show_error_info();
+    }
+}
+// 进入指定目录
+void AT_M6(int dir_id) {
+    char command[10];
+    snprintf(command, sizeof(command), "AT+M6%02d", dir_id);
+    bluetooth_send_at_command(command, CMD_CHANGE_DIR);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_CHANGE_DIR)) {
+        show_error_info();
+    }
+}
+// 开始获得当前目录下所有曲目名
+void AT_M4(int m4_target) {
+    char command[10];
+    snprintf(command, sizeof(command), "AT+M4%02d", m4_target);
+    bluetooth_send_at_command(command, CMD_GET_DIR_FILE_NAMES);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
+    if (!(bits & EVENT_GET_DIR_FILE_NAMES)) {
+        show_error_info();
+    }
+}
+// 获得当前曲目的总时长
+void AT_MT(void) {
+    bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_GET_DURATION, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_GET_DURATION)) {
+        show_error_info();
+    }
+}
+// 下一首
+void AT_CC(void) {
+    bluetooth_send_at_command("AT+CC", CMD_NEXT_TRACK);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_NEXT_TRACK, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_NEXT_TRACK)) {
+        show_error_info();
+    }
+}
+// 播放指定物理序号的音乐
+void AT_AF(int music_id) {
+    char command[10];
+    snprintf(command, sizeof(command), "AT+AF%02d", music_id);
+    bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_PLAY_MUSIC_WITH_ID)) {
+        show_error_info();
+    }
+}
+// 修改提示音开关
+void AT_CN(int cmd) {       // 这b参数要怎么命名啊
+    char command[10];
+    snprintf(command, sizeof(command), "AT+CN%d", cmd);
+    bluetooth_send_at_command(command, CMD_CHANGE_PROMPT_TONE);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_CHANGE_PROMPT_TONE)) {
+        show_error_info();
+    }
+}
+// 停止播放
+void AT_AA0(void) {
+    bluetooth_send_at_command("AT+AA0", CMD_STOP_TRACK);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_STOP_TRACK, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_STOP_TRACK)) {
+        show_error_info();
+    }
+}
+// 获得蓝牙名称
+void AT_TD(void) {
+    bluetooth_send_at_command("AT+TD", CMD_BLUETOOTH_GET_NAME);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_GET_NAME, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_BLUETOOTH_GET_NAME)) {
+        show_error_info();
+    }
+}
+// 获得蓝牙密码
+void AT_TE(void) {
+    bluetooth_send_at_command("AT+TE", CMD_BLUETOOTH_GET_PASSWORD);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_GET_PASSWORD, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_BLUETOOTH_GET_PASSWORD)) {
+        show_error_info();
+    }
+}
+// 设置蓝牙密码
+void AT_BE(char *pass) {
+    char command[20];
+    snprintf(command, sizeof(command), "AT+BE%s", pass);
+    bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_PASSWORD);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_SET_PASSWORD, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_BLUETOOTH_SET_PASSWORD)) {
+        show_error_info();
+    }
+}
+// 设置蓝牙名称
+void AT_BD(char *name) {
+    char command[20];
+    snprintf(command, sizeof(command), "AT+BD%s", name);
+    bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_NAME);
+    // 然后会自动复位, 所以等待复位事件位
+    vTaskDelay(100 / portTICK_PERIOD_MS);   // QT是第二个回复的, 而复位会回复四个值, 所以等一下
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_STARTUP_SUCCESS)) {
+        show_error_info();
+    }
+}
+// 设置音量
+void AT_CA(int volume) {
+    char command[20];
+    snprintf(command, sizeof(command), "AT+CA%02d", volume);
+    bluetooth_send_at_command(command, CMD_SET_VOLUME);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_SET_VOLUME, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_SET_VOLUME)) {
+        show_error_info();
+    }
+}
+// 设置均衡器
+void AT_CQ(int equalizer) {
+    char command[20];
+    snprintf(command, sizeof(command), "AT+CQ%d", equalizer);
+    bluetooth_send_at_command(command, CMD_EQUALIZER_SET);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_EQUALIZER_SET)) {
+        show_error_info();
+    }
+}
+// 播放/暂停
+void AT_CB(void) {
+    bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE_TOGGLE);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_PAUSE_TOGGLE, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    if (!(bits & EVENT_PLAY_PAUSE_TOGGLE)) {
+        show_error_info();
     }
 }

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 16 px
  * Bpp: 1
- * Opts: --bpp 1 --size 16 --font /Users/ry79/SquareLine/assets/微软雅黑.ttf -o /Users/ry79/SquareLine/assets/ui_font_MSBlack16.c --format lvgl -r 0x20-0x7f --symbols 卡未插入或未刷新曲目 --no-compress --no-prefilter
+ * Opts: --bpp 1 --size 16 --font /Users/ry79/SquareLine/assets/微软雅黑.ttf -o /Users/ry79/SquareLine/assets/ui_font_MSBlack16.c --format lvgl -r 0x20-0x7f --symbols 卡未插入或未刷新曲目时分 --no-compress --no-prefilter
  ******************************************************************************/
 
 #include "../ui.h"
@@ -384,6 +384,12 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0x6, 0x20, 0xc, 0x30, 0x8, 0x10, 0x18, 0x18,
     0x30, 0xc, 0xe0, 0x7, 0x0, 0x0,
 
+    /* U+5206 "分" */
+    0x4, 0xc0, 0x8, 0x80, 0x21, 0x80, 0xc1, 0x83,
+    0x1, 0x8c, 0x1, 0xb0, 0x1, 0x9f, 0xf8, 0x4,
+    0x10, 0x8, 0x20, 0x10, 0x40, 0x60, 0x81, 0x81,
+    0x6, 0x6, 0x38, 0x78, 0x0, 0x0,
+
     /* U+5237 "刷" */
     0x0, 0x6, 0xff, 0xd, 0x2, 0x5a, 0x4, 0xb7,
     0xf9, 0x68, 0x92, 0xd1, 0x5, 0xaf, 0xcb, 0x54,
@@ -413,6 +419,12 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0x26, 0x40, 0x24, 0x40, 0xff, 0x40, 0x0, 0x7f,
     0x8, 0x48, 0xff, 0x48, 0x8, 0xc8, 0x6c, 0x88,
     0x4a, 0x88, 0xca, 0x88, 0x19, 0x8, 0x31, 0x8,
+
+    /* U+65F6 "时" */
+    0x0, 0x13, 0xe0, 0x48, 0x81, 0x22, 0xff, 0x88,
+    0x12, 0x20, 0x4f, 0xb1, 0x22, 0x44, 0x89, 0x92,
+    0x22, 0x48, 0x81, 0x22, 0x4, 0xf8, 0x12, 0x20,
+    0x40, 0xe, 0x0,
 
     /* U+66F2 "曲" */
     0x8, 0x80, 0x44, 0x3f, 0xff, 0x11, 0x18, 0x88,
@@ -536,14 +548,16 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 1009, .adv_w = 190, .box_w = 8, .box_h = 3, .ofs_x = 2, .ofs_y = 4},
     {.bitmap_index = 1012, .adv_w = 76, .box_w = 1, .box_h = 1, .ofs_x = 0, .ofs_y = 0},
     {.bitmap_index = 1013, .adv_w = 256, .box_w = 16, .box_h = 15, .ofs_x = 0, .ofs_y = -2},
-    {.bitmap_index = 1043, .adv_w = 256, .box_w = 15, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
-    {.bitmap_index = 1072, .adv_w = 256, .box_w = 15, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
-    {.bitmap_index = 1101, .adv_w = 256, .box_w = 15, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
-    {.bitmap_index = 1130, .adv_w = 256, .box_w = 16, .box_h = 15, .ofs_x = 0, .ofs_y = -2},
-    {.bitmap_index = 1160, .adv_w = 256, .box_w = 16, .box_h = 16, .ofs_x = 0, .ofs_y = -2},
-    {.bitmap_index = 1192, .adv_w = 256, .box_w = 13, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
-    {.bitmap_index = 1217, .adv_w = 256, .box_w = 15, .box_h = 15, .ofs_x = 0, .ofs_y = -2},
-    {.bitmap_index = 1246, .adv_w = 256, .box_w = 11, .box_h = 14, .ofs_x = 3, .ofs_y = -2}
+    {.bitmap_index = 1043, .adv_w = 256, .box_w = 15, .box_h = 16, .ofs_x = 0, .ofs_y = -3},
+    {.bitmap_index = 1073, .adv_w = 256, .box_w = 15, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
+    {.bitmap_index = 1102, .adv_w = 256, .box_w = 15, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
+    {.bitmap_index = 1131, .adv_w = 256, .box_w = 15, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
+    {.bitmap_index = 1160, .adv_w = 256, .box_w = 16, .box_h = 15, .ofs_x = 0, .ofs_y = -2},
+    {.bitmap_index = 1190, .adv_w = 256, .box_w = 16, .box_h = 16, .ofs_x = 0, .ofs_y = -2},
+    {.bitmap_index = 1222, .adv_w = 256, .box_w = 14, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
+    {.bitmap_index = 1249, .adv_w = 256, .box_w = 13, .box_h = 15, .ofs_x = 1, .ofs_y = -2},
+    {.bitmap_index = 1274, .adv_w = 256, .box_w = 15, .box_h = 15, .ofs_x = 0, .ofs_y = -2},
+    {.bitmap_index = 1303, .adv_w = 256, .box_w = 11, .box_h = 14, .ofs_x = 3, .ofs_y = -2}
 };
 
 /*---------------------
@@ -551,8 +565,8 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
  *--------------------*/
 
 static const uint16_t unicode_list_1[] = {
-    0x0, 0xd2, 0x1fc, 0x10b1, 0x126d, 0x144b, 0x158d, 0x15c5,
-    0x2589
+    0x0, 0xa1, 0xd2, 0x1fc, 0x10b1, 0x126d, 0x144b, 0x1491,
+    0x158d, 0x15c5, 0x2589
 };
 
 /*Collect the unicode lists and glyph_id offsets*/
@@ -564,7 +578,7 @@ static const lv_font_fmt_txt_cmap_t cmaps[] =
     },
     {
         .range_start = 20837, .range_length = 9610, .glyph_id_start = 97,
-        .unicode_list = unicode_list_1, .glyph_id_ofs_list = NULL, .list_length = 9, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        .unicode_list = unicode_list_1, .glyph_id_ofs_list = NULL, .list_length = 11, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
     }
 };
 

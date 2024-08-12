@@ -1025,7 +1025,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_x( ui_System_Version_Text, 4 );
     lv_obj_set_y( ui_System_Version_Text, -123 );
     lv_obj_set_align( ui_System_Version_Text, LV_ALIGN_LEFT_MID );
-    lv_label_set_text(ui_System_Version_Text,"v0.4.7-Janus");
+    lv_label_set_text(ui_System_Version_Text,"Version Error");
 
     ui_System_Parting_Line1 = lv_obj_create(ui_System_Settings_Panel);
     lv_obj_set_width( ui_System_Parting_Line1, 300);

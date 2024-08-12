@@ -116,5 +116,26 @@ void obtain_time(void) {
     }
 }
 
+time_t calculate_timer_length(int hour, int min) {
+    struct tm *current_time_tm = localtime(&global_time);
+
+    // 构造闹钟的时间
+    struct tm alarm_time_tm = *current_time_tm;
+    alarm_time_tm.tm_hour = hour;
+    alarm_time_tm.tm_min = min;
+    alarm_time_tm.tm_sec = 0;
+
+    time_t alarm_time = mktime(&alarm_time_tm);
+
+    // 如果设定的时间已经过去，设定到第二天
+    if (alarm_time <= global_time) {
+        alarm_time += 24 * 3600; // 加一天的秒数
+    }
+
+    // 计算时间差
+    time_t timer_length = alarm_time - global_time;
+
+    return timer_length;
+}
 
 

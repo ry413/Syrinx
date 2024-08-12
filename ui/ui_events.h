@@ -87,6 +87,11 @@ void playSelectedMusic(lv_event_t * e);
 void musicPlayScrLoaded(lv_event_t * e);
 void attempt_enter_music_window(lv_event_t * e);
 void attempt_enter_nature_window(lv_event_t * e);
+void change_alarm_clock_hour(lv_event_t *e);
+void change_alarm_clock_min(lv_event_t *e);
+void save_alarm_clock(lv_event_t *e);
+void cancel_save_alarm_clock(lv_event_t *e);
+void esp32_restart(lv_event_t *e);
 
 void reset_inactive_timer(void);
 void create_inactive_timer(void);

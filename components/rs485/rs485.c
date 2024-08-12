@@ -49,6 +49,18 @@ esp_err_t rs485_init(void) {
     xSemaphoreGive(rs485_handle_semaphore);
     return ESP_OK;
 }
+
+void print_rs485_packet(const rs485_packet_t *packet) {
+    printf("RS485 Packet:\n");
+    printf("Header: 0x%02X\n", packet->header);
+    printf("Command: ");
+    for (int i = 0; i < 5; ++i) {
+        printf("0x%02X ", packet->command[i]);
+    }
+    printf("\n");
+    printf("Checksum: 0x%02X\n", packet->checksum);
+    printf("Footer: 0x%02X\n", packet->footer);
+}
 // 检查校验和
 uint8_t calculate_checksum(rs485_packet_t *packet) {
     uint8_t checksum = 0;
@@ -58,11 +70,14 @@ uint8_t calculate_checksum(rs485_packet_t *packet) {
     }
     return checksum & 0xFF;
 }
-void play_bath_music_with_index(int index) {
-    char command[20];
-    snprintf(command, sizeof(command), "AT+AF%02d", bath_file_ids[index]);
-    bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
-    xEventGroupWaitBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID, pdTRUE, pdFALSE, portMAX_DELAY);
+static void play_bath_music_with_index(int index) {
+    AT_AF(bath_file_ids[index]);
+}
+void show_bath_sound_icon_callback(void *param) {
+    lv_obj_clear_flag(ui_bath_sound_icon, LV_OBJ_FLAG_HIDDEN);
+}
+void hide_bath_sound_icon_callback(void *param) {
+    lv_obj_add_flag(ui_bath_sound_icon, LV_OBJ_FLAG_HIDDEN);
 }
 // 下一首浴室音乐
 void next_bath_track(void) {
@@ -117,7 +132,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
 
     // 检查包头和包尾
     if (packet->header != PACKET_HEADER || packet->footer != PACKET_FOOTER) {
-        ESP_LOGE(TAG, "Invalid packet header/footer");
+        ESP_LOGE(TAG, "Invalid packet header/footer: ");
+        print_rs485_packet(packet);
         return;
     }
 
@@ -152,12 +168,12 @@ void process_command(rs485_packet_t *packet, size_t len) {
             // 触摸缓冲好像删不掉, 所以开一个遮罩防止在拔卡后积累触摸事件
             lv_obj_clear_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN);
 
-            bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
-            xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
+            AT_CM(0);
             lv_scr_load(ui_Main_Window);  // 回到主界面理应会删掉音乐播放任务和自然之音播放任务, 浴室的在这里删
             if (bath_play_task_handle != NULL) {
                 vTaskDelete(bath_play_task_handle);
                 bath_play_task_handle = NULL;
+                lv_async_call(hide_bath_sound_icon_callback, NULL);
             }
             xSemaphoreGive(rs485_handle_semaphore);
             printf("已释放信号量\n");
@@ -197,13 +213,12 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         if (bath_play_task_handle == NULL) {
                             ESP_LOGI(TAG, "空闲模式, 非特殊界面, 未播放浴室音乐, 进音乐模式并打开通道并播放浴室音乐");
                             assert(music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                            bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
-                            xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
-                            work_mode = 2;
+                            AT_CM(2);
                             vTaskDelay(2000 / portTICK_PERIOD_MS);
                             open_bath_channel();
                             next_bath_track();
                             create_bath_play_task();
+                            lv_async_call(show_bath_sound_icon_callback, NULL);
                         } else {
                             ESP_LOGI(TAG, "空闲模式, 非特殊界面, 正在播放浴室音乐, 拒绝播放指令");
                             assert(bath_play_task_handle != NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
@@ -220,14 +235,12 @@ void process_command(rs485_packet_t *packet, size_t len) {
                             ESP_LOGI(TAG, "蓝牙模式, 蓝牙界面, 蓝牙已连接, 拒绝播放指令");
                         } else {
                             ESP_LOGI(TAG, "蓝牙模式, 蓝牙界面, 蓝牙未连接, 关闭功放并进入音乐模式并打开通道并播放浴室音乐");
-                            bluetooth_send_at_command("AT+CL0", CMD_CHANGE_CHANNEL);
-                            xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
-                            bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
-                            xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, portMAX_DELAY);
-                            work_mode = 2;
+                            AT_CL(0);
+                            AT_CM(2);
                             open_bath_channel();
                             next_bath_track();
                             create_bath_play_task();
+                            lv_async_call(show_bath_sound_icon_callback, NULL);
                             del_inactive_timer(); // 删除不活动定时器, 不再自动退出蓝牙界面
                         }
                     }
@@ -255,6 +268,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
                             open_bath_channel();
                             next_bath_track();
                             create_bath_play_task();
+                            lv_async_call(show_bath_sound_icon_callback, NULL);
                         } else {
                             ESP_LOGI(TAG, "音乐模式, 自然之音界面, 正在播放某音乐, 拒绝播放指令");
                         }
@@ -303,10 +317,10 @@ void process_command(rs485_packet_t *packet, size_t len) {
                     if (bath_play_task_handle != NULL) {
                         ESP_LOGI(TAG, "音乐模式, 自然之音界面, 正在播放浴室音乐, 仅停止播放");
                         assert(music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                        bluetooth_send_at_command("AT+AA0", CMD_STOP_TRACK);
-                        xEventGroupWaitBits(music_event_group, EVENT_STOP_TRACK, pdTRUE, pdFALSE, portMAX_DELAY);
+                        AT_AA0();
                         vTaskDelete(bath_play_task_handle);
                         bath_play_task_handle = NULL;
+                        lv_async_call(hide_bath_sound_icon_callback, NULL);
                     } else {
                         ESP_LOGI(TAG, "音乐模式, 自然之音界面, 未播放浴室音乐, 拒绝停止指令");
                         assert(bath_play_task_handle == NULL && music_play_task_handle == NULL);
@@ -318,11 +332,10 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         ESP_LOGI(TAG, "音乐模式, 蓝牙界面, 正在播放浴室音乐, 停止并回到蓝牙模式");
                         vTaskDelete(bath_play_task_handle);
                         bath_play_task_handle = NULL;
+                        lv_async_call(hide_bath_sound_icon_callback, NULL);
                         assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
                         open_living_room_channel();
-                        bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
-                        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, portMAX_DELAY);
-                        work_mode = 1;
+                        AT_CM(1);
                         
                         create_inactive_timer();  // 回蓝牙模式后如果很久都不连接, 也要回主界面, 所以重建不活动定时器
                     } else {
@@ -336,12 +349,10 @@ void process_command(rs485_packet_t *packet, size_t len) {
                         ESP_LOGI(TAG, "音乐模式, 非特殊界面, 正在播放浴室音乐, 停止并关闭功放并进入空闲模式");
                         vTaskDelete(bath_play_task_handle);
                         bath_play_task_handle = NULL;
+                        lv_async_call(hide_bath_sound_icon_callback, NULL);
                         assert(bath_play_task_handle == NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
-                        bluetooth_send_at_command("AT+CL0", CMD_CHANGE_CHANNEL);
-                        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, portMAX_DELAY);
-                        bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
-                        xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, portMAX_DELAY);
-                        work_mode = 0;
+                        AT_CL(0);
+                        AT_CM(0);
                     }
                 }
             }
@@ -445,17 +456,6 @@ void process_command(rs485_packet_t *packet, size_t len) {
         // ESP_LOGE(TAG, "Unknown command");
     }
     // uart_write_bytes(RS485_UART_PORT, (const char *)packet, sizeof(rs485_packet_t)); // 谁写的这个?
-}
-void print_rs485_packet(const rs485_packet_t *packet) {
-    printf("RS485 Packet:\n");
-    printf("Header: 0x%02X\n", packet->header);
-    printf("Command: ");
-    for (int i = 0; i < 5; ++i) {
-        printf("0x%02X ", packet->command[i]);
-    }
-    printf("\n");
-    printf("Checksum: 0x%02X\n", packet->checksum);
-    printf("Footer: 0x%02X\n", packet->footer);
 }
 void rs485_monitor_task(void *pvParameter) {
     rs485_packet_t packet;

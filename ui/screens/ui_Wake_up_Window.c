@@ -187,8 +187,8 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_remove_style_all(ui_AlarmClockTimeText);
     lv_obj_set_width( ui_AlarmClockTimeText, 100);
     lv_obj_set_height( ui_AlarmClockTimeText, 50);
-    lv_obj_set_x( ui_AlarmClockTimeText, -97 );
-    lv_obj_set_y( ui_AlarmClockTimeText, -140 );
+    lv_obj_set_x( ui_AlarmClockTimeText, -110 );
+    lv_obj_set_y( ui_AlarmClockTimeText, -150 );
     lv_obj_set_align( ui_AlarmClockTimeText, LV_ALIGN_CENTER );
     lv_obj_clear_flag( ui_AlarmClockTimeText, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
@@ -199,7 +199,7 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_set_y( ui_AlarmClockTimeHour, 0 );
     lv_obj_set_align( ui_AlarmClockTimeHour, LV_ALIGN_LEFT_MID );
     lv_label_set_text(ui_AlarmClockTimeHour,"24");
-    lv_obj_set_style_text_font(ui_AlarmClockTimeHour, &lv_font_montserrat_30, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_AlarmClockTimeHour, &ui_font_Font30, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_AlarmClockTimeDecora = lv_label_create(ui_AlarmClockTimeText);
     lv_obj_set_width( ui_AlarmClockTimeDecora, LV_SIZE_CONTENT);  /// 1
@@ -215,7 +215,17 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_set_y( ui_AlarmClockTimeMin, 0 );
     lv_obj_set_align( ui_AlarmClockTimeMin, LV_ALIGN_LEFT_MID );
     lv_label_set_text(ui_AlarmClockTimeMin,"42");
-    lv_obj_set_style_text_font(ui_AlarmClockTimeMin, &lv_font_montserrat_30, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_AlarmClockTimeMin, &ui_font_Font30, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_alarm_clock_countdown_time_text = lv_label_create(ui_AlarmClockTimePanel);
+    lv_obj_set_width( ui_alarm_clock_countdown_time_text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_alarm_clock_countdown_time_text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_alarm_clock_countdown_time_text, -100 );
+    lv_obj_set_y( ui_alarm_clock_countdown_time_text, -125 );
+    lv_obj_set_align( ui_alarm_clock_countdown_time_text, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_alarm_clock_countdown_time_text,"16小时42分钟后响铃");
+    lv_obj_set_style_text_color(ui_alarm_clock_countdown_time_text, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_alarm_clock_countdown_time_text, &ui_font_LanTing12, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_AlarmClockSwitch = lv_switch_create(ui_AlarmClockTimePanel);
     lv_obj_set_width( ui_AlarmClockSwitch, 65);
@@ -227,6 +237,9 @@ void ui_Wake_up_Window_screen_init(void)
     ui_AlarmClockTimeSelector = ui_TimeSelector_create(ui_AlarmClockTimePanel);
     lv_obj_set_x( ui_AlarmClockTimeSelector, 0 );
     lv_obj_set_y( ui_AlarmClockTimeSelector, 0 );
+
+    ui_alarm_clock_hour_roller = lv_obj_get_child(ui_AlarmClockTimeSelector, 0);
+    ui_alarm_clock_min_roller = lv_obj_get_child(ui_AlarmClockTimeSelector, 3);
     
     ui_AlarmClockTimeVerifyBtn = lv_obj_create(ui_AlarmClockTimePanel);
     lv_obj_set_width(ui_AlarmClockTimeVerifyBtn, 170);
@@ -285,6 +298,9 @@ void ui_Wake_up_Window_screen_init(void)
 
     // lv_obj_add_event_cb(ui_Custom_Ringtone_Btn, ui_event_Custom_Ringtone_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wakeup_Time_Btn, ui_event_Wakeup_Time_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_AlarmClockTimeSelector, ui_event_AlarmClockTimeSelector, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_AlarmClockTimeVerifyBtn, ui_event_ui_AlarmClockTimeVerifyBtn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_AlarmClockTimeCancelBtn, ui_event_ui_AlarmClockTimeCancelBtn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BackToMainWindowBtn5, ui_event_BackToMainWindowBtn5, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wake_up_Window, ui_event_Wake_up_Window, LV_EVENT_ALL, NULL);
 
