@@ -517,6 +517,7 @@ void initActions(lv_event_t *e) {
     }
     vTaskDelay(500 / portTICK_PERIOD_MS);
     ESP_LOGI("LVGL initActions", "这条消息之上应该是四条返回值");
+    lv_label_set_text(ui_System_Version_Text, final_version);
     // 查询设备状态
     AT_MV();
     // 关闭提示音
