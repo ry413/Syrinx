@@ -517,7 +517,6 @@ void initActions(lv_event_t *e) {
     }
     vTaskDelay(500 / portTICK_PERIOD_MS);
     ESP_LOGI("LVGL initActions", "这条消息之上应该是四条返回值");
-    lv_label_set_text(ui_System_Version_Text, final_version);
     // 查询设备状态
     AT_MV();
     // 关闭提示音
@@ -537,7 +536,9 @@ void initActions(lv_event_t *e) {
     set_date_label(ui_Idle_Window_Date);
     // 设置待机screen, 为了不让多余的文件include "ui_events.h"只好这么写了
     idle_window = ui_Idle_Window;
-
+    // clear主动返回的QV, 保证主动查询时都能被阻塞
+    xEventGroupClearBits(bt_event_group, EVENT_QUERY_VERSION);
+    AT_QV();
     lv_label_set_text(ui_System_Version_Text, final_version);
 }
 

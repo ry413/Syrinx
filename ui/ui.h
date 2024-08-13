@@ -25,7 +25,7 @@ extern lv_obj_t * ui_Main_Window;
 extern lv_obj_t * ui_Header_Main;
 extern lv_obj_t * ui_Header_Main_Time;
 extern lv_obj_t * ui_Header_Main_Text;
-extern lv_obj_t * ui_Header_Error_Text;
+extern lv_obj_t * ui_Error_Info_Dorpdown;
 extern lv_obj_t * ui_Menu_Items;
 extern lv_obj_t * ui_Music;
 void ui_event_Music_Btn(lv_event_t * e);

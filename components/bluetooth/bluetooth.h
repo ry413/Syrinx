@@ -35,9 +35,11 @@ typedef enum {
     CMD_EQUALIZER_SET,          // AT+CQx   设置均衡器
     CMD_GET_DEVICE_STATE,       // AT+MV    查询设备状态
     CMD_CHANGE_PROMPT_TONE,     // AT+CN    修改提示音开关状态
+    CMD_QUERY_VERSION,          // AT+QV    主动查询版本号
 } command_type_t;
 
 extern command_type_t current_command;
+
 
 extern EventGroupHandle_t music_event_group;        // 音乐播放相关的事件组
 
@@ -75,6 +77,7 @@ extern EventGroupHandle_t bt_event_group;           // 除了音乐播放相关�
 #define EVENT_ALL_DURATION_COMPLETE (1 << 17)       // 已获取完音乐库每首歌的总时长
 #define EVENT_GET_DEVICE_STATE (1 << 18)            // 已获取设备状态
 #define EVENT_CHANGE_PROMPT_TONE (1 << 19)          // 已修改提示音开关状态
+#define EVENT_QUERY_VERSION (1 << 20)               // 已获取版本号
 
 
 
@@ -112,7 +115,6 @@ void bluetooth_monitor_task(void *pvParameters);
 void open_living_room_channel(void);
 void open_bath_channel(void);
 
-void show_error_info(void);
 
 void AT_MV(void);
 void AT_CL(int channel);
@@ -132,5 +134,6 @@ void AT_BE(char *pass);
 void AT_CA(int volume);
 void AT_CQ(int equalizer);
 void AT_CB(void);
+void AT_QV(void);
 
 #endif // BLUETOOTH_H

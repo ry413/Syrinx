@@ -17,7 +17,7 @@ lv_obj_t * ui_Main_Window;
 lv_obj_t * ui_Header_Main;
 lv_obj_t * ui_Header_Main_Time;
 lv_obj_t * ui_Header_Main_Text;
-lv_obj_t * ui_Header_Error_Text;
+lv_obj_t * ui_Error_Info_Dorpdown;
 lv_obj_t * ui_Menu_Items;
 lv_obj_t * ui_Music;
 void ui_event_Music_Btn(lv_event_t * e);
@@ -1159,6 +1159,7 @@ void ui_event_BackToMainWindowBtn8(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_screen_change(&ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
 void ui_event_Bluetooth_Name_Input2(lv_event_t * e)

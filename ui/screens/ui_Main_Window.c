@@ -40,17 +40,20 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Header_Main_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Header_Main_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Header_Error_Text = lv_label_create(ui_Header_Main);
-    lv_obj_set_width(ui_Header_Error_Text, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Header_Error_Text, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Header_Error_Text, LV_ALIGN_CENTER);
-    lv_obj_set_x(ui_Header_Error_Text, 80);
-    lv_obj_set_y(ui_Header_Error_Text, 0);
-    lv_label_set_text(ui_Header_Error_Text, "");
-    lv_obj_set_style_text_color(ui_Header_Error_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Header_Error_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Error_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
-
+    ui_Error_Info_Dorpdown = lv_dropdown_create(ui_Main_Window);
+    lv_dropdown_set_options( ui_Error_Info_Dorpdown, "" );
+    lv_obj_set_width( ui_Error_Info_Dorpdown, 114);
+    lv_obj_set_height( ui_Error_Info_Dorpdown, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_Error_Info_Dorpdown, 90 );
+    lv_obj_set_y( ui_Error_Info_Dorpdown, -220 );
+    lv_obj_set_align( ui_Error_Info_Dorpdown, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_Error_Info_Dorpdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS | LV_OBJ_FLAG_HIDDEN );   /// Flags
+    lv_obj_set_style_text_color(ui_Error_Info_Dorpdown, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_text_opa(ui_Error_Info_Dorpdown, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_Error_Info_Dorpdown, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_bg_opa(ui_Error_Info_Dorpdown, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_Error_Info_Dorpdown, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_border_opa(ui_Error_Info_Dorpdown, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_Menu_Items = lv_obj_create(ui_Main_Window);
     lv_obj_remove_style_all(ui_Menu_Items);
