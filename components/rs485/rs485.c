@@ -184,7 +184,11 @@ void process_command(rs485_packet_t *packet, size_t len) {
         ESP_LOGI(TAG, "Command: 睡眠模式");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
-            offScreen(NULL);
+            if (lv_scr_act() == ui_Idle_Window) {
+                offScreen(NULL);
+            } else {
+                sleep_mode();
+            }
             xSemaphoreGive(rs485_handle_semaphore);
             printf("已释放信号量\n");
         }

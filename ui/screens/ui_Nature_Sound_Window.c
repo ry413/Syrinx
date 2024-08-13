@@ -255,6 +255,15 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_obj_set_y(ui_Nature_Window_Volume_adjust, 0);
     lv_obj_add_flag(ui_Nature_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
+    ui_Nature_On_Screen_Range = lv_obj_create(ui_Nature_Sound_Window);
+    lv_obj_remove_style_all(ui_Nature_On_Screen_Range);
+    lv_obj_set_width(ui_Nature_On_Screen_Range, 480);
+    lv_obj_set_height(ui_Nature_On_Screen_Range, 480);
+    lv_obj_set_align(ui_Nature_On_Screen_Range, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Nature_On_Screen_Range, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_Nature_On_Screen_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+
     lv_obj_add_event_cb(ui_Bird_Sound_Btn, ui_event_Bird_Sound_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Bug_Sound_Btn, ui_event_Bug_Sound_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Forest_Sound_Btn, ui_event_Forest_Sound_Btn, LV_EVENT_ALL, NULL);

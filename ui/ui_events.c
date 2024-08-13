@@ -62,10 +62,10 @@ uint16_t alarm_clock_selected_min;
 // 如果保存了闹钟, 真正用的时间
 uint16_t alarm_clock_hour;
 uint16_t alarm_clock_min;
-bool alarm_clock_enabled = false;
+bool alarm_clock_enabled = true;
 
 // 真正的闹钟timer
-static TimerHandle_t alarm_clock_itself = NULL;
+static TimerHandle_t alarm_clock_itself_timer = NULL;
 
 // ******************** 闹钟 ********************
 
@@ -539,8 +539,12 @@ void initActions(lv_event_t *e) {
     idle_window = ui_Idle_Window;
     // clear主动返回的QV, 保证主动查询时都能被阻塞
     xEventGroupClearBits(bt_event_group, EVENT_QUERY_VERSION);
+    // 设置版本号
     AT_QV();
     lv_label_set_text(ui_System_Version_Text, final_version);
+
+    // 默认选择自然均衡器
+    select_eq_nature(NULL);
 }
 
 // ******************** 各界面加载完成后的回调 ********************
@@ -548,20 +552,20 @@ void initActions(lv_event_t *e) {
 
 void mainScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Main_Time);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Main_Header_Volume;
     current_screen_volume_adjust = ui_Main_Window_Volume_adjust;
     current_screen_on_screen_range = ui_On_Main_Screen_Range;
     update_header_volume();
 
-    // 每次到主界面时, 重建一个背光定时器, 因为只有在主界面时才会进入待机模式
-    init_backlight_timer(backlight_time_level_to_second(backlight_time_level));
-    // 停止inactive定时器
+    // 每次到主界面时, 重建一个待机定时器, 因为只有在主界面时才会试图进入待机模式
+    create_enter_idle_timer(enter_idle_time_level_to_second(enter_idle_time_level));
+    // 停止不活动定时器
     del_inactive_timer();
 }
 void musicScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Music_Time);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Music_Header_Volume;
     current_screen_volume_adjust = ui_Music_Window_Volume_adjust;
     current_screen_on_screen_range = ui_Music_On_Screen_Range;
@@ -571,7 +575,7 @@ void musicScrLoaded(lv_event_t *e) {
 }
 void musicPlayScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Music_Time2);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Music_Play_Header_Volume;
     current_screen_volume_adjust = ui_Music_Play_Window_Volume_adjust;
     current_screen_on_screen_range = ui_Music_Play_On_Screen_Range;
@@ -579,14 +583,15 @@ void musicPlayScrLoaded(lv_event_t *e) {
 }
 void natureSoundScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Nature_Sound_Time);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Nature_Header_Volume;
     current_screen_volume_adjust = ui_Nature_Window_Volume_adjust;
+    current_screen_on_screen_range = ui_Nature_On_Screen_Range;
     update_header_volume();
 }
 void bluetoothScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Bluetooth_Time);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Bluetooth_Header_Volume;
     current_screen_volume_adjust = ui_Bluetooth_Window_Volume_adjust;
     update_header_volume();
@@ -607,20 +612,20 @@ void bluetoothScrLoaded(lv_event_t *e) {
 }
 void modeScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Mode_Time);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Mode_Header_Volume;
     current_screen_volume_adjust = ui_Mode_Window_Volume_adjust;
     update_header_volume();
 }
 void wakeupScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Wake_up_Time);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Wakeup_Header_Volume;
     current_screen_volume_adjust = ui_Wakeup_Window_Volume_adjust;
     update_header_volume();
 
-    // 如果未设置闹钟, 则将闹钟时间调整到当前时间
-    if (alarm_clock_enabled == false) {
+    // 如果现在没有已设置的闹钟, 则将闹钟时间调整到当前时间
+    if (alarm_clock_itself_timer == NULL) {
         struct tm *local_time = localtime(&global_time);
         alarm_clock_selected_hour = local_time->tm_hour;
         alarm_clock_selected_min = local_time->tm_min;
@@ -631,7 +636,7 @@ void wakeupScrLoaded(lv_event_t *e) {
 }
 void guideScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Guide_Time);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Guide_Header_Volume;
     current_screen_volume_adjust = ui_Guide_Window_Volume_adjust;
     update_header_volume();
@@ -641,7 +646,7 @@ void guideScrLoaded(lv_event_t *e) {
 }
 void idleScrLoaded(lv_event_t *e) {
     set_time_label(ui_Idle_Window_Time);
-    if (global_time > 0) update_current_time_label();
+    if (global_time > 0) update_current_time_label(true);
 }
 void settingsScrLoaded(lv_event_t *e) {
 
@@ -649,16 +654,15 @@ void settingsScrLoaded(lv_event_t *e) {
 // ******************** 离开各界面后的回调 ********************
 
 void leaveMainWindow(lv_event_t *e) {
-    printf("Leave Main\n");
-    // 关闭背光定时器, 因为只有处于主界面时才会试图定时以进入待机界面
-    stop_backlight_timer();
+    // 关闭待机定时器, 因为只有处于主界面时才会试图定时以进入待机界面
+    del_enter_idle_timer();
 
     closeVolumeAdjust(NULL);
     // 处理特殊界面
     lv_obj_t *new_scr = lv_scr_act();
     // 进入Idle界面即正常待机
     if (new_scr == ui_Idle_Window) {
-        printf("is Idle\n");
+        printf("Enter Idle Window\n");
     }
     // 只有从main进入music界面才打开某些东西(因为play界面也能进入music界面)
     else if (new_scr == ui_Music_Window) {
@@ -682,9 +686,13 @@ void leaveMainWindow(lv_event_t *e) {
     else if (new_scr == ui_Settings_Window) {
 
     }
+    // 指南界面当然不创建
+    else if (new_scr == ui_Guide_Window) {
+        
+    }
     // 通常都创建不活动定时器, 无操作一定时间后回到主界面
     else {
-        printf("别的界面, 创建活动定时器\n");
+        printf("别的界面, 创建不活动定时器\n");
         create_inactive_timer();
     }
 }
@@ -737,7 +745,8 @@ void leaveModeWindow(lv_event_t *e) {
 
 }
 void leaveWakeupWindow(lv_event_t *e) {
-
+    cancel_save_alarm_clock(NULL);
+    lv_obj_add_flag(ui_AlarmClockTime, LV_OBJ_FLAG_HIDDEN);
 }
 void leaveGuideWindow(lv_event_t *e) {
 
@@ -747,9 +756,9 @@ void leaveSettingsWindow(lv_event_t *e) {
     lv_obj_add_flag(ui_Backlight_Settings_Panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_System_Settings_Panel, LV_OBJ_FLAG_HIDDEN);
 }
-// ******************** 背光相关 ********************
+// ******************** 背光与待机相关 ********************
 
-// 初始化背光亮度与时间, 以及创建进入待机的定时器
+// 初始化背光亮度与待机时间, 以及创建待机定时器
 void initBacklightSettings(lv_event_t *e) {
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("BLSettings", NVS_READWRITE, &nvs_handle);
@@ -772,10 +781,10 @@ void initBacklightSettings(lv_event_t *e) {
     }
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%ld", backlight_level);
 
-    err = nvs_get_u32(nvs_handle, "time", &backlight_time_level);
+    err = nvs_get_u32(nvs_handle, "time", &enter_idle_time_level);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGW("backlightSettings", "NVS中未找到'time'，将写入默认值 %ld", backlight_time_level);
-        err = nvs_set_u32(nvs_handle, "time", backlight_time_level);
+        ESP_LOGW("backlightSettings", "NVS中未找到'time'，将写入默认值 %ld", enter_idle_time_level);
+        err = nvs_set_u32(nvs_handle, "time", enter_idle_time_level);
         if (err != ESP_OK) {
             ESP_LOGE("backlightSettings", "Failed to set default value for 'time': %s", esp_err_to_name(err));
         } else {
@@ -785,7 +794,7 @@ void initBacklightSettings(lv_event_t *e) {
         ESP_LOGE("backlightSettings", "Failed to get 'time' from NVS: %s", esp_err_to_name(err));
     }
     // 麻烦的off, 这行就像lv_label_set_text_fmt的用处
-    set_backlight_time_to_label(ui_Backlight_Time_Value, backlight_time_level);
+    set_enter_idle_time_to_label(ui_Enter_Idle_Time_Value, enter_idle_time_level);
     nvs_close(nvs_handle);
 }
 // 确认保存背光设置
@@ -806,10 +815,10 @@ void saveBacklightSettings(lv_event_t *e) {
         return;
     }
 
-    const char *second = lv_label_get_text(ui_Backlight_Time_Value);
-    backlight_time_level = backlight_time_second_to_level(atoi(second));
+    const char *second = lv_label_get_text(ui_Enter_Idle_Time_Value);
+    enter_idle_time_level = enter_idle_time_second_to_level(atoi(second));
 
-    err = nvs_set_u32(nvs_handle, "time", backlight_time_level);
+    err = nvs_set_u32(nvs_handle, "time", enter_idle_time_level);
     if (err != ESP_OK) {
         ESP_LOGE("saveBacklightTime", "Failed to set backlightTime in NVS");
         nvs_close(nvs_handle);
@@ -826,7 +835,7 @@ void saveBacklightSettings(lv_event_t *e) {
 void cancelSaveBacklightSettings(lv_event_t *e) {
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%ld", backlight_level);
     set_backlight(backlight_level);
-    set_backlight_time_to_label(ui_Backlight_Time_Value, backlight_time_level);
+    set_enter_idle_time_to_label(ui_Enter_Idle_Time_Value, enter_idle_time_level);
 }
 // 增加背光亮度
 void addBrightness(lv_event_t *e) {
@@ -844,57 +853,68 @@ void decBrightness(lv_event_t *e) {
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%d", brightnessLevel);
     set_backlight(brightnessLevel);
 }
-// 增加背光时间
+// 增加待机时间
 void addBacklightTime(lv_event_t *e) {
-    const char *second = lv_label_get_text(ui_Backlight_Time_Value);
-    int backlightTimeLevel = backlight_time_second_to_level(atoi(second));
+    const char *second = lv_label_get_text(ui_Enter_Idle_Time_Value);
+    int enter_idle_time_level = enter_idle_time_second_to_level(atoi(second));
 
-    if (backlightTimeLevel < 6) backlightTimeLevel++;
+    if (enter_idle_time_level < 6) enter_idle_time_level++;
 
-    set_backlight_time_to_label(ui_Backlight_Time_Value, backlightTimeLevel);
+    set_enter_idle_time_to_label(ui_Enter_Idle_Time_Value, enter_idle_time_level);
 }
-// 减少背光时间
+// 减少待机时间
 void decBacklightTime(lv_event_t *e) {
-    const char *second = lv_label_get_text(ui_Backlight_Time_Value);
-    // atoi("off")会返回0, 这是可以利用的
-    int backlightTimeLevel = backlight_time_second_to_level(atoi(second));
+    const char *second = lv_label_get_text(ui_Enter_Idle_Time_Value);
+    // atoi("off")会返回0, 可以利用
+    int enter_idle_time_level = enter_idle_time_second_to_level(atoi(second));
 
-    if (backlightTimeLevel > 0) backlightTimeLevel--;
+    if (enter_idle_time_level > 0) enter_idle_time_level--;
 
-    set_backlight_time_to_label(ui_Backlight_Time_Value, backlightTimeLevel);
+    set_enter_idle_time_to_label(ui_Enter_Idle_Time_Value, enter_idle_time_level);
 }
-// 进入熄屏
-static void offScreen_callback(void *pvParameter) {
-    printf("Sleep\n");
-    // 关闭背光
+// 485指令睡眠模式所用
+void sleep_mode(void) {
+    // 固定关闭背光
     set_backlight(0);
-    // 在非music和music_play界面, 回到main
-    if (lv_scr_act() != ui_Music_Play_Window && lv_scr_act() != ui_Music_Window) {
-        lv_scr_load(ui_Main_Window);
+    // 如果处于音乐库或音乐播放或自然之音界面, 就不返回主界面, 而是放出唤醒Range
+    if (lv_scr_act() == ui_Music_Play_Window || lv_scr_act() == ui_Music_Window || lv_scr_act() == ui_Nature_Sound_Window) {
+        lv_obj_clear_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        // 如果处理睡眠指令时, 处于非播放界面, 就跑到Idle界面来处理, 真是乱套了
+        lv_scr_load(ui_Idle_Window);
+        lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
     }
-    // 启用"从熄屏中醒来"的可触摸区域
-    lv_obj_clear_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
 }
+
+// 按下待机界面上的熄屏按钮主动进入熄屏
 void offScreen(lv_event_t *e) {
-    // 确保在主线程中执行 UI 更新
-    lv_async_call(offScreen_callback, NULL);
+    printf("熄屏\n");
+    // 熄屏实际上仍然在idle界面, 只是关了背光
+    set_backlight(0);
+    // 防止想要醒来但再次按到熄屏按钮, 所以把它隐藏掉
+    lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
 }
-// 从熄屏中醒来
-static void onScreen_callback(void *pvParameter) {
-    printf("Wakeup\n");
-    // 恢复背光
+// 稍微逆天
+static void wake_set_bl(void *param) {
+    vTaskDelay(160 / portTICK_PERIOD_MS);
     set_backlight(backlight_level);
-    lv_obj_add_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
+    vTaskDelete(NULL);
 }
+// 从熄屏中醒来, 同时485指令明亮模式也调用这个
 void onScreen(lv_event_t *e) {
-    // 确保在主线程中执行 UI 更新
-    lv_async_call(onScreen_callback, NULL);
+    printf("Wake up\n");
+    // 如果熄屏时在这几个界面, 说明并不想要醒到主界面
+    if (lv_scr_act() == ui_Music_Window || lv_scr_act() == ui_Music_Play_Window || lv_scr_act() == ui_Nature_Sound_Window) {
+        set_backlight(backlight_level);
+        lv_obj_add_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_scr_load(ui_Main_Window);
+        // 等主界面load完了再打开背光
+        xTaskCreate(wake_set_bl, "wake_set_bl", 1024, NULL, 5, NULL);
+        lv_obj_clear_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+    }
 }
-// 从待机界面回到主界面
-void idleBackToMainWindow(lv_event_t *e) {
-    lv_scr_load(ui_Main_Window);
-    reset_backlight_timer();
-}
+
 
 // ******************** 蓝牙相关 ********************
 
@@ -1384,10 +1404,10 @@ void verifyResetFactory(lv_event_t *e)
     nvs_close(nvs_handle);
 
     backlight_level = new_bk_level;
-    backlight_time_level = new_bk_time_level;
+    enter_idle_time_level = new_bk_time_level;
     lv_label_set_text_fmt(ui_Backlight_Brightness_Value, "%ld", backlight_level);
     set_backlight(backlight_level);
-    set_backlight_time_to_label(ui_Backlight_Time_Value, backlight_time_level);
+    set_enter_idle_time_to_label(ui_Enter_Idle_Time_Value, enter_idle_time_level);
 
 
     // 重置声音设置
@@ -2265,7 +2285,6 @@ static void delay_update_alarm_clock_time_callback_callback(void *param) {
 static void delay_update_alarm_clock_time_callback(lv_timer_t *timer) {
     lv_async_call(delay_update_alarm_clock_time_callback_callback, NULL);
 }
-
 void change_alarm_clock_hour(lv_event_t *e) {
     alarm_clock_selected_hour = lv_roller_get_selected(ui_alarm_clock_hour_roller);
     lv_timer_reset(delay_update_alarm_clock_timer);
@@ -2276,32 +2295,60 @@ void change_alarm_clock_min(lv_event_t *e) {
     lv_timer_reset(delay_update_alarm_clock_timer);
     lv_timer_resume(delay_update_alarm_clock_timer);
 }
+// 闹钟响了!
+static void alarm_clock_shout_callback(TimerHandle_t xTimer) {
+    
+    printf("shout!!!!\n");
+    printf("shout!!!!\n");
+    printf("shout!!!!\n");
+    printf("shout!!!!\n");
+    
+    if (xTimerDelete(xTimer, 0) == pdPASS) {
+        alarm_clock_itself_timer = NULL;
+        printf("已删除闹钟\n");
+        lv_obj_add_flag(ui_alarm_clock_icon, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        ESP_LOGE("alarm_clock_shout_callback", "删除闹钟timer失败");
+    }
+}
 // 保存闹钟
 void save_alarm_clock(lv_event_t *e) {
     alarm_clock_hour = alarm_clock_selected_hour;
     alarm_clock_min = alarm_clock_selected_min;
     time_t timer_length = calculate_timer_length(alarm_clock_hour, alarm_clock_min);
-    printf("距离响铃需要: %lld秒\n", timer_length);
 
     alarm_clock_enabled = lv_obj_has_state(ui_AlarmClockSwitch, LV_STATE_CHECKED);
     if (alarm_clock_enabled == true) {
+        printf("距离响铃需要: %lld秒\n", timer_length);
         // 如果已经设置过闹钟, 删除它再创建新的
-        if (alarm_clock_itself != NULL) {
-            xTimerDelete(alarm_clock_itself, 0);
-            alarm_clock_itself = NULL;
+        if (alarm_clock_itself_timer != NULL) {
+            xTimerDelete(alarm_clock_itself_timer, 0);
+            alarm_clock_itself_timer = NULL;
         }
         // 创建并运行闹钟
-        // alarm_clock_itself = xTimerCreate("alarm_clock", pdMS_TO_TICKS(timer_length * 1000), pdFALSE, NULL, alarm_clock_shout_callback);
-        xTimerStart(alarm_clock_itself, 0);
+        alarm_clock_itself_timer = xTimerCreate("alarm_clock", pdMS_TO_TICKS(timer_length * 1000), pdFALSE, NULL, alarm_clock_shout_callback);
+        xTimerStart(alarm_clock_itself_timer, 0);
+        // 显示图标
+        lv_obj_clear_flag(ui_alarm_clock_icon, LV_OBJ_FLAG_HIDDEN);
     } else {
         // 如果已有闹钟, 关掉它
-        // if ()
+        if (alarm_clock_itself_timer != NULL) {
+            printf("已关闭闹钟\n");
+            xTimerDelete(alarm_clock_itself_timer, 0);
+            alarm_clock_itself_timer = NULL;
+            lv_obj_add_flag(ui_alarm_clock_icon, LV_OBJ_FLAG_HIDDEN);
+        }
     }
     
 }
 // 不保存闹钟
 void cancel_save_alarm_clock(lv_event_t *e) {
-
+    // 并不用重置选择的时分, 因为进这界面时会自动选择系统时间, 只需要重置switch
+    if (alarm_clock_enabled) {
+        lv_obj_add_state(ui_AlarmClockSwitch, LV_STATE_CHECKED);
+    } else {
+        lv_obj_clear_state(ui_AlarmClockSwitch, LV_STATE_CHECKED);
+    }
 }
 
 

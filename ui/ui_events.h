@@ -92,6 +92,7 @@ void change_alarm_clock_min(lv_event_t *e);
 void save_alarm_clock(lv_event_t *e);
 void cancel_save_alarm_clock(lv_event_t *e);
 
+void sleep_mode(void);
 void attempt_restart_esp32(void);
 void reset_inactive_timer(void);
 void create_inactive_timer(void);

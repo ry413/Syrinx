@@ -18,12 +18,24 @@ void ui_Idle_Window_screen_init(void)
     lv_obj_set_x(ui_Idle_Window_Time, 0);
     lv_obj_set_y(ui_Idle_Window_Time, -57);
     lv_obj_set_align(ui_Idle_Window_Time, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Idle_Window_Time, "11:42");
+    lv_label_set_text(ui_Idle_Window_Time, "11 42");
     lv_obj_set_style_text_color(ui_Idle_Window_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Idle_Window_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_Idle_Window_Time, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_Idle_Window_Time, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Idle_Window_Time, &ui_font_Font100, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Idle_Window_Time_Decora = lv_label_create(ui_Idle_Window);
+    lv_obj_set_width( ui_Idle_Window_Time_Decora, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_Idle_Window_Time_Decora, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_Idle_Window_Time_Decora, 0 );
+    lv_obj_set_y( ui_Idle_Window_Time_Decora, -62 );
+    lv_obj_set_align( ui_Idle_Window_Time_Decora, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_Idle_Window_Time_Decora,":");
+    lv_obj_set_style_text_color(ui_Idle_Window_Time_Decora, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_text_opa(ui_Idle_Window_Time_Decora, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Idle_Window_Time_Decora, &ui_font_Font100, LV_PART_MAIN| LV_STATE_DEFAULT);
+
 
     ui_Idle_Window_Date = lv_label_create(ui_Idle_Window);
     lv_obj_set_width(ui_Idle_Window_Date, LV_SIZE_CONTENT);   /// 1

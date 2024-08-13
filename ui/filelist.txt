@@ -31,10 +31,12 @@ images/ui_img_1742736079.c
 images/ui_img_35201459.c
 images/ui_img_2101671624.c
 images/ui_img_bath_sound_png.c
+images/ui_img_alarmclock_png.c
 images/ui_img_490182776.c
 images/ui_img_861711258.c
 images/ui_img_348826415.c
 images/ui_img_12669592.c
+images/ui_img_6695340.c
 images/ui_img_260357382.c
 images/ui_img_1071321554.c
 images/ui_img_2034599484.c

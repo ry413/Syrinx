@@ -2,6 +2,7 @@
 #include <freertos/event_groups.h>
 #include "../lvgl/lvgl.h"
 #include "esp_log.h"
+#include "../../ui/ui.h"
 
 // 时间戳
 time_t global_time = 0;
@@ -30,12 +31,16 @@ static const char* get_chinese_weekday(int wday) {
     return weekdays[wday];
 }
 // 把global_time更新到time_label上
-void update_current_time_label(void) {
+void update_current_time_label(bool showSymbol) {
     struct tm timeinfo;
     char timeStr[9];
 
     localtime_r(&global_time, &timeinfo);
-    strftime(timeStr, sizeof(timeStr), "%H:%M", &timeinfo);
+    if (showSymbol) {
+        strftime(timeStr, sizeof(timeStr), "%H:%M", &timeinfo);
+    } else {
+        strftime(timeStr, sizeof(timeStr), "%H %M", &timeinfo);
+    }
     lv_label_set_text(time_label, timeStr);
 }
 // 更新日期到date_label上
@@ -54,9 +59,19 @@ void update_time_task(void *pvParameter)
 {
     while (1)
     {
-        update_current_time_label();   // 更新当前screen上的时间label
+        static bool toggle = true;
+        if (time_label == ui_Idle_Window_Time) {
+            if (toggle) {
+                lv_obj_add_flag(ui_Idle_Window_Time_Decora, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_clear_flag(ui_Idle_Window_Time_Decora, LV_OBJ_FLAG_HIDDEN);
+            }
+            update_current_time_label(false);
+            toggle = !toggle;
+        } else {
+            update_current_time_label(true);   // 更新当前screen上的时间label
+        }
         update_current_date_label();   // 更新待机界面的日期label
-        
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         global_time += 1;
     }

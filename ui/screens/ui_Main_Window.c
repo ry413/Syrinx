@@ -318,12 +318,22 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Guide_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Guide_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_alarm_clock_icon = lv_img_create(ui_Main_Window);
+    lv_img_set_src(ui_alarm_clock_icon, &ui_img_alarmclock_png);
+    lv_obj_set_width(ui_alarm_clock_icon, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_alarm_clock_icon, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_alarm_clock_icon, -187);
+    lv_obj_set_y(ui_alarm_clock_icon, -224);
+    lv_obj_set_align(ui_alarm_clock_icon, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_alarm_clock_icon, LV_OBJ_FLAG_ADV_HITTEST | LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_alarm_clock_icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
     ui_bath_sound_icon = lv_img_create(ui_Main_Window);
     lv_img_set_src(ui_bath_sound_icon, &ui_img_bath_sound_png);
     lv_obj_set_width(ui_bath_sound_icon, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_bath_sound_icon, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_bath_sound_icon, -157);
-    lv_obj_set_y(ui_bath_sound_icon, -224);
+    lv_obj_set_y(ui_bath_sound_icon, -226);
     lv_obj_set_align(ui_bath_sound_icon, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_bath_sound_icon, LV_OBJ_FLAG_ADV_HITTEST | LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_clear_flag(ui_bath_sound_icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -468,10 +478,6 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_border_opa(ui_esp32_restart_btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_shadow_color(ui_esp32_restart_btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_shadow_opa(ui_esp32_restart_btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-
-
-
 
     lv_obj_add_event_cb(ui_Music_Btn, ui_event_Music_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Nature_Sound_Btn, ui_event_Nature_Sound_Btn, LV_EVENT_ALL, NULL);

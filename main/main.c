@@ -179,7 +179,7 @@ static void example_lvgl_touch_cb(lv_indev_drv_t * drv, lv_indev_data_t * data)
         // 仅在状态变化时重置定时器
         if (!is_touching) {
             reset_inactive_timer();     // 重置不活动定时器
-            reset_backlight_timer();    // 重置待机定时器
+            reset_enter_idle_timer();    // 重置待机定时器
             is_touching = true;
         }
     } else {

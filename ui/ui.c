@@ -49,6 +49,7 @@ void ui_event_Guide_Btn(lv_event_t * e);
 lv_obj_t * ui_Guide_Btn;
 lv_obj_t * ui_Guide_Icon;
 lv_obj_t * ui_Guide_Text;
+lv_obj_t * ui_alarm_clock_icon;
 lv_obj_t * ui_bath_sound_icon;
 lv_obj_t * ui_tfcard_States_Icon;
 lv_obj_t * ui_tfcard_unavailable_the_X;
@@ -127,6 +128,8 @@ void ui_event_BackToMainWindowBtn7(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn7;
 lv_obj_t * ui_Nature_Header_Volume;
 lv_obj_t * ui_Nature_Window_Volume_adjust;
+void ui_event_Nature_On_Screen_Range(lv_event_t * e);
+lv_obj_t * ui_Nature_On_Screen_Range;
 
 
 // SCREEN: ui_Bluetooth_WIndow
@@ -248,7 +251,6 @@ lv_obj_t * ui_Guide_Content;
 lv_obj_t * ui_Popup_WIndow;
 void ui_event_More_Info_Close_Btn(lv_event_t * e);
 lv_obj_t * ui_More_Info_Close_Btn;
-lv_obj_t * ui_More_Info_Text;
 lv_obj_t * ui_QR_Code;
 void ui_event_BackToMainWindowBtn6(lv_event_t * e);
 lv_obj_t * ui_BackToMainWindowBtn6;
@@ -280,16 +282,16 @@ lv_obj_t * ui_Backlight_Brightness_Dec_Icon;
 void ui_event_Backlight_Brightness_Add_Btn(lv_event_t * e);
 lv_obj_t * ui_Backlight_Brightness_Add_Btn;
 lv_obj_t * ui_Backlight_Brightness_Add_Icon;
-lv_obj_t * ui_Backlight_Time_Settings;
-lv_obj_t * ui_Backlight_Time_Text;
-lv_obj_t * ui_Backlight_Time_Panel;
-lv_obj_t * ui_Backlight_Time_Value;
-void ui_event_Backlight_Time_Dec_Btn(lv_event_t * e);
-lv_obj_t * ui_Backlight_Time_Dec_Btn;
-lv_obj_t * ui_Backlight_Time_Dec_Icon;
-lv_obj_t * ui_Backlight_Time_Add_Btn;
-void ui_event_Backlight_Time_Add_Btn(lv_event_t * e);
-lv_obj_t * ui_Backlight_Time_Add_Icon;
+lv_obj_t * ui_Enter_Idle_Time_Settings;
+lv_obj_t * ui_Enter_Idle_Time_Text;
+lv_obj_t * ui_Enter_Idle_Time_Panel;
+lv_obj_t * ui_Enter_Idle_Time_Value;
+void ui_event_Enter_Idle_Time_Dec_Btn(lv_event_t * e);
+lv_obj_t * ui_Enter_Idle_Time_Dec_Btn;
+lv_obj_t * ui_Enter_Idle_Time_Dec_Icon;
+void ui_event_Enter_Idle_Time_Add_Btn(lv_event_t * e);
+lv_obj_t * ui_Enter_Idle_Time_Add_Btn;
+lv_obj_t * ui_Enter_Idle_Time_Add_Icon;
 void ui_event_Backlight_Settings_Verify_Btn(lv_event_t * e);
 lv_obj_t * ui_Backlight_Settings_Verify_Btn;
 lv_obj_t * ui_Backlight_Settings_Verify_Btn_Text;
@@ -559,6 +561,7 @@ void ui_Idle_Window_screen_init(void);
 void ui_event_Idle_Window(lv_event_t * e);
 lv_obj_t * ui_Idle_Window;
 lv_obj_t * ui_Idle_Window_Time;
+lv_obj_t * ui_Idle_Window_Time_Decora;
 lv_obj_t * ui_Idle_Window_Date;
 void ui_event_Back_To_Main_Window_Range(lv_event_t * e);
 lv_obj_t * ui_Back_To_Main_Window_Range;
@@ -1031,7 +1034,7 @@ void ui_event_Backlight_Brightness_Add_Btn(lv_event_t * e)
         addBrightness(e);
     }
 }
-void ui_event_Backlight_Time_Dec_Btn(lv_event_t * e)
+void ui_event_Enter_Idle_Time_Dec_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
@@ -1039,7 +1042,7 @@ void ui_event_Backlight_Time_Dec_Btn(lv_event_t * e)
         decBacklightTime(e);
     }
 }
-void ui_event_Backlight_Time_Add_Btn(lv_event_t * e)
+void ui_event_Enter_Idle_Time_Add_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
@@ -1512,7 +1515,7 @@ void ui_event_Back_To_Main_Window_Range(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_PRESSED) {
-        idleBackToMainWindow(e);
+        onScreen(e);
     }
 }
 void ui_event_Off_Screen_Btn(lv_event_t * e)

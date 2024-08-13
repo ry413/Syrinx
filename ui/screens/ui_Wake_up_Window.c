@@ -204,6 +204,8 @@ void ui_Wake_up_Window_screen_init(void)
     ui_AlarmClockTimeDecora = lv_label_create(ui_AlarmClockTimeText);
     lv_obj_set_width( ui_AlarmClockTimeDecora, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height( ui_AlarmClockTimeDecora, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_AlarmClockTimeDecora, 0 );
+    lv_obj_set_y( ui_AlarmClockTimeDecora, -4 );
     lv_obj_set_align( ui_AlarmClockTimeDecora, LV_ALIGN_CENTER );
     lv_label_set_text(ui_AlarmClockTimeDecora,":");
     lv_obj_set_style_text_font(ui_AlarmClockTimeDecora, &lv_font_montserrat_30, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -233,6 +235,7 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_set_x( ui_AlarmClockSwitch, 102 );
     lv_obj_set_y( ui_AlarmClockSwitch, -139 );
     lv_obj_set_align( ui_AlarmClockSwitch, LV_ALIGN_CENTER );
+    lv_obj_add_state( ui_AlarmClockSwitch, LV_STATE_CHECKED );
 
     ui_AlarmClockTimeSelector = ui_TimeSelector_create(ui_AlarmClockTimePanel);
     lv_obj_set_x( ui_AlarmClockTimeSelector, 0 );

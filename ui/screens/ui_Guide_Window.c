@@ -66,9 +66,9 @@ void ui_Guide_Window_screen_init(void)
     ui_Popup_WIndow = lv_obj_create(ui_Guide_Window);
     lv_obj_remove_style_all(ui_Popup_WIndow);
     lv_obj_set_width(ui_Popup_WIndow, 480);
-    lv_obj_set_height(ui_Popup_WIndow, 320);
+    lv_obj_set_height(ui_Popup_WIndow, 296);
     lv_obj_set_x(ui_Popup_WIndow, 0);
-    lv_obj_set_y(ui_Popup_WIndow, 80);
+    lv_obj_set_y(ui_Popup_WIndow, 89);
     lv_obj_set_align(ui_Popup_WIndow, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_Popup_WIndow, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_Popup_WIndow, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -84,24 +84,14 @@ void ui_Guide_Window_screen_init(void)
     lv_obj_set_align(ui_More_Info_Close_Btn, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_More_Info_Close_Btn, LV_OBJ_FLAG_PRESS_LOCK);      /// Flags
 
-    ui_More_Info_Text = lv_label_create(ui_Popup_WIndow);
-    lv_obj_set_width(ui_More_Info_Text, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_More_Info_Text, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_More_Info_Text, -74);
-    lv_obj_set_y(ui_More_Info_Text, -133);
-    lv_obj_set_align(ui_More_Info_Text, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_More_Info_Text, "更多信息敬请关注：");
-    lv_obj_set_style_text_font(ui_More_Info_Text, &ui_font_LanTingFine24, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_QR_Code = lv_img_create(ui_Popup_WIndow);
+    lv_img_set_src(ui_QR_Code, &ui_img_6695340);
     lv_obj_set_width(ui_QR_Code, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_QR_Code, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_QR_Code, 2);
-    lv_obj_set_y(ui_QR_Code, 15);
     lv_obj_set_align(ui_QR_Code, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_QR_Code, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_QR_Code, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_img_set_zoom(ui_QR_Code, 2);
+    
 
     ui_BackToMainWindowBtn6 = lv_imgbtn_create(ui_Guide_Window);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn6, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);

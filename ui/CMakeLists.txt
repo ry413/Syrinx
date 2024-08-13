@@ -35,6 +35,7 @@ SET(SOURCES components/ui_comp_header_volume.c
     images/ui_img_861711258.c
     images/ui_img_348826415.c
     images/ui_img_12669592.c
+    images/ui_img_6695340.c
     images/ui_img_260357382.c
     images/ui_img_1071321554.c
     images/ui_img_2034599484.c
@@ -61,6 +62,7 @@ SET(SOURCES components/ui_comp_header_volume.c
     images/ui_img_899744137.c
     images/ui_img_542960551.c
     images/ui_img_bath_sound_png.c
+    images/ui_img_alarmclock_png.c
     fonts/ui_font_Font100.c
     fonts/ui_font_Font30.c
     fonts/ui_font_LanTing12.c

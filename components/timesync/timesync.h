@@ -23,7 +23,7 @@ extern uint32_t date_day;
 
 extern TaskHandle_t update_time_task_handle;
 
-void update_current_time_label(void);
+void update_current_time_label(bool show_symbol);
 void update_current_date_label(void);
 void obtain_time(void);
 void set_time_label(lv_obj_t * label);

@@ -58,6 +58,7 @@ extern lv_obj_t * ui_Guide_Btn;
 extern lv_obj_t * ui_Guide_Icon;
 extern lv_obj_t * ui_Guide_Text;
 extern lv_obj_t * ui_bath_sound_icon;
+extern lv_obj_t * ui_alarm_clock_icon;
 extern lv_obj_t * ui_tfcard_States_Icon;
 extern lv_obj_t * ui_tfcard_unavailable_the_X;
 void ui_event_TFCardNotFoundMsg(lv_event_t * e);
@@ -137,6 +138,9 @@ void ui_event_BackToMainWindowBtn7(lv_event_t * e);
 extern lv_obj_t * ui_BackToMainWindowBtn7;
 extern lv_obj_t * ui_Nature_Header_Volume;
 extern lv_obj_t * ui_Nature_Window_Volume_adjust;
+void ui_event_Nature_On_Screen_Range(lv_event_t * e);
+extern lv_obj_t * ui_Nature_On_Screen_Range;
+
 // SCREEN: ui_Bluetooth_WIndow
 void ui_Bluetooth_WIndow_screen_init(void);
 void ui_event_Bluetooth_WIndow(lv_event_t * e);
@@ -253,7 +257,6 @@ extern lv_obj_t * ui_Guide_Content;
 extern lv_obj_t * ui_Popup_WIndow;
 void ui_event_More_Info_Close_Btn(lv_event_t * e);
 extern lv_obj_t * ui_More_Info_Close_Btn;
-extern lv_obj_t * ui_More_Info_Text;
 extern lv_obj_t * ui_QR_Code;
 void ui_event_BackToMainWindowBtn6(lv_event_t * e);
 extern lv_obj_t * ui_BackToMainWindowBtn6;
@@ -284,16 +287,16 @@ extern lv_obj_t * ui_Backlight_Brightness_Dec_Icon;
 void ui_event_Backlight_Brightness_Add_Btn(lv_event_t * e);
 extern lv_obj_t * ui_Backlight_Brightness_Add_Btn;
 extern lv_obj_t * ui_Backlight_Brightness_Add_Icon;
-extern lv_obj_t * ui_Backlight_Time_Settings;
-extern lv_obj_t * ui_Backlight_Time_Text;
-extern lv_obj_t * ui_Backlight_Time_Panel;
-extern lv_obj_t * ui_Backlight_Time_Value;
-void ui_event_Backlight_Time_Dec_Btn(lv_event_t * e);
-extern lv_obj_t * ui_Backlight_Time_Dec_Btn;
-extern lv_obj_t * ui_Backlight_Time_Dec_Icon;
-extern lv_obj_t * ui_Backlight_Time_Add_Btn;
-void ui_event_Backlight_Time_Add_Btn(lv_event_t * e);
-extern lv_obj_t * ui_Backlight_Time_Add_Icon;
+extern lv_obj_t * ui_Enter_Idle_Time_Settings;
+extern lv_obj_t * ui_Enter_Idle_Time_Text;
+extern lv_obj_t * ui_Enter_Idle_Time_Panel;
+extern lv_obj_t * ui_Enter_Idle_Time_Value;
+void ui_event_Enter_Idle_Time_Dec_Btn(lv_event_t * e);
+extern lv_obj_t * ui_Enter_Idle_Time_Dec_Btn;
+extern lv_obj_t * ui_Enter_Idle_Time_Dec_Icon;
+extern lv_obj_t * ui_Enter_Idle_Time_Add_Btn;
+void ui_event_Enter_Idle_Time_Add_Btn(lv_event_t * e);
+extern lv_obj_t * ui_Enter_Idle_Time_Add_Icon;
 void ui_event_Backlight_Settings_Verify_Btn(lv_event_t * e);
 extern lv_obj_t * ui_Backlight_Settings_Verify_Btn;
 extern lv_obj_t * ui_Backlight_Settings_Verify_Btn_Text;
@@ -560,6 +563,7 @@ void ui_Idle_Window_screen_init(void);
 void ui_event_Idle_Window(lv_event_t * e);
 extern lv_obj_t * ui_Idle_Window;
 extern lv_obj_t * ui_Idle_Window_Time;
+extern lv_obj_t * ui_Idle_Window_Time_Decora;
 extern lv_obj_t * ui_Idle_Window_Date;
 void ui_event_Back_To_Main_Window_Range(lv_event_t * e);
 extern lv_obj_t * ui_Back_To_Main_Window_Range;
@@ -585,6 +589,7 @@ LV_IMG_DECLARE(ui_img_490182776);    // assets/丽枫UI/音量.png
 LV_IMG_DECLARE(ui_img_861711258);    // assets/丽枫UI/background.png
 LV_IMG_DECLARE(ui_img_348826415);    // assets/丽枫UI/back.png
 LV_IMG_DECLARE(ui_img_12669592);    // assets/丽枫UI/鸟叫.png
+LV_IMG_DECLARE(ui_img_6695340);    // assets/客房指南.png
 LV_IMG_DECLARE(ui_img_2034599484);    // assets/丽枫UI/虫鸣.png
 LV_IMG_DECLARE(ui_img_304460963);    // assets/丽枫UI/森林.png
 LV_IMG_DECLARE(ui_img_1893023884);    // assets/丽枫UI/大海.png
@@ -611,6 +616,7 @@ LV_IMG_DECLARE(ui_img_899744137);    // assets/丽枫UI/播放.png
 LV_IMG_DECLARE(ui_img_542960551);    // assets/丽枫UI/下一首.png
 LV_IMG_DECLARE(ui_img_607840074);    // assets/丽枫UI/tfcard.png
 LV_IMG_DECLARE(ui_img_bath_sound_png);    // assets/bath_sound.png
+LV_IMG_DECLARE(ui_img_alarmclock_png);    // assets/ui_img_alarmclock.png
 
 
 

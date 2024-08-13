@@ -271,102 +271,102 @@ void ui_Settings_Window_screen_init(void)
     lv_img_set_zoom(ui_Backlight_Brightness_Add_Icon, 300);
 
 
-    ui_Backlight_Time_Settings = lv_obj_create(ui_Backlight_Settings_Panel);
-    lv_obj_remove_style_all(ui_Backlight_Time_Settings);
-    lv_obj_set_width(ui_Backlight_Time_Settings, 300);
-    lv_obj_set_height(ui_Backlight_Time_Settings, 114);
-    lv_obj_set_x(ui_Backlight_Time_Settings, 0);
-    lv_obj_set_y(ui_Backlight_Time_Settings, 20);
-    lv_obj_set_align(ui_Backlight_Time_Settings, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_Backlight_Time_Settings, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_Enter_Idle_Time_Settings = lv_obj_create(ui_Backlight_Settings_Panel);
+    lv_obj_remove_style_all(ui_Enter_Idle_Time_Settings);
+    lv_obj_set_width(ui_Enter_Idle_Time_Settings, 300);
+    lv_obj_set_height(ui_Enter_Idle_Time_Settings, 114);
+    lv_obj_set_x(ui_Enter_Idle_Time_Settings, 0);
+    lv_obj_set_y(ui_Enter_Idle_Time_Settings, 20);
+    lv_obj_set_align(ui_Enter_Idle_Time_Settings, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Enter_Idle_Time_Settings, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Backlight_Time_Text = lv_label_create(ui_Backlight_Time_Settings);
-    lv_obj_set_width(ui_Backlight_Time_Text, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Backlight_Time_Text, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Backlight_Time_Text, 0);
-    lv_obj_set_y(ui_Backlight_Time_Text, -30);
-    lv_obj_set_align(ui_Backlight_Time_Text, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Backlight_Time_Text, "背光时间");
-    lv_obj_set_style_text_color(ui_Backlight_Time_Text, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Backlight_Time_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_letter_space(ui_Backlight_Time_Text, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_Backlight_Time_Text, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Backlight_Time_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_Enter_Idle_Time_Text = lv_label_create(ui_Enter_Idle_Time_Settings);
+    lv_obj_set_width(ui_Enter_Idle_Time_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Enter_Idle_Time_Text, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Enter_Idle_Time_Text, 0);
+    lv_obj_set_y(ui_Enter_Idle_Time_Text, -30);
+    lv_obj_set_align(ui_Enter_Idle_Time_Text, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Enter_Idle_Time_Text, "背光时间");
+    lv_obj_set_style_text_color(ui_Enter_Idle_Time_Text, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Enter_Idle_Time_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_letter_space(ui_Enter_Idle_Time_Text, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_Enter_Idle_Time_Text, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Enter_Idle_Time_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Backlight_Time_Panel = lv_obj_create(ui_Backlight_Time_Settings);
-    lv_obj_set_width(ui_Backlight_Time_Panel, 140);
-    lv_obj_set_height(ui_Backlight_Time_Panel, 40);
-    lv_obj_set_x(ui_Backlight_Time_Panel, 0);
-    lv_obj_set_y(ui_Backlight_Time_Panel, 10);
-    lv_obj_set_align(ui_Backlight_Time_Panel, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_Backlight_Time_Panel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Backlight_Time_Panel, lv_color_hex(0x959CFA), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Backlight_Time_Panel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_Backlight_Time_Panel, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_Backlight_Time_Panel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_Enter_Idle_Time_Panel = lv_obj_create(ui_Enter_Idle_Time_Settings);
+    lv_obj_set_width(ui_Enter_Idle_Time_Panel, 140);
+    lv_obj_set_height(ui_Enter_Idle_Time_Panel, 40);
+    lv_obj_set_x(ui_Enter_Idle_Time_Panel, 0);
+    lv_obj_set_y(ui_Enter_Idle_Time_Panel, 10);
+    lv_obj_set_align(ui_Enter_Idle_Time_Panel, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Enter_Idle_Time_Panel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_Enter_Idle_Time_Panel, lv_color_hex(0x959CFA), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_Enter_Idle_Time_Panel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_Enter_Idle_Time_Panel, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_Enter_Idle_Time_Panel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Backlight_Time_Value = lv_label_create(ui_Backlight_Time_Panel);
-    lv_obj_set_width(ui_Backlight_Time_Value, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Backlight_Time_Value, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Backlight_Time_Value, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Backlight_Time_Value, "5");
-    lv_obj_set_style_text_font(ui_Backlight_Time_Value, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_Enter_Idle_Time_Value = lv_label_create(ui_Enter_Idle_Time_Panel);
+    lv_obj_set_width(ui_Enter_Idle_Time_Value, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Enter_Idle_Time_Value, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Enter_Idle_Time_Value, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Enter_Idle_Time_Value, "5");
+    lv_obj_set_style_text_font(ui_Enter_Idle_Time_Value, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Backlight_Time_Dec_Btn = lv_btn_create(ui_Backlight_Time_Settings);
-    lv_obj_set_width(ui_Backlight_Time_Dec_Btn, 60);
-    lv_obj_set_height(ui_Backlight_Time_Dec_Btn, 60);
-    lv_obj_set_x(ui_Backlight_Time_Dec_Btn, -107);
-    lv_obj_set_y(ui_Backlight_Time_Dec_Btn, 10);
-    lv_obj_set_align(ui_Backlight_Time_Dec_Btn, LV_ALIGN_CENTER);
-    lv_obj_set_flex_flow(ui_Backlight_Time_Dec_Btn, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_Backlight_Time_Dec_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Backlight_Time_Dec_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_Backlight_Time_Dec_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Backlight_Time_Dec_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Backlight_Time_Dec_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_color(ui_Backlight_Time_Dec_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_opa(ui_Backlight_Time_Dec_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_Backlight_Time_Dec_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(ui_Backlight_Time_Dec_Btn, 100, LV_PART_MAIN | LV_STATE_PRESSED);
+    ui_Enter_Idle_Time_Dec_Btn = lv_btn_create(ui_Enter_Idle_Time_Settings);
+    lv_obj_set_width(ui_Enter_Idle_Time_Dec_Btn, 60);
+    lv_obj_set_height(ui_Enter_Idle_Time_Dec_Btn, 60);
+    lv_obj_set_x(ui_Enter_Idle_Time_Dec_Btn, -107);
+    lv_obj_set_y(ui_Enter_Idle_Time_Dec_Btn, 10);
+    lv_obj_set_align(ui_Enter_Idle_Time_Dec_Btn, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(ui_Enter_Idle_Time_Dec_Btn, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(ui_Enter_Idle_Time_Dec_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Enter_Idle_Time_Dec_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_Enter_Idle_Time_Dec_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_Enter_Idle_Time_Dec_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_Enter_Idle_Time_Dec_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_Enter_Idle_Time_Dec_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_opa(ui_Enter_Idle_Time_Dec_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_Enter_Idle_Time_Dec_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(ui_Enter_Idle_Time_Dec_Btn, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_Backlight_Time_Dec_Icon = lv_img_create(ui_Backlight_Time_Dec_Btn);
-    lv_img_set_src(ui_Backlight_Time_Dec_Icon, &ui_img_404002205);
-    lv_obj_set_width(ui_Backlight_Time_Dec_Icon, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Backlight_Time_Dec_Icon, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Backlight_Time_Dec_Icon, -2);
-    lv_obj_set_y(ui_Backlight_Time_Dec_Icon, -6);
-    lv_obj_set_align(ui_Backlight_Time_Dec_Icon, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Backlight_Time_Dec_Icon, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_Backlight_Time_Dec_Icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_img_set_zoom(ui_Backlight_Time_Dec_Icon, 300);
+    ui_Enter_Idle_Time_Dec_Icon = lv_img_create(ui_Enter_Idle_Time_Dec_Btn);
+    lv_img_set_src(ui_Enter_Idle_Time_Dec_Icon, &ui_img_404002205);
+    lv_obj_set_width(ui_Enter_Idle_Time_Dec_Icon, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Enter_Idle_Time_Dec_Icon, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Enter_Idle_Time_Dec_Icon, -2);
+    lv_obj_set_y(ui_Enter_Idle_Time_Dec_Icon, -6);
+    lv_obj_set_align(ui_Enter_Idle_Time_Dec_Icon, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Enter_Idle_Time_Dec_Icon, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_Enter_Idle_Time_Dec_Icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_img_set_zoom(ui_Enter_Idle_Time_Dec_Icon, 300);
 
-    ui_Backlight_Time_Add_Btn = lv_btn_create(ui_Backlight_Time_Settings);
-    lv_obj_set_width(ui_Backlight_Time_Add_Btn, 60);
-    lv_obj_set_height(ui_Backlight_Time_Add_Btn, 60);
-    lv_obj_set_x(ui_Backlight_Time_Add_Btn, 107);
-    lv_obj_set_y(ui_Backlight_Time_Add_Btn, 10);
-    lv_obj_set_align(ui_Backlight_Time_Add_Btn, LV_ALIGN_CENTER);
-    lv_obj_set_flex_flow(ui_Backlight_Time_Add_Btn, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_Backlight_Time_Add_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Backlight_Time_Add_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_Backlight_Time_Add_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Backlight_Time_Add_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Backlight_Time_Add_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_color(ui_Backlight_Time_Add_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_opa(ui_Backlight_Time_Add_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_Backlight_Time_Add_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(ui_Backlight_Time_Add_Btn, 100, LV_PART_MAIN | LV_STATE_PRESSED);
+    ui_Enter_Idle_Time_Add_Btn = lv_btn_create(ui_Enter_Idle_Time_Settings);
+    lv_obj_set_width(ui_Enter_Idle_Time_Add_Btn, 60);
+    lv_obj_set_height(ui_Enter_Idle_Time_Add_Btn, 60);
+    lv_obj_set_x(ui_Enter_Idle_Time_Add_Btn, 107);
+    lv_obj_set_y(ui_Enter_Idle_Time_Add_Btn, 10);
+    lv_obj_set_align(ui_Enter_Idle_Time_Add_Btn, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(ui_Enter_Idle_Time_Add_Btn, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(ui_Enter_Idle_Time_Add_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Enter_Idle_Time_Add_Btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_Enter_Idle_Time_Add_Btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_Enter_Idle_Time_Add_Btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_Enter_Idle_Time_Add_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_Enter_Idle_Time_Add_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_opa(ui_Enter_Idle_Time_Add_Btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_Enter_Idle_Time_Add_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(ui_Enter_Idle_Time_Add_Btn, 100, LV_PART_MAIN | LV_STATE_PRESSED);
 
-    ui_Backlight_Time_Add_Icon = lv_img_create(ui_Backlight_Time_Add_Btn);
-    lv_img_set_src(ui_Backlight_Time_Add_Icon, &ui_img_239308628);
-    lv_obj_set_width(ui_Backlight_Time_Add_Icon, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Backlight_Time_Add_Icon, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Backlight_Time_Add_Icon, 1);
-    lv_obj_set_y(ui_Backlight_Time_Add_Icon, -1);
-    lv_obj_set_align(ui_Backlight_Time_Add_Icon, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Backlight_Time_Add_Icon, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_Backlight_Time_Add_Icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_img_set_zoom(ui_Backlight_Time_Add_Icon, 300);
+    ui_Enter_Idle_Time_Add_Icon = lv_img_create(ui_Enter_Idle_Time_Add_Btn);
+    lv_img_set_src(ui_Enter_Idle_Time_Add_Icon, &ui_img_239308628);
+    lv_obj_set_width(ui_Enter_Idle_Time_Add_Icon, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Enter_Idle_Time_Add_Icon, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Enter_Idle_Time_Add_Icon, 1);
+    lv_obj_set_y(ui_Enter_Idle_Time_Add_Icon, -1);
+    lv_obj_set_align(ui_Enter_Idle_Time_Add_Icon, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Enter_Idle_Time_Add_Icon, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_Enter_Idle_Time_Add_Icon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_img_set_zoom(ui_Enter_Idle_Time_Add_Icon, 300);
 
     ui_Backlight_Settings_Verify_Btn = lv_obj_create(ui_Backlight_Settings_Panel);
     lv_obj_set_width(ui_Backlight_Settings_Verify_Btn, 155);
@@ -1331,8 +1331,8 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_add_event_cb(ui_Settings_Backlight_Btn2, ui_event_Settings_Backlight_Btn2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Brightness_Add_Btn, ui_event_Backlight_Brightness_Add_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Brightness_Dec_Btn, ui_event_Backlight_Brightness_Dec_Btn, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_Backlight_Time_Add_Btn, ui_event_Backlight_Time_Add_Btn, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_Backlight_Time_Dec_Btn, ui_event_Backlight_Time_Dec_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Enter_Idle_Time_Add_Btn, ui_event_Enter_Idle_Time_Add_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Enter_Idle_Time_Dec_Btn, ui_event_Enter_Idle_Time_Dec_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Settings_Verify_Btn, ui_event_Backlight_Settings_Verify_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Backlight_Settings_Cancel_Btn, ui_event_Backlight_Settings_Cancel_Btn, LV_EVENT_ALL, NULL);
     
