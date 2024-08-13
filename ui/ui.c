@@ -696,7 +696,7 @@ void ui_event_esp32_restart_btn(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        esp32_restart(e);
+        attempt_restart_esp32();
     }
 }
 void ui_event_Music_On_Screen_Range(lv_event_t * e)

@@ -453,16 +453,21 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_esp32_restart_btn = lv_btn_create(ui_Main_Window);
-    
-    lv_obj_set_width(ui_esp32_restart_btn, 100);
-    lv_obj_set_height(ui_esp32_restart_btn, 50);
-    lv_obj_set_x(ui_esp32_restart_btn, -137);
-    lv_obj_set_y(ui_esp32_restart_btn, -153);
+    lv_obj_set_width(ui_esp32_restart_btn, 80);
+    lv_obj_set_height(ui_esp32_restart_btn, 80);
+    lv_obj_set_x(ui_esp32_restart_btn, -152);
+    lv_obj_set_y(ui_esp32_restart_btn, -145);
     lv_obj_set_align(ui_esp32_restart_btn, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_esp32_restart_btn, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_esp32_restart_btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(ui_esp32_restart_btn, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_esp32_restart_btn, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_esp32_restart_btn, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_esp32_restart_btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_esp32_restart_btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_esp32_restart_btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_esp32_restart_btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_opa(ui_esp32_restart_btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -478,6 +483,5 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_event_cb(ui_TFCardNotFoundMsg, ui_event_TFCardNotFoundMsg, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_On_Main_Screen_Range, ui_event_Main_On_Screen_Range, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Main_Window, ui_event_Main_Window, LV_EVENT_ALL, NULL);
-
     lv_obj_add_event_cb(ui_esp32_restart_btn, ui_event_esp32_restart_btn, LV_EVENT_ALL, NULL);
 }

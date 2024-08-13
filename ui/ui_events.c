@@ -31,6 +31,7 @@
 #define MAX_VOLUME_LIMIT 30                         // 真实的音量上限
 #define ENTER_SETTINGS_WINDOW_CLICK_COUNT 5         // 进入设置界面需要点击的次数
 #define ENTER_SETTINGS_WINDOW_CLICK_RESET_TIME 500  // 进入设置界面点击的间隔, 每两次点击间隔不能超过500ms
+#define RESTART_ESP32_CLICK_RESET_TIME 500          // 试图复位esp32的点击间隔, 每两次点击间隔不能超过500ms
 
 //////////////////// GLOBAL VARIABLES 乱爆了 ////////////////////
 
@@ -2325,8 +2326,21 @@ void attempt_enter_settings_window(void) {
         lv_scr_load(ui_Settings_Window);
     }
 }
+void attempt_restart_esp32(void) {
+    static uint8_t click_count = 0;
+    static uint32_t last_click_time = 0;
 
-void esp32_restart(lv_event_t *e) {
-    assert(1 == 0);
-    // esp_restart();
+    uint32_t current_time = lv_tick_get();
+
+    if (current_time - last_click_time > RESTART_ESP32_CLICK_RESET_TIME) {
+        click_count = 0; // 如果时间间隔超出设定的时间，重置点击计数
+    }
+
+    last_click_time = current_time;
+    click_count++;
+
+    if (click_count >= ENTER_SETTINGS_WINDOW_CLICK_COUNT) {
+        click_count = 0; // 达到点击次数后重置计数
+        esp_restart();
+    }
 }
