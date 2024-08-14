@@ -27,7 +27,7 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_label_set_text(ui_Header_Nature_Sound_Text, "自然之音");
     lv_obj_set_style_text_color(ui_Header_Nature_Sound_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Nature_Sound_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Nature_Sound_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Nature_Sound_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Header_Nature_Sound_Time = lv_label_create(ui_Header_Nature_Sound);
     lv_obj_set_width(ui_Header_Nature_Sound_Time, LV_SIZE_CONTENT);   /// 1
@@ -38,7 +38,7 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_label_set_text(ui_Header_Nature_Sound_Time, "");
     lv_obj_set_style_text_color(ui_Header_Nature_Sound_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Nature_Sound_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Nature_Sound_Time, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Nature_Sound_Time, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Nature_Sound_Menu = lv_obj_create(ui_Nature_Sound_Window);
     lv_obj_remove_style_all(ui_Nature_Sound_Menu);
@@ -94,7 +94,7 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_label_set_text(ui_Bird_Sound_Text, "鸟叫");
     lv_obj_set_style_text_color(ui_Bird_Sound_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Bird_Sound_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Bird_Sound_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bird_Sound_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bug_Sound = lv_obj_create(ui_Nature_Sound_Menu);
     lv_obj_remove_style_all(ui_Bug_Sound);
@@ -140,7 +140,7 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_label_set_text(ui_Bug_Sound_Text, "虫鸣");
     lv_obj_set_style_text_color(ui_Bug_Sound_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Bug_Sound_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Bug_Sound_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bug_Sound_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Forest_Sound = lv_obj_create(ui_Nature_Sound_Menu);
     lv_obj_remove_style_all(ui_Forest_Sound);
@@ -186,7 +186,7 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_label_set_text(ui_Forest_Sound_Text, "森林");
     lv_obj_set_style_text_color(ui_Forest_Sound_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Forest_Sound_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Forest_Sound_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Forest_Sound_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Sea_Sound = lv_obj_create(ui_Nature_Sound_Menu);
     lv_obj_remove_style_all(ui_Sea_Sound);
@@ -232,7 +232,7 @@ void ui_Nature_Sound_Window_screen_init(void)
     lv_label_set_text(ui_Sea_Sound_Text, "大海");
     lv_obj_set_style_text_color(ui_Sea_Sound_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Sea_Sound_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Sea_Sound_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Sea_Sound_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_BackToMainWindowBtn7 = lv_imgbtn_create(ui_Nature_Sound_Window);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn7, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);

@@ -27,7 +27,7 @@ void ui_Mode_WIndow_screen_init(void)
     lv_label_set_text(ui_Header_Mode_Text, "模式");
     lv_obj_set_style_text_color(ui_Header_Mode_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Mode_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Mode_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Mode_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Header_Mode_Time = lv_label_create(ui_Header_Mode);
     lv_obj_set_width(ui_Header_Mode_Time, LV_SIZE_CONTENT);   /// 1
@@ -38,7 +38,7 @@ void ui_Mode_WIndow_screen_init(void)
     lv_label_set_text(ui_Header_Mode_Time, "");
     lv_obj_set_style_text_color(ui_Header_Mode_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Mode_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Mode_Time, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Mode_Time, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Mode_Items = lv_obj_create(ui_Mode_WIndow);
     lv_obj_remove_style_all(ui_Mode_Items);
@@ -102,7 +102,7 @@ void ui_Mode_WIndow_screen_init(void)
     lv_label_set_text(ui_Mode_Nature_text, "自然");
     lv_obj_set_style_text_color(ui_Mode_Nature_text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Mode_Nature_text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Mode_Nature_text, &ui_font_LanTIng20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Mode_Nature_text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Mode_Jazz = lv_obj_create(ui_Mode_Items);
     lv_obj_remove_style_all(ui_Mode_Jazz);
@@ -155,7 +155,7 @@ void ui_Mode_WIndow_screen_init(void)
     lv_label_set_text(ui_Mode_Jazz_Text, "爵士");
     lv_obj_set_style_text_color(ui_Mode_Jazz_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Mode_Jazz_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Mode_Jazz_Text, &ui_font_LanTIng20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Mode_Jazz_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Mode_Rock = lv_obj_create(ui_Mode_Items);
     lv_obj_remove_style_all(ui_Mode_Rock);
@@ -208,7 +208,7 @@ void ui_Mode_WIndow_screen_init(void)
     lv_label_set_text(ui_Mode_Rock_Text, "摇滚");
     lv_obj_set_style_text_color(ui_Mode_Rock_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Mode_Rock_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Mode_Rock_Text, &ui_font_LanTIng20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Mode_Rock_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Mode_Pop = lv_obj_create(ui_Mode_Items);
     lv_obj_remove_style_all(ui_Mode_Pop);
@@ -261,7 +261,7 @@ void ui_Mode_WIndow_screen_init(void)
     lv_label_set_text(ui_Mode_Pop_Text, "流行");
     lv_obj_set_style_text_color(ui_Mode_Pop_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Mode_Pop_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Mode_Pop_Text, &ui_font_LanTIng20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Mode_Pop_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Mode_Classical = lv_obj_create(ui_Mode_Items);
     lv_obj_remove_style_all(ui_Mode_Classical);
@@ -314,7 +314,7 @@ void ui_Mode_WIndow_screen_init(void)
     lv_label_set_text(ui_Mode_Classical_Text, "古典");
     lv_obj_set_style_text_color(ui_Mode_Classical_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Mode_Classical_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Mode_Classical_Text, &ui_font_LanTIng20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Mode_Classical_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Mode_Opera = lv_obj_create(ui_Mode_Items);
     lv_obj_remove_style_all(ui_Mode_Opera);
@@ -369,7 +369,7 @@ void ui_Mode_WIndow_screen_init(void)
     lv_label_set_text(ui_Mode_Opera_Text, "歌剧");
     lv_obj_set_style_text_color(ui_Mode_Opera_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Mode_Opera_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Mode_Opera_Text, &ui_font_LanTIng20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Mode_Opera_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_BackToMainWindowBtn4 = lv_imgbtn_create(ui_Mode_WIndow);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn4, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);

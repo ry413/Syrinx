@@ -432,6 +432,9 @@ void process_command(rs485_packet_t *packet, size_t len) {
     }
     // 查询MP
     else if (memcmp(packet->command, (uint8_t[]){0x16, 0xA0, 0x00, 0x02, 0x01}, (size_t)5) == 0) {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        uint8_t cmd[] = {0x16, 0xA0, 0x00, 0x02, 0x01, 0x0a, 0x0d, 0x02};
+        uart_write_bytes(RS485_UART_PORT, (const char*)cmd, sizeof(cmd));
         bluetooth_send_at_command("AT+MP", CMD_GET_PLAY_STATE);
         xEventGroupWaitBits(music_event_group, EVENT_GET_PLAY_STATE, pdTRUE, pdFALSE, portMAX_DELAY);
         printf("现在播放状态: %d\n", play_state);

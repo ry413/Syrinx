@@ -27,7 +27,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_label_set_text(ui_Header_Main_Text1, "WIFI设置");
     lv_obj_set_style_text_color(ui_Header_Main_Text1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Main_Text1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Main_Text1, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Main_Text1, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Wifi_SSID = lv_obj_create(ui_Settings_Wifi_Window);
     lv_obj_remove_style_all(ui_Wifi_SSID);
@@ -47,7 +47,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_label_set_text(ui_Wifi_SSID_Text, "WIFI名称:");
     lv_obj_set_style_text_color(ui_Wifi_SSID_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Wifi_SSID_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Wifi_SSID_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Wifi_SSID_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Wifi_SSID_Line = lv_obj_create(ui_Wifi_SSID);
     lv_obj_set_width(ui_Wifi_SSID_Line, 325);
@@ -68,7 +68,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Wifi_SSID_Input, "WIFI Name");
     lv_textarea_set_one_line(ui_Wifi_SSID_Input, true);
     lv_obj_clear_flag(ui_Wifi_SSID_Input, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Wifi_SSID_Input, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Wifi_SSID_Input, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -90,7 +90,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_label_set_text(ui_Wifi_Password_Text, "WIFI密码:");
     lv_obj_set_style_text_color(ui_Wifi_Password_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Wifi_Password_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Wifi_Password_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Wifi_Password_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Wifi_Password_Line = lv_obj_create(ui_Wifi_Password);
     lv_obj_set_width(ui_Wifi_Password_Line, 450);
@@ -111,7 +111,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Wifi_Password_Input, "Name");
     lv_textarea_set_one_line(ui_Wifi_Password_Input, true);
     lv_obj_clear_flag(ui_Wifi_Password_Input, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Wifi_Password_Input, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Wifi_Password_Input, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -150,7 +150,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_label_set_text(ui_Wifi_Switch_Text2, "关             开");
     lv_obj_set_style_text_color(ui_Wifi_Switch_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Wifi_Switch_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Wifi_Switch_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Wifi_Switch_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Wifi_Switch_Switch2 = lv_switch_create(ui_Wifi_Switch2);
     lv_obj_set_width(ui_Wifi_Switch_Switch2, 50);
@@ -180,7 +180,7 @@ void ui_Settings_Wifi_Window_screen_init(void)
     lv_obj_set_height(ui_Wifi_Enter_Text, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Wifi_Enter_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Wifi_Enter_Text, "保存");
-    lv_obj_set_style_text_font(ui_Wifi_Enter_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Wifi_Enter_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_Wifi_SSID_Input, ui_event_Wifi_SSID_Input, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wifi_Password_Input, ui_event_Wifi_Password_Input, LV_EVENT_ALL, NULL);

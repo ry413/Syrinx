@@ -63,16 +63,13 @@ SET(SOURCES components/ui_comp_header_volume.c
     images/ui_img_542960551.c
     images/ui_img_bath_sound_png.c
     images/ui_img_alarmclock_png.c
-    fonts/ui_font_Font100.c
-    fonts/ui_font_Font30.c
-    fonts/ui_font_LanTing12.c
-    fonts/ui_font_LanTing18.c
-    fonts/ui_font_LanTIng20.c
-    fonts/ui_font_LanTingFine16.c
-    fonts/ui_font_LanTingFine18.c
-    fonts/ui_font_LanTingFine22.c
-    fonts/ui_font_LanTingFine24.c
-    fonts/ui_font_MSBlack22.c
-    fonts/ui_font_MSBlack16.c)
+    fonts/ui_font_IdleTime_MS100B2.c
+    fonts/ui_font_IdleDate_MS30B2.c
+    fonts/ui_font_Downcount_MS12B2.c.c
+    fonts/ui_font_Music_MS18B2.c
+    fonts/ui_font_Music_MS22B2.c
+    fonts/ui_font_Main_MS22B4.c
+    fonts/ui_font_Vice_MS20B4.c
+    fonts/ui_font_Guide_MS18B2.c)
 
 add_library(ui ${SOURCES})

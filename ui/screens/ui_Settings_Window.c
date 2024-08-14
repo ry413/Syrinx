@@ -27,7 +27,7 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_Header_Main_Text2, "设置");
     lv_obj_set_style_text_color(ui_Header_Main_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Main_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Main_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Main_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Settings_List2 = lv_obj_create(ui_Settings_Window);
     lv_obj_remove_style_all(ui_Settings_List2);
@@ -120,7 +120,7 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_Settings_Backlight_Text2, "背光设置");
     lv_obj_set_style_text_color(ui_Settings_Backlight_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Settings_Backlight_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Settings_Backlight_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Settings_Backlight_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Settings_Backlight_Line2 = lv_obj_create(ui_Settings_Backlight2);
     lv_obj_set_width(ui_Settings_Backlight_Line2, 450);
@@ -193,7 +193,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Backlight_Brightness_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_Backlight_Brightness_Text, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_Backlight_Brightness_Text, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Backlight_Brightness_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Backlight_Brightness_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Backlight_Brightness_Panel = lv_obj_create(ui_Backlight_Brightness_Settings);
     lv_obj_set_width(ui_Backlight_Brightness_Panel, 140);
@@ -291,7 +291,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Enter_Idle_Time_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_Enter_Idle_Time_Text, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_Enter_Idle_Time_Text, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Enter_Idle_Time_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Enter_Idle_Time_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Enter_Idle_Time_Panel = lv_obj_create(ui_Enter_Idle_Time_Settings);
     lv_obj_set_width(ui_Enter_Idle_Time_Panel, 140);
@@ -393,7 +393,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y(ui_Backlight_Settings_Verify_Btn_Text, -2);
     lv_obj_set_align(ui_Backlight_Settings_Verify_Btn_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Backlight_Settings_Verify_Btn_Text, "确认");
-    lv_obj_set_style_text_font(ui_Backlight_Settings_Verify_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Backlight_Settings_Verify_Btn_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Backlight_Settings_Cancel_Btn = lv_obj_create(ui_Backlight_Settings_Panel);
     lv_obj_set_width(ui_Backlight_Settings_Cancel_Btn, 155);
@@ -420,7 +420,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y(ui_Backlight_Settings_Cancel_Btn_Text, -2);
     lv_obj_set_align(ui_Backlight_Settings_Cancel_Btn_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Backlight_Settings_Cancel_Btn_Text, "取消");
-    lv_obj_set_style_text_font(ui_Backlight_Settings_Cancel_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Backlight_Settings_Cancel_Btn_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     
     ui_Settings_Bluetooth_Text2 = lv_label_create(ui_Settings_Bluetooth2);
@@ -432,7 +432,7 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_Settings_Bluetooth_Text2, "蓝牙设置");
     lv_obj_set_style_text_color(ui_Settings_Bluetooth_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Settings_Bluetooth_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Settings_Bluetooth_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Settings_Bluetooth_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Settings_Bluetooth_Line2 = lv_obj_create(ui_Settings_Bluetooth2);
     lv_obj_set_width(ui_Settings_Bluetooth_Line2, 450);
@@ -485,7 +485,7 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_Settings_Time_Text2, "时间设置");
     lv_obj_set_style_text_color(ui_Settings_Time_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Settings_Time_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Settings_Time_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Settings_Time_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Settings_Time_Line2 = lv_obj_create(ui_Settings_Time2);
     lv_obj_set_width(ui_Settings_Time_Line2, 450);
@@ -538,7 +538,7 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_Settings_Volume_Text, "声音设置");
     lv_obj_set_style_text_color(ui_Settings_Volume_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Settings_Volume_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Settings_Volume_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Settings_Volume_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Settings_Volume_Line = lv_obj_create(ui_Settings_Volume);
     lv_obj_set_width(ui_Settings_Volume_Line, 450);
@@ -611,7 +611,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Max_Volume_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_Max_Volume_Text, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_Max_Volume_Text, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Max_Volume_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Max_Volume_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Max_Volume_Value_Panel = lv_obj_create(ui_Max_Volume_Settings);
     lv_obj_set_width(ui_Max_Volume_Value_Panel, 140);
@@ -708,7 +708,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Default_Volume_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_Default_Volume_Text, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_Default_Volume_Text, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Default_Volume_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Default_Volume_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Default_Volume_Value_Panel = lv_obj_create(ui_Default_Volume_Settings);
     lv_obj_set_width(ui_Default_Volume_Value_Panel, 140);
@@ -813,7 +813,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y( ui_Channels_Settings_Text, -30 );
     lv_obj_set_align( ui_Channels_Settings_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_Channels_Settings_Text,"浴室播放所用通道");
-    lv_obj_set_style_text_font(ui_Channels_Settings_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Channels_Settings_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bath_Play_Left_Channel_Text = lv_label_create(ui_Channels_Settings);
     lv_obj_set_width( ui_Bath_Play_Left_Channel_Text, LV_SIZE_CONTENT);  /// 1
@@ -822,7 +822,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y( ui_Bath_Play_Left_Channel_Text, 15 );
     lv_obj_set_align( ui_Bath_Play_Left_Channel_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_Bath_Play_Left_Channel_Text,"左");
-    lv_obj_set_style_text_font(ui_Bath_Play_Left_Channel_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bath_Play_Left_Channel_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bath_Play_Left_Channel_Switch = lv_switch_create(ui_Channels_Settings);
     lv_obj_set_width( ui_Bath_Play_Left_Channel_Switch, 50);
@@ -839,7 +839,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y( ui_Bath_Play_Right_Channel_Text, 15 );
     lv_obj_set_align( ui_Bath_Play_Right_Channel_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_Bath_Play_Right_Channel_Text,"右");
-    lv_obj_set_style_text_font(ui_Bath_Play_Right_Channel_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bath_Play_Right_Channel_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bath_Play_Right_Channel_Switch = lv_switch_create(ui_Channels_Settings);
     lv_obj_set_width( ui_Bath_Play_Right_Channel_Switch, 50);
@@ -874,7 +874,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y(ui_Volume_Settings_Verify_Btn_Text, -2);
     lv_obj_set_align(ui_Volume_Settings_Verify_Btn_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Volume_Settings_Verify_Btn_Text, "确认");
-    lv_obj_set_style_text_font(ui_Volume_Settings_Verify_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Volume_Settings_Verify_Btn_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Volume_Settings_Cancel_Btn = lv_obj_create(ui_Volume_Settings_Panel);
     lv_obj_set_width(ui_Volume_Settings_Cancel_Btn, 155);
@@ -901,7 +901,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y(ui_Volume_Settings_Cancel_Btn_Text, -2);
     lv_obj_set_align(ui_Volume_Settings_Cancel_Btn_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Volume_Settings_Cancel_Btn_Text, "取消");
-    lv_obj_set_style_text_font(ui_Volume_Settings_Cancel_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Volume_Settings_Cancel_Btn_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
     ui_Settings_Wifi_Text = lv_label_create(ui_Settings_Wifi);
@@ -913,7 +913,7 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_Settings_Wifi_Text, "WIFI设置");
     lv_obj_set_style_text_color(ui_Settings_Wifi_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Settings_Wifi_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Settings_Wifi_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Settings_Wifi_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Settings_Wifi_Line = lv_obj_create(ui_Settings_Wifi);
     lv_obj_set_width(ui_Settings_Wifi_Line, 450);
@@ -966,7 +966,7 @@ void ui_Settings_Window_screen_init(void)
     lv_label_set_text(ui_Settings_System_Text, "系统设置");
     lv_obj_set_style_text_color(ui_Settings_System_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Settings_System_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Settings_System_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Settings_System_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Settings_System_Line = lv_obj_create(ui_Settings_System);
     lv_obj_set_width(ui_Settings_System_Line, 450);
@@ -1057,7 +1057,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_System_ID_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_System_ID_Text, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_System_ID_Text, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_System_ID_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_System_ID_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_System_ID_Value_Panel = lv_obj_create(ui_System_ID_Settings);
     lv_obj_set_width(ui_System_ID_Value_Panel, 140);
@@ -1145,7 +1145,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_border_opa(ui_System_Parting_Line2, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_System_Reset_Factory_Btn = lv_btn_create(ui_System_Settings_Panel);
-    lv_obj_set_width( ui_System_Reset_Factory_Btn, 106);
+    lv_obj_set_width( ui_System_Reset_Factory_Btn, 112);
     lv_obj_set_height( ui_System_Reset_Factory_Btn, 50);
     lv_obj_set_x( ui_System_Reset_Factory_Btn, -70 );
     lv_obj_set_y( ui_System_Reset_Factory_Btn, 40 );
@@ -1159,10 +1159,10 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_height( ui_System_Reset_Factory_Text, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_align( ui_System_Reset_Factory_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_System_Reset_Factory_Text,"恢复出厂设置");
-    lv_obj_set_style_text_font(ui_System_Reset_Factory_Text, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_System_Reset_Factory_Text, &ui_font_Guide_MS18B2, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_System_Track_Refresh_Btn = lv_btn_create(ui_System_Settings_Panel);
-    lv_obj_set_width( ui_System_Track_Refresh_Btn, 106);
+    lv_obj_set_width( ui_System_Track_Refresh_Btn, 112);
     lv_obj_set_height( ui_System_Track_Refresh_Btn, 50);
     lv_obj_set_x( ui_System_Track_Refresh_Btn, 70 );
     lv_obj_set_y( ui_System_Track_Refresh_Btn, 40 );
@@ -1175,7 +1175,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_height( ui_System_Track_Refresh_Text, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_align( ui_System_Track_Refresh_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_System_Track_Refresh_Text,"曲目刷新");
-    lv_obj_set_style_text_font(ui_System_Track_Refresh_Text, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_System_Track_Refresh_Text, &ui_font_Guide_MS18B2, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_System_Settings_Verify_Btn = lv_obj_create(ui_System_Settings_Panel);
     lv_obj_set_width(ui_System_Settings_Verify_Btn, 155);
@@ -1202,7 +1202,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y(ui_System_Settings_Verify_Btn_Text, -2);
     lv_obj_set_align(ui_System_Settings_Verify_Btn_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_System_Settings_Verify_Btn_Text, "确认");
-    lv_obj_set_style_text_font(ui_System_Settings_Verify_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_System_Settings_Verify_Btn_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_System_Settings_Cancel_Btn = lv_obj_create(ui_System_Settings_Panel);
     lv_obj_set_width(ui_System_Settings_Cancel_Btn, 155);
@@ -1229,7 +1229,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y(ui_System_Settings_Cancel_Btn_Text, -2);
     lv_obj_set_align(ui_System_Settings_Cancel_Btn_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_System_Settings_Cancel_Btn_Text, "取消");
-    lv_obj_set_style_text_font(ui_System_Settings_Cancel_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_System_Settings_Cancel_Btn_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Rellay_Panel = lv_obj_create(ui_System_Settings_Panel);
     lv_obj_set_width( ui_Rellay_Panel, 300);
@@ -1245,7 +1245,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y( ui_Reset_Factory_Text, -80 );
     lv_obj_set_align( ui_Reset_Factory_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_Reset_Factory_Text,"恢复出厂设置?");
-    lv_obj_set_style_text_font(ui_Reset_Factory_Text, &ui_font_LanTingFine22, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Reset_Factory_Text, &ui_font_Main_MS22B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_Verify_Reset_Btn = lv_btn_create(ui_Rellay_Panel);
     lv_obj_set_width( ui_Verify_Reset_Btn, 143);
@@ -1262,7 +1262,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_height( ui_Verify_Reset_Text, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_align( ui_Verify_Reset_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_Verify_Reset_Text,"确认");
-    lv_obj_set_style_text_font(ui_Verify_Reset_Text, &ui_font_LanTingFine22, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Verify_Reset_Text, &ui_font_Main_MS22B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_Cancel_Reset_Btn = lv_btn_create(ui_Rellay_Panel);
     lv_obj_set_width( ui_Cancel_Reset_Btn, 143);
@@ -1277,10 +1277,10 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_height( ui_Cancel_Reset_Text, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_align( ui_Cancel_Reset_Text, LV_ALIGN_CENTER );
     lv_label_set_text(ui_Cancel_Reset_Text,"取消");
-    lv_obj_set_style_text_font(ui_Cancel_Reset_Text, &ui_font_LanTingFine22, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Cancel_Reset_Text, &ui_font_Main_MS22B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_TrackRefreshMsgPanel = lv_obj_create(ui_System_Settings_Panel);
-    lv_obj_set_width( ui_TrackRefreshMsgPanel, 239);
+    lv_obj_set_width( ui_TrackRefreshMsgPanel, 282);
     lv_obj_set_height( ui_TrackRefreshMsgPanel, 164);
     lv_obj_set_x( ui_TrackRefreshMsgPanel, 0 );
     lv_obj_set_y( ui_TrackRefreshMsgPanel, -13 );
@@ -1295,7 +1295,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_y( ui_TrackRefreshMsgText, 5 );
     lv_obj_set_align( ui_TrackRefreshMsgText, LV_ALIGN_CENTER );
     lv_label_set_text(ui_TrackRefreshMsgText,"正在刷新曲目清单中");
-    lv_obj_set_style_text_font(ui_TrackRefreshMsgText, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_TrackRefreshMsgText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_PleaseRestartMsgPanel = lv_obj_create(ui_Settings_Window);
     lv_obj_set_width( ui_PleaseRestartMsgPanel, 273);
@@ -1310,7 +1310,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_height( ui_PleaseRestartMsgText, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_align( ui_PleaseRestartMsgText, LV_ALIGN_CENTER );
     lv_label_set_text(ui_PleaseRestartMsgText,"已完成, 需要断电重启");
-    lv_obj_set_style_text_font(ui_PleaseRestartMsgText, &ui_font_LanTingFine16, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_PleaseRestartMsgText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_PleaseRestartMsgText, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
 
 

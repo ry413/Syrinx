@@ -620,17 +620,14 @@ LV_IMG_DECLARE(ui_img_alarmclock_png);    // assets/ui_img_alarmclock.png
 
 
 
-LV_FONT_DECLARE(ui_font_Font100);
-LV_FONT_DECLARE(ui_font_Font30);
-LV_FONT_DECLARE(ui_font_LanTing12);
-LV_FONT_DECLARE(ui_font_LanTing18);
-LV_FONT_DECLARE(ui_font_LanTIng20);
-LV_FONT_DECLARE(ui_font_LanTingFine16);
-LV_FONT_DECLARE(ui_font_LanTingFine18);
-LV_FONT_DECLARE(ui_font_LanTingFine22);
-LV_FONT_DECLARE(ui_font_LanTingFine24);
-LV_FONT_DECLARE(ui_font_MSBlack22);
-LV_FONT_DECLARE(ui_font_MSBlack16);
+LV_FONT_DECLARE(ui_font_IdleTime_MS100B2);
+LV_FONT_DECLARE(ui_font_IdleDate_MS30B2);
+LV_FONT_DECLARE(ui_font_Downcount_MS12B2);
+LV_FONT_DECLARE(ui_font_Music_MS18B2);
+LV_FONT_DECLARE(ui_font_Music_MS22B2);
+LV_FONT_DECLARE(ui_font_Main_MS22B4);
+LV_FONT_DECLARE(ui_font_Vice_MS20B4);
+LV_FONT_DECLARE(ui_font_Guide_MS18B2);
 
 
 

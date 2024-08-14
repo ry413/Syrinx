@@ -27,7 +27,7 @@ void ui_Music_Window_screen_init(void)
     lv_label_set_text(ui_Header_Music_Text, "音乐");
     lv_obj_set_style_text_color(ui_Header_Music_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Music_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Music_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Music_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Header_Music_Time = lv_label_create(ui_Header_Music);
     lv_obj_set_width(ui_Header_Music_Time, LV_SIZE_CONTENT);   /// 1
@@ -38,7 +38,7 @@ void ui_Music_Window_screen_init(void)
     lv_label_set_text(ui_Header_Music_Time, "");
     lv_obj_set_style_text_color(ui_Header_Music_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Music_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Music_Time, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Music_Time, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_BackToMainWindowBtn1 = lv_imgbtn_create(ui_Music_Window);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn1, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
@@ -82,7 +82,7 @@ void ui_Music_Window_screen_init(void)
     lv_obj_set_y(ui_Prev_Music_List_Btn_Text, -2);
     lv_obj_set_align(ui_Prev_Music_List_Btn_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Prev_Music_List_Btn_Text, "上一页");
-    lv_obj_set_style_text_font(ui_Prev_Music_List_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Prev_Music_List_Btn_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Next_Music_List_Btn = lv_obj_create(ui_Music_Window);
     lv_obj_set_width(ui_Next_Music_List_Btn, 155);
@@ -107,7 +107,7 @@ void ui_Music_Window_screen_init(void)
     lv_obj_set_y(ui_Next_Music_List_Btn_Text, -2);
     lv_obj_set_align(ui_Next_Music_List_Btn_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Next_Music_List_Btn_Text, "下一页");
-    lv_obj_set_style_text_font(ui_Next_Music_List_Btn_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Next_Music_List_Btn_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Music_Header_Volume = ui_Header_Volume_create(ui_Music_Window);
     lv_obj_set_x(ui_Music_Header_Volume, 187);

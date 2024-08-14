@@ -46,7 +46,7 @@ lv_obj_set_x( cui_HourSelector, -85 );
 lv_obj_set_y( cui_HourSelector, 0 );
 lv_obj_set_align( cui_HourSelector, LV_ALIGN_CENTER );
 lv_obj_add_flag( cui_HourSelector, LV_OBJ_FLAG_EVENT_BUBBLE );
-lv_obj_set_style_text_font(cui_HourSelector, &lv_font_montserrat_24, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_HourSelector, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_color(cui_HourSelector, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_border_opa(cui_HourSelector, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
@@ -63,7 +63,7 @@ lv_obj_set_x( cui_HourText, -55 );
 lv_obj_set_y( cui_HourText, 2 );
 lv_obj_set_align( cui_HourText, LV_ALIGN_CENTER );
 lv_label_set_text(cui_HourText,"时");
-lv_obj_set_style_text_font(cui_HourText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_HourText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 lv_obj_t *cui_HourOverlay;
 cui_HourOverlay = lv_obj_create(cui_TimeSelector);
@@ -151,7 +151,7 @@ lv_obj_set_x( cui_MinSelector, 85 );
 lv_obj_set_y( cui_MinSelector, 0 );
 lv_obj_set_align( cui_MinSelector, LV_ALIGN_CENTER );
 lv_obj_add_flag( cui_MinSelector, LV_OBJ_FLAG_EVENT_BUBBLE );
-lv_obj_set_style_text_font(cui_MinSelector, &lv_font_montserrat_24, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_MinSelector, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_color(cui_MinSelector, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_border_opa(cui_MinSelector, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
@@ -168,7 +168,7 @@ lv_obj_set_x( cui_MinText, 115 );
 lv_obj_set_y( cui_MinText, 2 );
 lv_obj_set_align( cui_MinText, LV_ALIGN_CENTER );
 lv_label_set_text(cui_MinText,"分");
-lv_obj_set_style_text_font(cui_MinText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_MinText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 lv_obj_t *cui_MinOverlay;
 cui_MinOverlay = lv_obj_create(cui_TimeSelector);

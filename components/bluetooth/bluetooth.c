@@ -496,7 +496,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.5.4-Vulcan";
+                    char *esp32_version = "v0.6.0-Aura";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {
@@ -585,7 +585,7 @@ void show_error_info(const char *cmd) {
 // 查询设备状态(tf卡在不在)
 void AT_MV(void) {
     bluetooth_send_at_command("AT+MV", CMD_GET_DEVICE_STATE);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DEVICE_STATE, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DEVICE_STATE, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_GET_DEVICE_STATE)) {
         show_error_info("MV");
     }
@@ -596,7 +596,7 @@ void AT_CL(int channel) {
     char command[10];
     snprintf(command, sizeof(command), "AT+CL%d", channel);
     bluetooth_send_at_command(command, CMD_CHANGE_CHANNEL);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_CHANNEL, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_CHANGE_CHANNEL)) {
         char str[4];
         snprintf(str, sizeof(str), "CL%d", channel);
@@ -610,13 +610,13 @@ void AT_CM(int mode) {
 
     if (mode == 0) {
         bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
-        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
     } else if (mode == 1) {
         bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
-        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
     } else if (mode == 2) {
         bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
-        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
     } else {
         ESP_LOGE(TAG, "Error mode: %d", mode);
         return;
@@ -633,7 +633,7 @@ void AT_CM(int mode) {
 // 获得当前目录下的曲目数
 void AT_M2(void) {
     bluetooth_send_at_command("AT+M2", CMD_GET_DIR_FILE_COUNT);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_GET_DIR_FILE_COUNT)) {
         show_error_info("M2");
     }
@@ -643,7 +643,7 @@ void AT_M6(int dir_id) {
     char command[10];
     snprintf(command, sizeof(command), "AT+M6%02d", dir_id);
     bluetooth_send_at_command(command, CMD_CHANGE_DIR);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_DIR, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_CHANGE_DIR)) {
         char str[5];
         snprintf(str, sizeof(str), "M6%02d", dir_id);
@@ -665,7 +665,7 @@ void AT_M4(int m4_target) {
 // 获得当前曲目的总时长
 void AT_MT(void) {
     bluetooth_send_at_command("AT+MT", CMD_GET_DURATION);
-    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_GET_DURATION, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_GET_DURATION, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_GET_DURATION)) {
         show_error_info("MT");
     }
@@ -673,7 +673,7 @@ void AT_MT(void) {
 // 下一首
 void AT_CC(void) {
     bluetooth_send_at_command("AT+CC", CMD_NEXT_TRACK);
-    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_NEXT_TRACK, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_NEXT_TRACK, pdTRUE, pdFALSE, 400 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_NEXT_TRACK)) {
         show_error_info("CC");
     }
@@ -683,7 +683,7 @@ void AT_AF(int music_id) {
     char command[10];
     snprintf(command, sizeof(command), "AT+AF%02d", music_id);
     bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
-    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_PLAY_MUSIC_WITH_ID)) {
         char str[5];
         snprintf(str, sizeof(str), "AF%02d", music_id);
@@ -695,7 +695,7 @@ void AT_CN(int cmd) {       // 这b参数要怎么命名啊
     char command[10];
     snprintf(command, sizeof(command), "AT+CN%d", cmd);
     bluetooth_send_at_command(command, CMD_CHANGE_PROMPT_TONE);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_PROMPT_TONE, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_CHANGE_PROMPT_TONE)) {
         char str[4];
         snprintf(str, sizeof(str), "CN%d", cmd);
@@ -705,7 +705,7 @@ void AT_CN(int cmd) {       // 这b参数要怎么命名啊
 // 停止播放
 void AT_AA0(void) {
     bluetooth_send_at_command("AT+AA0", CMD_STOP_TRACK);
-    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_STOP_TRACK, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_STOP_TRACK, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_STOP_TRACK)) {
         show_error_info("AA0");
     }
@@ -713,7 +713,7 @@ void AT_AA0(void) {
 // 获得蓝牙名称
 void AT_TD(void) {
     bluetooth_send_at_command("AT+TD", CMD_BLUETOOTH_GET_NAME);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_GET_NAME, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_GET_NAME, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_BLUETOOTH_GET_NAME)) {
         show_error_info("TD");
     }
@@ -721,7 +721,7 @@ void AT_TD(void) {
 // 获得蓝牙密码
 void AT_TE(void) {
     bluetooth_send_at_command("AT+TE", CMD_BLUETOOTH_GET_PASSWORD);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_GET_PASSWORD, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_GET_PASSWORD, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_BLUETOOTH_GET_PASSWORD)) {
         show_error_info("TE");
     }
@@ -731,7 +731,7 @@ void AT_BE(char *pass) {
     char command[20];
     snprintf(command, sizeof(command), "AT+BE%s", pass);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_PASSWORD);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_SET_PASSWORD, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_BLUETOOTH_SET_PASSWORD, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_BLUETOOTH_SET_PASSWORD)) {
         show_error_info("BE");
     }
@@ -742,8 +742,8 @@ void AT_BD(char *name) {
     snprintf(command, sizeof(command), "AT+BD%s", name);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_NAME);
     // 然后会自动复位, 所以等待复位事件位
-    vTaskDelay(100 / portTICK_PERIOD_MS);   // QT是第二个回复的, 而复位会回复四个值, 所以等一下
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);   // QT是第二个回复的, 直接就设置了事件位, 而复位会回复四个值, 所以等回复完再继续
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_STARTUP_SUCCESS)) {
         show_error_info("BD");
     }
@@ -753,7 +753,7 @@ void AT_CA(int volume) {
     char command[20];
     snprintf(command, sizeof(command), "AT+CA%02d", volume);
     bluetooth_send_at_command(command, CMD_SET_VOLUME);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_SET_VOLUME, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_SET_VOLUME, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_SET_VOLUME)) {
         char str[5];
         snprintf(str, sizeof(str), "CA%02d", volume);
@@ -765,7 +765,7 @@ void AT_CQ(int equalizer) {
     char command[20];
     snprintf(command, sizeof(command), "AT+CQ%d", equalizer);
     bluetooth_send_at_command(command, CMD_EQUALIZER_SET);
-    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_EQUALIZER_SET, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_EQUALIZER_SET)) {
         char str[4];
         snprintf(str, sizeof(str), "CQ%d", equalizer);
@@ -775,7 +775,7 @@ void AT_CQ(int equalizer) {
 // 播放/暂停
 void AT_CB(void) {
     bluetooth_send_at_command("AT+CB", CMD_PLAY_PAUSE_TOGGLE);
-    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_PAUSE_TOGGLE, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_PAUSE_TOGGLE, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_PLAY_PAUSE_TOGGLE)) {
         show_error_info("CB");
     }
@@ -783,7 +783,7 @@ void AT_CB(void) {
 // 查询版本号
 void AT_QV(void) {
     bluetooth_send_at_command("AT+QV", CMD_QUERY_VERSION);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_QUERY_VERSION, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_QUERY_VERSION, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_QUERY_VERSION)) {
         show_error_info("QV");
     }

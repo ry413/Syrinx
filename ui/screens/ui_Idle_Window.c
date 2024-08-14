@@ -23,7 +23,7 @@ void ui_Idle_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Idle_Window_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_Idle_Window_Time, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_Idle_Window_Time, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Idle_Window_Time, &ui_font_Font100, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Idle_Window_Time, &ui_font_IdleTime_MS100B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Idle_Window_Time_Decora = lv_label_create(ui_Idle_Window);
     lv_obj_set_width( ui_Idle_Window_Time_Decora, LV_SIZE_CONTENT);  /// 1
@@ -34,7 +34,7 @@ void ui_Idle_Window_screen_init(void)
     lv_label_set_text(ui_Idle_Window_Time_Decora,":");
     lv_obj_set_style_text_color(ui_Idle_Window_Time_Decora, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
     lv_obj_set_style_text_opa(ui_Idle_Window_Time_Decora, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Idle_Window_Time_Decora, &ui_font_Font100, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Idle_Window_Time_Decora, &ui_font_IdleTime_MS100B2, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 
     ui_Idle_Window_Date = lv_label_create(ui_Idle_Window);
@@ -48,7 +48,7 @@ void ui_Idle_Window_screen_init(void)
     lv_obj_set_style_text_opa(ui_Idle_Window_Date, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_Idle_Window_Date, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_Idle_Window_Date, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Idle_Window_Date, &ui_font_Font30, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Idle_Window_Date, &ui_font_IdleDate_MS30B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Back_To_Main_Window_Range = lv_obj_create(ui_Idle_Window);
     lv_obj_remove_style_all(ui_Back_To_Main_Window_Range);
@@ -77,7 +77,7 @@ void ui_Idle_Window_screen_init(void)
     lv_label_set_text(ui_Off_Screen_Text, "熄屏");
     lv_obj_set_style_text_color(ui_Off_Screen_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Off_Screen_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Off_Screen_Text, &ui_font_Font30, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Off_Screen_Text, &ui_font_IdleDate_MS30B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_Back_To_Main_Window_Range, ui_event_Back_To_Main_Window_Range, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Off_Screen_Btn, ui_event_Off_Screen_Btn, LV_EVENT_ALL, NULL);

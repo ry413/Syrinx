@@ -29,7 +29,7 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_Header_Main_Time, "");
     lv_obj_set_style_text_color(ui_Header_Main_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Main_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Main_Time, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Main_Time, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Header_Main_Text = lv_label_create(ui_Header_Main);
     lv_obj_set_width(ui_Header_Main_Text, LV_SIZE_CONTENT);   /// 1
@@ -38,7 +38,7 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_Header_Main_Text, "主界面");
     lv_obj_set_style_text_color(ui_Header_Main_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Main_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Main_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Main_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Error_Info_Dorpdown = lv_dropdown_create(ui_Main_Window);
     lv_dropdown_set_options( ui_Error_Info_Dorpdown, "" );
@@ -106,7 +106,7 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_Music_Text, "音乐库");
     lv_obj_set_style_text_color(ui_Music_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Music_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Music_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Music_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Nature_Sound = lv_obj_create(ui_Menu_Items);
     lv_obj_remove_style_all(ui_Nature_Sound);
@@ -146,7 +146,7 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_Nature_Sound_Text, "自然之音");
     lv_obj_set_style_text_color(ui_Nature_Sound_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Nature_Sound_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Nature_Sound_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Nature_Sound_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bluetooth = lv_obj_create(ui_Menu_Items);
     lv_obj_remove_style_all(ui_Bluetooth);
@@ -188,7 +188,7 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_Bluetoth_Text, "蓝牙");
     lv_obj_set_style_text_color(ui_Bluetoth_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Bluetoth_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Bluetoth_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bluetoth_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Mode = lv_obj_create(ui_Menu_Items);
     lv_obj_remove_style_all(ui_Mode);
@@ -230,7 +230,7 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_Mode_Text, "模式");
     lv_obj_set_style_text_color(ui_Mode_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Mode_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Mode_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Mode_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Wake_up = lv_obj_create(ui_Menu_Items);
     lv_obj_remove_style_all(ui_Wake_up);
@@ -274,7 +274,7 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_Weke_up_Text, "叫醒服务");
     lv_obj_set_style_text_color(ui_Weke_up_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Weke_up_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Weke_up_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Weke_up_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Guide = lv_obj_create(ui_Menu_Items);
     lv_obj_remove_style_all(ui_Guide);
@@ -316,7 +316,7 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_Guide_Text, "指南");
     lv_obj_set_style_text_color(ui_Guide_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Guide_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Guide_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Guide_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_alarm_clock_icon = lv_img_create(ui_Main_Window);
     lv_img_set_src(ui_alarm_clock_icon, &ui_img_alarmclock_png);
@@ -357,9 +357,8 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_tfcard_unavailable_the_X,"X");
     lv_obj_set_style_text_color(ui_tfcard_unavailable_the_X, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
     lv_obj_set_style_text_opa(ui_tfcard_unavailable_the_X, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_tfcard_unavailable_the_X, &ui_font_MSBlack22, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_tfcard_unavailable_the_X, &ui_font_Main_MS22B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-    
 
     ui_Wifi_States_Icon = lv_img_create(ui_Main_Window);
     lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
@@ -459,8 +458,8 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_width( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_align( ui_TFCardNotFoundMsgText, LV_ALIGN_CENTER );
-    lv_label_set_text(ui_TFCardNotFoundMsgText,"TF卡未插入或未刷新曲目");
-    lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_MSBlack16, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_label_set_text(ui_TFCardNotFoundMsgText,"");
+    lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
     ui_esp32_restart_btn = lv_btn_create(ui_Main_Window);
     lv_obj_set_width(ui_esp32_restart_btn, 80);

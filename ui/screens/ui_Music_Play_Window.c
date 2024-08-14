@@ -27,7 +27,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_Header_Music_Text2, "音乐");
     lv_obj_set_style_text_color(ui_Header_Music_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Music_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Music_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Music_Text2, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Header_Music_Time2 = lv_label_create(ui_Header_Music2);
     lv_obj_set_width(ui_Header_Music_Time2, LV_SIZE_CONTENT);   /// 1
@@ -38,7 +38,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_Header_Music_Time2, "");
     lv_obj_set_style_text_color(ui_Header_Music_Time2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Music_Time2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Music_Time2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Music_Time2, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Player_Image = lv_obj_create(ui_Music_Play_Window);
     lv_obj_set_width(ui_Player_Image, 150);
@@ -85,7 +85,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_Track_Title, "Grievous Lady");
     lv_obj_set_style_text_color(ui_Track_Title, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Track_Title, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Track_Title, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Track_Title, &ui_font_Music_MS22B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Track_Artist = lv_label_create(ui_Music_Play_Window);
     lv_obj_set_width(ui_Track_Artist, LV_SIZE_CONTENT);   /// 1
@@ -96,7 +96,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_Track_Artist, "Team Grimoire & Laur");
     lv_obj_set_style_text_color(ui_Track_Artist, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Track_Artist, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Track_Artist, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Track_Artist, &ui_font_Music_MS22B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Play_Mode_Btn = lv_img_create(ui_Music_Play_Window);
     lv_img_set_src(ui_Play_Mode_Btn, &ui_img_260357382);
@@ -132,7 +132,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_Play_Style_Text, "流行");
     lv_obj_set_style_text_color(ui_Play_Style_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Play_Style_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Play_Style_Text, &ui_font_LanTingFine22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Play_Style_Text, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Current_Time = lv_label_create(ui_Music_Play_Window);
     lv_obj_set_width(ui_Current_Time, LV_SIZE_CONTENT);   /// 1
@@ -143,7 +143,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_Current_Time, "00:03:04");
     lv_obj_set_style_text_color(ui_Current_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Current_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Current_Time, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Current_Time, &ui_font_Music_MS18B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Total_Time = lv_label_create(ui_Music_Play_Window);
     lv_obj_set_width(ui_Total_Time, LV_SIZE_CONTENT);   /// 1
@@ -154,7 +154,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_Total_Time, "00:03:04");
     lv_obj_set_style_text_color(ui_Total_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Total_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Total_Time, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Total_Time, &ui_font_Music_MS18B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Prev_Track_Btn = lv_btn_create(ui_Music_Play_Window);
     lv_obj_set_width(ui_Prev_Track_Btn, 75);
@@ -324,7 +324,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_MusicWindowEQText1, "自然");
     lv_obj_set_style_text_color(ui_MusicWindowEQText1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_MusicWindowEQText1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_MusicWindowEQText1, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_MusicWindowEQText1, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQ2 = lv_obj_create(ui_Music_Window_EQ_Panel);
     lv_obj_remove_style_all(ui_MusicWindowEQ2);
@@ -362,7 +362,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_MusicWindowEQText2, "爵士");
     lv_obj_set_style_text_color(ui_MusicWindowEQText2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_MusicWindowEQText2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_MusicWindowEQText2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_MusicWindowEQText2, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
     ui_MusicWindowEQ3 = lv_obj_create(ui_Music_Window_EQ_Panel);
@@ -401,7 +401,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_MusicWindowEQText3, "摇滚");
     lv_obj_set_style_text_color(ui_MusicWindowEQText3, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_MusicWindowEQText3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_MusicWindowEQText3, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_MusicWindowEQText3, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
     ui_MusicWindowEQ4 = lv_obj_create(ui_Music_Window_EQ_Panel);
@@ -440,7 +440,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_MusicWindowEQText4, "流行");
     lv_obj_set_style_text_color(ui_MusicWindowEQText4, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_MusicWindowEQText4, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_MusicWindowEQText4, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_MusicWindowEQText4, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQ5 = lv_obj_create(ui_Music_Window_EQ_Panel);
     lv_obj_remove_style_all(ui_MusicWindowEQ5);
@@ -478,7 +478,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_MusicWindowEQText5, "古典");
     lv_obj_set_style_text_color(ui_MusicWindowEQText5, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_MusicWindowEQText5, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_MusicWindowEQText5, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_MusicWindowEQText5, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MusicWindowEQ6 = lv_obj_create(ui_Music_Window_EQ_Panel);
     lv_obj_remove_style_all(ui_MusicWindowEQ6);
@@ -516,7 +516,7 @@ void ui_Music_Play_Window_screen_init(void)
     lv_label_set_text(ui_MusicWindowEQText6, "歌剧");
     lv_obj_set_style_text_color(ui_MusicWindowEQText6, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_MusicWindowEQText6, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_MusicWindowEQText6, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_MusicWindowEQText6, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Music_Play_On_Screen_Range = lv_obj_create(ui_Music_Play_Window);
     lv_obj_remove_style_all(ui_Music_Play_On_Screen_Range);

@@ -27,7 +27,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_label_set_text(ui_Header_Main_Text5, "时间设置");
     lv_obj_set_style_text_color(ui_Header_Main_Text5, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Main_Text5, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Main_Text5, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Main_Text5, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Time_Setting_Panel2 = lv_obj_create(ui_Settings_Time_Window);
     lv_obj_remove_style_all(ui_Time_Setting_Panel2);
@@ -47,7 +47,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_label_set_text(ui_Time_Setting_Text2, "时间:                   :");
     lv_obj_set_style_text_color(ui_Time_Setting_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Time_Setting_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Time_Setting_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Time_Setting_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Time_Setting_Line2 = lv_obj_create(ui_Time_Setting_Panel2);
     lv_obj_set_width(ui_Time_Setting_Line2, 450);
@@ -68,7 +68,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Time_Setting_Hour2, "11");
     lv_textarea_set_one_line(ui_Time_Setting_Hour2, true);
     lv_obj_clear_flag(ui_Time_Setting_Hour2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Time_Setting_Hour2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Time_Setting_Hour2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -83,7 +83,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Time_Setting_Min2, "42");
     lv_textarea_set_one_line(ui_Time_Setting_Min2, true);
     lv_obj_clear_flag(ui_Time_Setting_Min2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Time_Setting_Min2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Time_Setting_Min2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -105,7 +105,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_label_set_text(ui_Date_Settings_Text2, "日期:                   -                -");
     lv_obj_set_style_text_color(ui_Date_Settings_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Date_Settings_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Date_Settings_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Date_Settings_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Date_Setting_Line2 = lv_obj_create(ui_Date_Setting_Panel2);
     lv_obj_set_width(ui_Date_Setting_Line2, 450);
@@ -126,7 +126,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Date_Setting_Year2, "2022");
     lv_textarea_set_one_line(ui_Date_Setting_Year2, true);
     lv_obj_clear_flag(ui_Date_Setting_Year2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Date_Setting_Year2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Date_Setting_Year2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -141,7 +141,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Date_Setting_Month2, "04");
     lv_textarea_set_one_line(ui_Date_Setting_Month2, true);
     lv_obj_clear_flag(ui_Date_Setting_Month2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Date_Setting_Month2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Date_Setting_Month2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -156,7 +156,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Date_Setting_Day2, "13");
     lv_textarea_set_one_line(ui_Date_Setting_Day2, true);
     lv_obj_clear_flag(ui_Date_Setting_Day2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Date_Setting_Day2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Date_Setting_Day2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -200,7 +200,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_obj_set_height(ui_Time_Enter_Text, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Time_Enter_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Time_Enter_Text, "保存");
-    lv_obj_set_style_text_font(ui_Time_Enter_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Time_Enter_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
     lv_obj_add_event_cb(ui_Time_Setting_Hour2, ui_event_Time_Setting_Hour2, LV_EVENT_ALL, NULL);

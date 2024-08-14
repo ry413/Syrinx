@@ -27,7 +27,7 @@ void ui_Guide_Window_screen_init(void)
     lv_label_set_text(ui_Header_Guide_Text, "指南");
     lv_obj_set_style_text_color(ui_Header_Guide_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Guide_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Guide_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Guide_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Header_Guide_Time = lv_label_create(ui_Header_Guide);
     lv_obj_set_width(ui_Header_Guide_Time, LV_SIZE_CONTENT);   /// 1
@@ -38,7 +38,7 @@ void ui_Guide_Window_screen_init(void)
     lv_label_set_text(ui_Header_Guide_Time, "");
     lv_obj_set_style_text_color(ui_Header_Guide_Time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Guide_Time, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Guide_Time, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Guide_Time, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Guide_Title = lv_label_create(ui_Guide_Window);
     lv_obj_set_width(ui_Guide_Title, LV_SIZE_CONTENT);   /// 1
@@ -49,7 +49,7 @@ void ui_Guide_Window_screen_init(void)
     lv_label_set_text(ui_Guide_Title, "旅途中的 自然自在");
     lv_obj_set_style_text_color(ui_Guide_Title, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Guide_Title, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Guide_Title, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Guide_Title, &ui_font_Guide_MS18B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Guide_Content = lv_label_create(ui_Guide_Window);
     lv_obj_set_width(ui_Guide_Content, LV_SIZE_CONTENT);   /// 1
@@ -61,7 +61,7 @@ void ui_Guide_Window_screen_init(void)
                       "丽枫酒店是薰衣草元素, 香氛文化与酒店的结合，在\n丽能量的赋能下，淬炼出品牌特有的价值主张--自然\n自在。秉承：自然随心的生活态度，让一切张弛有度\n，自然自在。在人与自然的美妙平衡下，在自然元素\n的磁场里愉悦自己，切换生活里从繁至简的慵懒模式\n。通过自然元素，芳香之境的自在体验的深度打造，\n为每一位向往自在人生的旅人提供一个随心随意的\n居住空间。");
     lv_obj_set_style_text_color(ui_Guide_Content, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Guide_Content, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Guide_Content, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Guide_Content, &ui_font_Guide_MS18B2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Popup_WIndow = lv_obj_create(ui_Guide_Window);
     lv_obj_remove_style_all(ui_Popup_WIndow);

@@ -27,7 +27,7 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_label_set_text(ui_Header_Main_Text4, "蓝牙设置");
     lv_obj_set_style_text_color(ui_Header_Main_Text4, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Main_Text4, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Header_Main_Text4, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Header_Main_Text4, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bluetooth_Name2 = lv_obj_create(ui_Settings_Bluetooth_Window);
     lv_obj_remove_style_all(ui_Bluetooth_Name2);
@@ -47,7 +47,7 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_label_set_text(ui_Bluetooth_Name_Text2, "蓝牙名称:");
     lv_obj_set_style_text_color(ui_Bluetooth_Name_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Bluetooth_Name_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Bluetooth_Name_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bluetooth_Name_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bluetooth_Name_Line2 = lv_obj_create(ui_Bluetooth_Name2);
     lv_obj_set_width(ui_Bluetooth_Name_Line2, 325);
@@ -68,7 +68,7 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Bluetooth_Name_Input2, "Name");
     lv_textarea_set_one_line(ui_Bluetooth_Name_Input2, true);
     lv_obj_clear_flag(ui_Bluetooth_Name_Input2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Bluetooth_Name_Input2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bluetooth_Name_Input2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -90,7 +90,7 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_label_set_text(ui_Bluetooth_Password_Text2, "蓝牙密码:");
     lv_obj_set_style_text_color(ui_Bluetooth_Password_Text2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Bluetooth_Password_Text2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Bluetooth_Password_Text2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bluetooth_Password_Text2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bluetooth_Password_Line2 = lv_obj_create(ui_Bluetooth_Password2);
     lv_obj_set_width(ui_Bluetooth_Password_Line2, 325);
@@ -111,7 +111,7 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_textarea_set_placeholder_text(ui_Bluetooth_Password_Input2, "Password");
     lv_textarea_set_one_line(ui_Bluetooth_Password_Input2, true);
     lv_obj_clear_flag(ui_Bluetooth_Password_Input2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_text_font(ui_Bluetooth_Password_Input2, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bluetooth_Password_Input2, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -136,7 +136,7 @@ void ui_Settings_Bluetooth_Window_screen_init(void)
     lv_obj_set_height(ui_Bluetooth_Settings_Enter_Text, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Bluetooth_Settings_Enter_Text, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Bluetooth_Settings_Enter_Text, "保存");
-    lv_obj_set_style_text_font(ui_Bluetooth_Settings_Enter_Text, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Bluetooth_Settings_Enter_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Bluetooth_Keyboard2 = lv_keyboard_create(ui_Settings_Bluetooth_Window);
     lv_obj_set_width(ui_Bluetooth_Keyboard2, 480);

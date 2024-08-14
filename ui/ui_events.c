@@ -391,12 +391,14 @@ static void inactive_callback(lv_timer_t *timer) {
 }
 // 创建不活动定时器
 void create_inactive_timer(void) {
+    printf("创建inactive: %d\n", inactive_timer != NULL);
     if (inactive_timer == NULL) {
         inactive_timer = lv_timer_create(inactive_callback, INACTIVE_TIME, NULL);
     }
 }
 // 删除不活动定时器
 void del_inactive_timer(void) {
+    printf("删除inactive: %d\n", inactive_timer != NULL);
     if (inactive_timer != NULL) {
         lv_timer_del(inactive_timer);
         inactive_timer = NULL;
@@ -1260,7 +1262,8 @@ void closeVolumeAdjust(lv_event_t * e) {
 }
 // 改变音量
 static void volume_timer_callback(TimerHandle_t xTimer) {
-    AT_CA(current_volume * 2);
+    // AT_CA(current_volume * 2);
+    AT_CA(current_volume);
 }
 void changeVolume(lv_event_t * e) {
     lv_obj_t * slider = lv_event_get_target(e); // 获取触发事件的对象

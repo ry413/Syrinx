@@ -52,7 +52,7 @@ lv_obj_t * ui_Header_Volume_create(lv_obj_t * comp_parent)
     lv_label_set_text(cui_Header_Volume_Value, "79");
     lv_obj_set_style_text_color(cui_Header_Volume_Value, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(cui_Header_Volume_Value, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(cui_Header_Volume_Value, &ui_font_LanTing18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(cui_Header_Volume_Value, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t ** children = lv_mem_alloc(sizeof(lv_obj_t *) * _UI_COMP_HEADER_VOLUME_NUM);
     children[UI_COMP_HEADER_VOLUME_HEADER_VOLUME] = cui_Header_Volume;
