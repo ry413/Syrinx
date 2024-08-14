@@ -80,13 +80,15 @@ extern EventGroupHandle_t bt_event_group;           // 除了音乐播放相关�
 #define EVENT_QUERY_VERSION (1 << 20)               // 已获取版本号
 
 
-
+#define NATURE_SOUND_COUNT 4
 
 // 感觉, 大概都是别的组件需要的东西, 在这里声明, 好收到返回值后可以设上, 还能被别的组件引用
 extern char **utf8_file_names;
 extern uint32_t music_files_count;
 extern uint32_t bath_files_count;
+extern uint32_t ringtone_files_count;
 extern int *bath_file_ids;
+extern int *ringtone_file_ids;
 extern int current_dir_files_count;
 
 extern int current_playing_index;

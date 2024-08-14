@@ -18,7 +18,6 @@ void initVolumeSettings(lv_event_t * e);
 void initActions(lv_event_t * e);
 void mainScrLoaded(lv_event_t * e);
 void leaveMainWindow(lv_event_t * e);
-// void disconnectWifi(lv_event_t * e);
 void openVolumeAdjust(lv_event_t * e);
 void closeVolumeAdjust(lv_event_t * e);
 void changeVolume(lv_event_t * e);
@@ -92,13 +91,14 @@ void change_alarm_clock_min(lv_event_t *e);
 void save_alarm_clock(lv_event_t *e);
 void cancel_save_alarm_clock(lv_event_t *e);
 
+
 void sleep_mode(void);
 void attempt_restart_esp32(void);
 void reset_inactive_timer(void);
 void create_inactive_timer(void);
 void del_inactive_timer(void);
 void attempt_enter_settings_window(void);
-
+void reset_a_bunch_settings(void);
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

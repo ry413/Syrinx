@@ -24,6 +24,10 @@
 #include "wifi.h"
 #include "rs485.h"
 
+#include "esp_http_client.h"
+#include "esp_ota_ops.h"
+#include "esp_https_ota.h"
+
 //////////////////// DEFINITIONS ////////////////////
 #define MAX_ITEMS_PER_LIST 5                        // 每个MusicList里有几首歌
 #define MAX_LISTS 10                                // 假设最多有 10 个 MusicList
@@ -186,13 +190,13 @@ static void create_music_item(void) {
     }
 
     // 读取字符串们
-    file_names = (char **)malloc((music_files_count + bath_files_count + 4) * sizeof(char *));
+    file_names = (char **)malloc((music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT) * sizeof(char *));
     if (file_names == NULL) {
         ESP_LOGE("create_music_item", "Failed to allocate memory for file_names");
         nvs_close(nvs_handle);
         return;
     }
-    for (int i = 0; i < music_files_count + bath_files_count + 4; i++) {
+    for (int i = 0; i < music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT; i++) {
         char key[16];
         snprintf(key, sizeof(key), "file_%u", (unsigned int)i);
 
@@ -232,6 +236,8 @@ static void create_music_item(void) {
         }
     }
     nvs_close(nvs_handle);
+
+    // 以上只是从nvs中读文件名, 以下才是创建音乐item, 或许应该拆成两个函数
 
     music_obj_list = (lv_obj_t **)malloc(music_files_count * sizeof(lv_obj_t *));
     if (music_obj_list == NULL) {
@@ -278,10 +284,11 @@ static void create_music_item(void) {
     // 显示正常的tf卡图标(把X隐藏掉)
     lv_obj_add_flag(ui_tfcard_unavailable_the_X, LV_OBJ_FLAG_HIDDEN);
 
+
     // 收集bath里的歌的id
     bath_file_ids = (int *)malloc(bath_files_count * sizeof(int));
     if (bath_file_ids == NULL) {
-        ESP_LOGE("create_music_item", "Failed to allocate memory");
+        ESP_LOGE("create_music_item", "Failed to allocate memory bath");
         return;
     }
     for (int i = 0; i < bath_files_count; i++) {
@@ -289,6 +296,20 @@ static void create_music_item(void) {
         char id_str[3] = { file_names[music_files_count + i][0], file_names[music_files_count + i][1], '\0' };
         bath_file_ids[i] = atoi(id_str);
     }
+
+
+    // 收集ringtone的id
+    ringtone_file_ids = (int *)malloc(ringtone_files_count * sizeof(int));
+    if (ringtone_file_ids == NULL) {
+        ESP_LOGE("create_music_item", "Failed to allocate memory ringtone");
+        return;
+    }
+    for (int i = 0; i < ringtone_files_count; i++) {
+        // 提取id
+        char id_str[3] = { file_names[music_files_count + bath_files_count + i][0], file_names[music_files_count + bath_files_count + i][1], '\0' };
+        ringtone_file_ids[i] = atoi(id_str);
+    }
+
 
     create_music_item_complete = true;
 }
@@ -2376,6 +2397,33 @@ void attempt_enter_settings_window(void) {
         lv_scr_load(ui_Settings_Window);
     }
 }
+void ota_task(void *pvParameter)
+{
+    ESP_LOGI("ota", "Starting OTA example task");
+    esp_http_client_config_t config = {
+        .url = "http://192.168.2.7:8000/Syrinx.bin",
+        // .crt_bundle_attach = esp_crt_bundle_attach,
+        // .event_handler = _http_event_handler,
+        .keep_alive_enable = true,
+        .skip_cert_common_name_check = true,
+    };
+
+    esp_https_ota_config_t ota_config = {
+        .http_config = &config,
+    };
+    ESP_LOGI("ota", "Attempting to download update from %s", config.url);
+    esp_err_t ret = esp_https_ota(&ota_config);
+    if (ret == ESP_OK) {
+        ESP_LOGI("ota", "OTA Succeed, Rebooting...");
+        esp_restart();
+    } else {
+        ESP_LOGE("ota", "Firmware upgrade failed");
+    }
+    while (1) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+// 位于主界面的隐藏复位按钮
 void attempt_restart_esp32(void) {
     static uint8_t click_count = 0;
     static uint32_t last_click_time = 0;
@@ -2391,6 +2439,13 @@ void attempt_restart_esp32(void) {
 
     if (click_count >= ENTER_SETTINGS_WINDOW_CLICK_COUNT) {
         click_count = 0; // 达到点击次数后重置计数
-        esp_restart();
+        xTaskCreate(ota_task, "ota", 8192, NULL, 5, NULL);
+        // esp_restart();
     }
+}
+
+// 插拔卡时重置一堆设置到默认状态
+void reset_a_bunch_settings(void) {
+    AT_CA(defaultVolume);
+    select_eq_nature(NULL);
 }

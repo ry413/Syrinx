@@ -154,6 +154,9 @@ void process_command(rs485_packet_t *packet, size_t len) {
             set_backlight(backlight_level);
             // enable_touch();
             lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN);
+
+            // clear一堆设置到默认状态
+            reset_a_bunch_settings();
             xSemaphoreGive(rs485_handle_semaphore);
             printf("已释放信号量\n");
         }
@@ -175,6 +178,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 bath_play_task_handle = NULL;
                 lv_async_call(hide_bath_sound_icon_callback, NULL);
             }
+            // clear一堆设置到默认状态
+            reset_a_bunch_settings();
             xSemaphoreGive(rs485_handle_semaphore);
             printf("已释放信号量\n");
         }

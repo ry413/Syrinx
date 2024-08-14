@@ -35,17 +35,20 @@ const char *error_cmd = NULL;
 int at_error_code = -1;
 
 
-char **temp_file_names = NULL;  // 储存文件名的数组
-int current_dir_files_count = 0;// M2的返回值临时接收变量
-uint32_t music_files_count = 0;      // music目录下的文件数
-uint32_t bath_files_count = 0;       // bath目录下的文件数
-int *bath_file_ids = NULL;      // bath目录下的文件们的id数组
-int current_playing_index = 0;  // 播放阶段使用, 当前在放的音频, 在file_names中的索引, 我也不知道为什么要定义在这里
+char **temp_file_names = NULL;          // 储存文件名的数组
+int current_dir_files_count = 0;        // M2的返回值临时接收变量
+uint32_t music_files_count = 0;         // music目录下的文件数
+uint32_t bath_files_count = 0;          // bath目录下的文件数
+uint32_t ringtone_files_count = 0;      // ringtone目录下的文件数
+int *bath_file_ids = NULL;              // bath目录下的文件们的id数组
+int *ringtone_file_ids = NULL;          // ringtone目录下的文件们的id数组
+
+int current_playing_index = 0;          // 播放阶段使用, 当前在放的音频, 在file_names中的索引, 我也不知道为什么要定义在这里
 uint32_t current_music_duration = 0;
 char bluetooth_name[13];
 char bluetooth_password[5];
-int bluetooth_state = 0;        // 蓝牙状态
-int work_mode = 0;              // 工作模式, 0: 空闲, 1: 蓝牙, 2: 音乐
+int bluetooth_state = 0;                // 蓝牙状态
+int work_mode = 0;                      // 工作模式, 0: 空闲, 1: 蓝牙, 2: 音乐
 int play_state = 0;
 int device_state = 0;
 
@@ -203,7 +206,12 @@ void get_all_file_names(void) {
     AT_M2();
     bath_files_count = current_dir_files_count;
 
-    printf("music: %ld, bath: %ld\n", music_files_count, bath_files_count);
+    // ringtone
+    AT_M6(3);
+    AT_M2();
+    ringtone_files_count = current_dir_files_count;
+
+    printf("music: %ld, bath: %ld, ringtone: %ld\n", music_files_count, bath_files_count, ringtone_files_count);
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (4/12)");
     // 储存文件数
@@ -224,15 +232,20 @@ void get_all_file_names(void) {
         nvs_close(nvs_handle);
         return;
     }
+    err = nvs_set_u32(nvs_handle, "ringtone_count", ringtone_files_count);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return;
+    }
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (5/12)");
-    // 分配内存, 这里面将分别装music, bath, theme三个目录的文件名, theme(4首)就是自然之音
-    temp_file_names = (char **)malloc((music_files_count + bath_files_count + 4) * sizeof(char *));
+    // 分配内存, 这里面将分别装music, bath, ringtone, theme四个目录的文件名, theme(4首)是自然之音
+    temp_file_names = (char **)malloc((music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT) * sizeof(char *));
     if ((temp_file_names == NULL)) {
         ESP_LOGE(TAG, "Failed to allocate memory for file_namess");
         return;
     }
-    for (int i = 0; i < (music_files_count + bath_files_count + 4); i++) {
+    for (int i = 0; i < (music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT); i++) {
         temp_file_names[i] = (char *)malloc(100 * sizeof(char));
         if (temp_file_names[i] == NULL) {
             ESP_LOGE(TAG, "Failed to allocate memory for temp_file_names[%d]", i);
@@ -248,10 +261,11 @@ void get_all_file_names(void) {
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (6/12)");
     AT_M4(2);
     AT_M4(1);
+    AT_M4(3);
     AT_M4(4);
 
     // 储存文件名们到nvs里
-    for (int i = 0; i < (music_files_count + bath_files_count + 4); i++) {
+    for (int i = 0; i < (music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT); i++) {
         char key[16];
         snprintf(key, sizeof(key), "file_%u", (unsigned int)i);
 
@@ -496,7 +510,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.6.0-Aura";
+                    char *esp32_version = "v?.?.?-null";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {
@@ -610,13 +624,13 @@ void AT_CM(int mode) {
 
     if (mode == 0) {
         bluetooth_send_at_command("AT+CM0", CMD_CHANGE_TO_IDLE);
-        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_IDLE, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
     } else if (mode == 1) {
         bluetooth_send_at_command("AT+CM1", CMD_CHANGE_TO_BLUETOOTH);
-        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_BLUETOOTH, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
     } else if (mode == 2) {
         bluetooth_send_at_command("AT+CM2", CMD_CHANGE_TO_MUSIC);
-        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
     } else {
         ESP_LOGE(TAG, "Error mode: %d", mode);
         return;
@@ -788,7 +802,3 @@ void AT_QV(void) {
         show_error_info("QV");
     }
 }
-
-
-
-
