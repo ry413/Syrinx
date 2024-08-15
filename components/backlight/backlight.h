@@ -1,6 +1,12 @@
 #ifndef BACKLIGHT_H
 #define BACKLIGHT_H
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include "stdio.h"
 #include "driver/ledc.h"
 #include "../lvgl/lvgl.h"
@@ -28,5 +34,10 @@ void set_backlight(uint32_t level);
 uint32_t enter_idle_time_level_to_second(int level);
 int enter_idle_time_second_to_level(uint32_t second);
 // uint32_t get_backlight_time_level_from_label(lv_obj_t * target_label);
+
+
+#ifdef __cplusplus
+} /*extern "C"*/
+#endif
 
 #endif /* BACKLIGHT_H */

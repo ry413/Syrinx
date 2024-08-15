@@ -432,35 +432,6 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_flag(ui_On_Main_Screen_Range, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_clear_flag(ui_On_Main_Screen_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Disabled_Touch_Range = lv_obj_create(ui_Main_Window);
-    lv_obj_remove_style_all(ui_Disabled_Touch_Range);
-    lv_obj_set_width(ui_Disabled_Touch_Range, 480);
-    lv_obj_set_height(ui_Disabled_Touch_Range, 480);
-    lv_obj_set_align(ui_Disabled_Touch_Range, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_clear_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-
-    ui_TFCardNotFoundMsg = lv_obj_create(ui_Main_Window);
-    lv_obj_remove_style_all(ui_TFCardNotFoundMsg);
-    lv_obj_set_width( ui_TFCardNotFoundMsg, 480);
-    lv_obj_set_height( ui_TFCardNotFoundMsg, 480);
-    lv_obj_set_align( ui_TFCardNotFoundMsg, LV_ALIGN_CENTER );
-    lv_obj_add_flag( ui_TFCardNotFoundMsg, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_HIDDEN );     /// Flags
-    lv_obj_clear_flag( ui_TFCardNotFoundMsg, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-    ui_TFCardNotFoundMsgPanel = lv_obj_create(ui_TFCardNotFoundMsg);
-    lv_obj_set_width( ui_TFCardNotFoundMsgPanel, 200);
-    lv_obj_set_height( ui_TFCardNotFoundMsgPanel, 100);
-    lv_obj_set_align( ui_TFCardNotFoundMsgPanel, LV_ALIGN_CENTER );
-    lv_obj_clear_flag( ui_TFCardNotFoundMsgPanel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-
-    ui_TFCardNotFoundMsgText = lv_label_create(ui_TFCardNotFoundMsgPanel);
-    lv_obj_set_width( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_align( ui_TFCardNotFoundMsgText, LV_ALIGN_CENTER );
-    lv_label_set_text(ui_TFCardNotFoundMsgText,"");
-    lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
-
     ui_esp32_restart_btn = lv_btn_create(ui_Main_Window);
     lv_obj_set_width(ui_esp32_restart_btn, 80);
     lv_obj_set_height(ui_esp32_restart_btn, 80);
@@ -500,6 +471,7 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_x( ui_OTA_Progress_Text, 0 );
     lv_obj_set_y( ui_OTA_Progress_Text, 15 );
     lv_obj_set_align( ui_OTA_Progress_Text, LV_ALIGN_CENTER );
+    lv_label_set_text( ui_OTA_Progress_Text, "" );
     lv_obj_set_style_text_font(ui_OTA_Progress_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_OTA_Progress_Bar = lv_bar_create(ui_OTA_Progress_Panel);
@@ -511,6 +483,35 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_y( ui_OTA_Progress_Bar, -8 );
     lv_obj_set_align( ui_OTA_Progress_Bar, LV_ALIGN_CENTER );
     
+    ui_Disabled_Touch_Range = lv_obj_create(ui_Main_Window);
+    lv_obj_remove_style_all(ui_Disabled_Touch_Range);
+    lv_obj_set_width(ui_Disabled_Touch_Range, 480);
+    lv_obj_set_height(ui_Disabled_Touch_Range, 480);
+    lv_obj_set_align(ui_Disabled_Touch_Range, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_TFCardNotFoundMsg = lv_obj_create(ui_Main_Window);
+    lv_obj_remove_style_all(ui_TFCardNotFoundMsg);
+    lv_obj_set_width( ui_TFCardNotFoundMsg, 480);
+    lv_obj_set_height( ui_TFCardNotFoundMsg, 480);
+    lv_obj_set_align( ui_TFCardNotFoundMsg, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_TFCardNotFoundMsg, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_HIDDEN );     /// Flags
+    lv_obj_clear_flag( ui_TFCardNotFoundMsg, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_TFCardNotFoundMsgPanel = lv_obj_create(ui_TFCardNotFoundMsg);
+    lv_obj_set_width( ui_TFCardNotFoundMsgPanel, 200);
+    lv_obj_set_height( ui_TFCardNotFoundMsgPanel, 100);
+    lv_obj_set_align( ui_TFCardNotFoundMsgPanel, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_TFCardNotFoundMsgPanel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_TFCardNotFoundMsgText = lv_label_create(ui_TFCardNotFoundMsgPanel);
+    lv_obj_set_width( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_TFCardNotFoundMsgText, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_TFCardNotFoundMsgText, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_TFCardNotFoundMsgText,"");
+    lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
+
 
     lv_obj_add_event_cb(ui_Music_Btn, ui_event_Music_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Nature_Sound_Btn, ui_event_Nature_Sound_Btn, LV_EVENT_ALL, NULL);

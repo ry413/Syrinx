@@ -77,8 +77,8 @@ static TimerHandle_t alarm_clock_itself_timer = NULL;
 // ******************** 设置界面UI ********************
 
 // 蓝牙名称与密码
-char *bluetooth_ui_name = NULL;
-char *bluetooth_ui_pass = NULL;
+const char *bluetooth_ui_name = NULL;
+const char *bluetooth_ui_pass = NULL;
 
 // 当前音量
 int current_volume;
@@ -173,8 +173,13 @@ static void create_music_item(void) {
     esp_err_t err;
 
     err = nvs_open("filenames", NVS_READONLY, &nvs_handle);
+    // 如果没有找到就自动刷新
     if (err != ESP_OK) {
         ESP_LOGE("create_music_item", "NVS中未找到filenames命名空间, 需要刷新");
+        xEventGroupClearBits(bt_event_group, EVENT_REFRESH_COMPLETE);
+        track_refresh(NULL);
+        xEventGroupWaitBits(bt_event_group, EVENT_REFRESH_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+        create_music_item();
         return;
     }
 
@@ -219,7 +224,7 @@ static void create_music_item(void) {
             return;
         }
         
-        file_names[i] = malloc(required_size);
+        file_names[i] = (char *)malloc(required_size);
         if (file_names[i] == NULL) {
             ESP_LOGE("create_music_item", "Failed to allocate memory for file_names[%d]", i);
             for (int j = 0; j < i; j++) {
@@ -461,7 +466,7 @@ static void update_header_volume(void) {
 // 洗牌
 static void shufflePlaylist(void) {
     if (shuffle_order == NULL) {
-        shuffle_order = malloc(music_files_count * sizeof(int));
+        shuffle_order = (int *)malloc(music_files_count * sizeof(int));
     }
 
     for (int i = 0; i < music_files_count; i++) {
@@ -499,22 +504,19 @@ static void music_play_mode_task(void *pvParameter) {
     }
 }
 
-// 什么b命名?
-static void close_tf_card_notfound_msg_timer_callback_callback(void *Param) {
-    lv_obj_add_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
-}
 // 关闭"tf卡未插入"的弹窗的回调
 static void close_tf_card_notfound_msg_timer_callback(lv_timer_t *timer) {
-    lv_async_call(close_tf_card_notfound_msg_timer_callback_callback, NULL);
+    lv_async_call([](void *param) {
+       lv_obj_add_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
+    }, nullptr);
     lv_timer_pause(close_tf_card_notfound_msg_timer);
 }
 
 // 关闭音量调节块的回调
-static void close_volume_adjust_timer_callback_callback(void *param) {
-    lv_obj_add_flag(current_screen_volume_adjust, LV_OBJ_FLAG_HIDDEN);
-}
 static void close_volume_adjust_timer_callback(lv_timer_t *timer) {
-    lv_async_call(close_volume_adjust_timer_callback_callback, NULL);
+    lv_async_call([](void *param) {
+        lv_obj_add_flag(current_screen_volume_adjust, LV_OBJ_FLAG_HIDDEN);
+    }, nullptr);
     lv_timer_pause(close_volume_adjust_timer);
 }
 
@@ -555,7 +557,7 @@ void initActions(lv_event_t *e) {
     xSemaphoreGive(init_phase_semaphore);
 
     if (device_state == 2) {
-        // 初始化音乐列表和durations
+        // 只要识别到卡就试图初始化音乐列表
         create_music_item();
         init_durations_for_nvs();
     } else {
@@ -784,6 +786,10 @@ void leaveSettingsWindow(lv_event_t *e) {
     lv_obj_add_flag(ui_Volume_Settings_Panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_Backlight_Settings_Panel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_System_Settings_Panel, LV_OBJ_FLAG_HIDDEN);
+    if (!(lv_scr_act() == ui_Settings_Wifi_Window) && !(lv_scr_act() == ui_Settings_Time_Window) && !(lv_scr_act() == ui_Settings_Bluetooth_Window)) {
+        lv_obj_clear_flag(ui_System_Password, LV_OBJ_FLAG_HIDDEN);
+        lv_textarea_set_text(ui_System_Password_Text, "");
+    }
 }
 // ******************** 背光与待机相关 ********************
 
@@ -1041,7 +1047,8 @@ void saveTimeSetting(lv_event_t *e) {
     }
     
     struct timeval now = {
-        .tv_sec = global_time
+        .tv_sec = global_time,
+        .tv_usec = 0
     };
     settimeofday(&now, NULL);
 }
@@ -1537,8 +1544,11 @@ void verifyResetFactory(lv_event_t *e)
         ESP_LOGI("verifyResetFactory", "WIFI设置重置为enabled: %d, ssid: %s, pass: %s", new_enabled, new_wifi_ssid, new_wifi_password);
     }
     nvs_close(nvs_handle);
-
+    if (wifi_ssid != NULL)
+        free(wifi_ssid);
     wifi_ssid = strdup(new_wifi_ssid);
+    if (wifi_password != NULL)
+        free(wifi_password);
     wifi_password = strdup(new_wifi_password);
     lv_textarea_set_text(ui_Wifi_SSID_Input, wifi_ssid);
     lv_textarea_set_text(ui_Wifi_Password_Input, wifi_password);
@@ -1579,12 +1589,6 @@ void cancelResetFactory(lv_event_t *e)
 
 }
 // 曲目刷新
-void track_refresh_task_callback(void *pvParameter) {
-    lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
-    // lv_obj_add_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN);
-    
-}
 static void track_refresh_task(void *pvParameters) {
     // 清除nvs中的曲目名
     nvs_handle_t nvs_handle;
@@ -1631,7 +1635,14 @@ static void track_refresh_task(void *pvParameters) {
 
     // 获得文件名列表写入nvs
     get_all_file_names();
-    xEventGroupWaitBits(bt_event_group, EVENT_FILE_LIST_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_FILE_LIST_COMPLETE | EVENT_ERROR_ERROR_ERROR, pdTRUE, pdFALSE, portMAX_DELAY);
+    if (bits & EVENT_ERROR_ERROR_ERROR) {
+        lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(ui_PleaseRestartMsgText, "tf卡文件错误");
+        lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
+        xEventGroupSetBits(bt_event_group, EVENT_REFRESH_COMPLETE);
+        vTaskDelete(NULL);
+    }
     // 获得音乐库的歌的时长写入nvs
     get_all_music_duration();
     xEventGroupWaitBits(bt_event_group, EVENT_ALL_DURATION_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
@@ -1683,7 +1694,11 @@ static void track_refresh_task(void *pvParameters) {
     // // 然后再创建一次
     // create_music_item();
 
-    lv_async_call(track_refresh_task_callback, NULL);
+    lv_async_call([](void *param) {
+        lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
+    }, nullptr);
+    xEventGroupSetBits(bt_event_group, EVENT_REFRESH_COMPLETE);
     vTaskDelete(NULL);
 }
 void track_refresh(lv_event_t *e) {
@@ -1730,7 +1745,7 @@ void initWifiSettings(lv_event_t *e) {
         return;
     }
     if (required_size > 0) {
-        char *tempWifiName = malloc(required_size);
+        char *tempWifiName = (char *)malloc(required_size);
         if (tempWifiName == NULL) {
             ESP_LOGE("initWifiSettings", "Failed to allocate memory for Wifi name");
             nvs_close(nvs_handle);
@@ -1753,7 +1768,7 @@ void initWifiSettings(lv_event_t *e) {
             nvs_close(nvs_handle);
             return;
         }
-        wifi_ssid = "12345678";
+        wifi_ssid = strdup("12345678");
         lv_textarea_set_text(ui_Wifi_SSID_Input, wifi_ssid);
     }
 
@@ -1766,7 +1781,7 @@ void initWifiSettings(lv_event_t *e) {
         return;
     }
     if (required_size > 0) {
-        char *tempWifiPassword = malloc(required_size);
+        char *tempWifiPassword = (char *)malloc(required_size);
         if (tempWifiPassword == NULL) {
             ESP_LOGE("initWifiSettings", "Failed to allocate memory for Wifi password");
             nvs_close(nvs_handle);
@@ -1789,7 +1804,7 @@ void initWifiSettings(lv_event_t *e) {
             nvs_close(nvs_handle);
             return;
         }
-        wifi_password = "12345678";
+        wifi_password = strdup("12345678");
         lv_textarea_set_text(ui_Wifi_Password_Input, wifi_password);
     }
     err = nvs_commit(nvs_handle);
@@ -1820,7 +1835,8 @@ void saveWifiSetting(lv_event_t *e) {
     }
     const char *password = lv_textarea_get_text(ui_Wifi_Password_Input);
     if (password != NULL) {
-        if (wifi_password != NULL) free(wifi_password);
+        if (wifi_password != NULL)
+            free(wifi_password);
         wifi_password = strdup(password);
     }
 
@@ -1896,25 +1912,24 @@ void attempt_enter_music_window(lv_event_t *e) {
     }
 }
 // 更新进度条与时间标签的回调函数
-static void update_progress_callback(void *pvParameter) {
-    if (currentPlayTime < current_music_duration) {
-        currentPlayTime++;
-        // 更新当前时间标签
-        char time_str[9];  // hh:mm:ss
-        format_time(currentPlayTime, time_str, sizeof(time_str));
-        lv_label_set_text(ui_Current_Time, time_str);
-
-        int progressValue = (currentPlayTime * 100) / (current_music_duration);
-        lv_slider_set_value(ui_Progress_Slider, progressValue, LV_ANIM_OFF);
-    } else {
-        if (progressTimer != NULL) {
-            lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
-            lv_timer_pause(progressTimer);  // 停止定时器
-        }
-    }
-}
 static void update_progress(lv_timer_t *timer) {
-    lv_async_call(update_progress_callback, NULL);
+    lv_async_call([](void *) {
+        if (currentPlayTime < current_music_duration) {
+            currentPlayTime++;
+            // 更新当前时间标签
+            char time_str[9];  // hh:mm:ss
+            format_time(currentPlayTime, time_str, sizeof(time_str));
+            lv_label_set_text(ui_Current_Time, time_str);
+
+            int progressValue = (currentPlayTime * 100) / (current_music_duration);
+            lv_slider_set_value(ui_Progress_Slider, progressValue, LV_ANIM_OFF);
+        } else {
+            if (progressTimer != NULL) {
+                lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
+                lv_timer_pause(progressTimer);  // 停止定时器
+            }
+        }
+    }, NULL);
 }
 // 初始化音频进度条定时器
 static void initProgressBar(void) {
@@ -2043,96 +2058,102 @@ void playSelectedMusic(lv_event_t *e) {
     playMusicWithCurrentIndex();
 }
 // 下一首音乐
-static void nextTrack_callback(void *pvParameter) {
-    changeMusicUpdateUI();
-
-    switch (play_mode) {
-        case PLAY_MODE_LOOP:
-            if (current_playing_index < music_files_count - 1) {
-                current_playing_index++;
-            } else {
-                current_playing_index = 0;
-            }
-            break;
-        case PLAY_MODE_SINGLE:
-            // 不增加current_playing_index就行了
-            break;
-        case PLAY_MODE_SHUFFLE:
-            if (shuffle_list_index < music_files_count - 1) {
-                shuffle_list_index++;
-            } else {
-                shuffle_list_index = 0;
-            }
-            current_playing_index = shuffle_order[shuffle_list_index];
-            break;
-    }
-    char *track_title;
-    track_title = file_names[current_playing_index];
-    lv_label_set_text(ui_Track_Title, track_title + 2);
-    lv_label_set_text(ui_Track_Artist, "null");
-    playMusicWithCurrentIndex();
-}
 void nextTrack(lv_event_t *e) {
     // 确保在主线程中执行 UI 更新, 因为485指令也会调用这几个函数
-    lv_async_call(nextTrack_callback, NULL);
-}
-// 上一首音乐
-static void prevTrack_callback(void *pvParameter) {
-    changeMusicUpdateUI();
-    char *track_title;
+    lv_async_call([](void *) {
+        changeMusicUpdateUI();
 
-    switch (play_mode) {
-        case PLAY_MODE_LOOP:
-            if (current_playing_index > 0) {
-                current_playing_index--;
-            } else {
-                current_playing_index = music_files_count - 1;
-            }
-            break;
-        case PLAY_MODE_SINGLE:
-            // 不增加current_playing_index
-            break;
-        case PLAY_MODE_SHUFFLE:
-            if (shuffle_list_index > 0) {
-                shuffle_list_index--;
-            } else {
-                shuffle_list_index = music_files_count - 1;
-            }
-            current_playing_index = shuffle_order[shuffle_list_index];
-            break;
-    }
-    track_title = file_names[current_playing_index];
-    lv_label_set_text(ui_Track_Title, track_title + 2);
-    lv_label_set_text(ui_Track_Artist, "null");
-    playMusicWithCurrentIndex();
+        switch (play_mode) {
+            case PLAY_MODE_LOOP:
+                if (current_playing_index < music_files_count - 1) {
+                    current_playing_index++;
+                } else {
+                    current_playing_index = 0;
+                }
+                break;
+            case PLAY_MODE_SINGLE:
+                // 不增加current_playing_index就行了
+                break;
+            case PLAY_MODE_SHUFFLE:
+                if (shuffle_list_index < music_files_count - 1) {
+                    shuffle_list_index++;
+                } else {
+                    shuffle_list_index = 0;
+                }
+                current_playing_index = shuffle_order[shuffle_list_index];
+                break;
+        }
+        char *track_title;
+        track_title = file_names[current_playing_index];
+        lv_label_set_text(ui_Track_Title, track_title + 2);
+        lv_label_set_text(ui_Track_Artist, "null");
+        playMusicWithCurrentIndex();
+    }, NULL);
 }
 void prevTrack(lv_event_t *e) {
     // 确保在主线程中执行 UI 更新
-    lv_async_call(prevTrack_callback, NULL);
+    lv_async_call([](void *param) {
+        changeMusicUpdateUI();
+        char *track_title;
+
+        switch (play_mode) {
+            case PLAY_MODE_LOOP:
+                if (current_playing_index > 0) {
+                    current_playing_index--;
+                } else {
+                    current_playing_index = music_files_count - 1;
+                }
+                break;
+            case PLAY_MODE_SINGLE:
+                // 不增加current_playing_index
+                break;
+            case PLAY_MODE_SHUFFLE:
+                if (shuffle_list_index > 0) {
+                    shuffle_list_index--;
+                } else {
+                    shuffle_list_index = music_files_count - 1;
+                }
+                current_playing_index = shuffle_order[shuffle_list_index];
+                break;
+        }
+        track_title = file_names[current_playing_index];
+        lv_label_set_text(ui_Track_Title, track_title + 2);
+        lv_label_set_text(ui_Track_Artist, "null");
+        playMusicWithCurrentIndex();
+    }, NULL);
 }
 // 播放/暂停
-static void playPause_callback(void *pvParameter) {
-    AT_CB();
-    // 如果是在播放音乐库音乐就修改UI
-    if (music_play_task_handle != NULL) {
-        if (playing) {
-            // 暂停
-            lv_timer_pause(progressTimer);
-            lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
-            printf("暂停\n");
-            playing = false;
-        } else {
-            // 播放
-            lv_timer_resume(progressTimer);
-            lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
-            printf("播放\n");
-            playing = true;
-        }
-    }
-}
 void playPause(lv_event_t *e) {
     // 确保在主线程中执行 UI 更新
-    lv_async_call(playPause_callback, NULL);
+    lv_async_call([](void *param) {
+        AT_CB();
+        // 如果是在播放音乐库音乐就修改UI
+        if (music_play_task_handle != NULL) {
+            if (playing) {
+                // 暂停
+                lv_timer_pause(progressTimer);
+                lv_img_set_src(ui_Play_Pause_Icon, &ui_img_2101671624);
+                printf("暂停\n");
+                playing = false;
+            } else {
+                // 播放
+                lv_timer_resume(progressTimer);
+                lv_img_set_src(ui_Play_Pause_Icon, &ui_img_899744137);
+                printf("播放\n");
+                playing = true;
+            }
+        }
+        // 如果在放浴室音乐, 更改主界面上的浴室状态图标
+        else if (bath_play_task_handle != NULL) {
+            if (playing) {
+                lv_obj_clear_flag(ui_bath_sound_icon, LV_OBJ_FLAG_HIDDEN);
+                playing = false;
+            } else {
+                lv_obj_add_flag(ui_bath_sound_icon, LV_OBJ_FLAG_HIDDEN);
+                playing = true;
+            }
+        }
+    }, NULL);
 }
 // 切换播放模式
 void changePlayMode(lv_event_t *e) {
@@ -2401,17 +2422,16 @@ void selectSeaSound(lv_event_t *e) {
 // ******************** 闹钟相关 ********************
 
 // 等滑动完滚筒后, 等一会再更新时间值
-static void delay_update_alarm_clock_time_callback_callback(void *param) {
-    lv_label_set_text_fmt(ui_AlarmClockTimeHour, "%02d", alarm_clock_selected_hour);
-    lv_label_set_text_fmt(ui_AlarmClockTimeMin, "%02d", alarm_clock_selected_min);
-
-    time_t countdown_time = calculate_timer_length(alarm_clock_selected_hour, alarm_clock_selected_min);
-    lv_label_set_text_fmt(ui_alarm_clock_countdown_time_text, "%lld小时%lld分钟后响铃", countdown_time / 3600, (countdown_time % 3600) / 60);
-
-    lv_timer_pause(delay_update_alarm_clock_timer);
-}
 static void delay_update_alarm_clock_time_callback(lv_timer_t *timer) {
-    lv_async_call(delay_update_alarm_clock_time_callback_callback, NULL);
+    lv_async_call([](void *param) {
+        lv_label_set_text_fmt(ui_AlarmClockTimeHour, "%02d", alarm_clock_selected_hour);
+        lv_label_set_text_fmt(ui_AlarmClockTimeMin, "%02d", alarm_clock_selected_min);
+
+        time_t countdown_time = calculate_timer_length(alarm_clock_selected_hour, alarm_clock_selected_min);
+        lv_label_set_text_fmt(ui_alarm_clock_countdown_time_text, "%lld小时%lld分钟后响铃", countdown_time / 3600, (countdown_time % 3600) / 60);
+
+        lv_timer_pause(delay_update_alarm_clock_timer);
+    }, NULL);
 }
 void change_alarm_clock_hour(lv_event_t *e) {
     alarm_clock_selected_hour = lv_roller_get_selected(ui_alarm_clock_hour_roller);
@@ -2549,26 +2569,30 @@ static esp_err_t ota_http_event_handler(esp_http_client_event_t *evt) {
     }
     return ESP_OK;
 }
-void ota_progress_cb(void *param) {
-    lv_obj_clear_flag(ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN);
-}
 void ota_task(void *pvParameter)
 {
     ESP_LOGI("ota", "Starting OTA example task");
-    esp_http_client_config_t config = {
-        // .url = "http://xzota-1302399879.cos.ap-guangzhou.myqcloud.com/wenkongq/Syrinx.bin",
-        .url = "http://192.168.2.7:8000/build/Syrinx.bin",
-        .crt_bundle_attach = esp_crt_bundle_attach,
-        .event_handler = ota_http_event_handler,
-        .keep_alive_enable = true,
-        .skip_cert_common_name_check = true,
-        .use_global_ca_store = true,
-    };
-    lv_async_call(ota_progress_cb, NULL);
-    esp_https_ota_config_t ota_config = {
-        .http_config = &config,
-    };
+    esp_http_client_config_t config;
+    memset(&config, 0, sizeof(config));
+
+    // config.url = "http://xzota-1302399879.cos.ap-guangzhou.myqcloud.com/wenkongq/Syrinx.bin",
+    config.url = "http://192.168.2.7:8000/build/Syrinx.bin";
+    config.crt_bundle_attach = esp_crt_bundle_attach;
+    config.event_handler = ota_http_event_handler;
+    config.keep_alive_enable = true;
+    config.skip_cert_common_name_check = true;
+    config.use_global_ca_store = true;
+
+    esp_https_ota_config_t ota_config;
+    memset(&ota_config, 0, sizeof(ota_config));
+    ota_config.http_config = &config;
     ESP_LOGI("ota", "Attempting to download update from %s", config.url);
+
+    lv_async_call([](void *param) {
+        lv_obj_clear_flag(ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN);
+    }, nullptr);
+    del_enter_idle_timer();
+    
     esp_err_t ret = esp_https_ota(&ota_config);
     if (ret == ESP_OK) {
         ESP_LOGI("ota", "OTA Succeed, Rebooting...");
@@ -2578,6 +2602,7 @@ void ota_task(void *pvParameter)
         lv_label_set_text(ui_OTA_Progress_Text, "升级失败, 发生错误");
         vTaskDelay(3000 / portTICK_PERIOD_MS);
         lv_obj_add_flag(ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN);
+        create_enter_idle_timer(enter_idle_time_level_to_second(enter_idle_time_level));
         vTaskDelete(NULL);
     }
     while (1) {
@@ -2609,4 +2634,14 @@ void attempt_restart_esp32(void) {
 void reset_a_bunch_settings(void) {
     AT_CA(defaultVolume);
     select_eq_nature(NULL);
+}
+
+// 进入设置界面时输入密码
+void system_password_input(lv_event_t *e) {
+    const char *name = lv_textarea_get_text(ui_System_Password_Text);
+    if (strlen(name) == 4) {
+        if (strcmp(name, "1234") == 0) {
+            lv_obj_add_flag(ui_System_Password, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
 }

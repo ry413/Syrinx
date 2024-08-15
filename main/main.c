@@ -566,6 +566,6 @@ void app_main() {
     rs485_init();
     xTaskCreate(rs485_monitor_task, "rs485_monitor_task", 4096, NULL, 5, NULL);
 
-    xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 4096, NULL, 6, NULL, 1);
+    xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 8192, NULL, 6, NULL, 1);
     xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
 }

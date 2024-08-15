@@ -1,6 +1,10 @@
 #ifndef BLUETOOTH_H
 #define BLUETOOTH_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -73,11 +77,14 @@ extern EventGroupHandle_t bt_event_group;           // 除了音乐播放相关�
 #define EVENT_BLUETOOTH_DISCONNECTED (1 << 13)      // 蓝牙已断开
 #define EVENT_END_PLAY (1 << 14)                    // 播放已结束
 #define EVENT_STARTUP_SUCCESS (1 << 15)             // 模块已复位
-#define EVENT_GET_DIR_FILE_NAMES (1 << 16)          // 已获取当前目录下所有音频文件名
-#define EVENT_ALL_DURATION_COMPLETE (1 << 17)       // 已获取完音乐库每首歌的总时长
-#define EVENT_GET_DEVICE_STATE (1 << 18)            // 已获取设备状态
-#define EVENT_CHANGE_PROMPT_TONE (1 << 19)          // 已修改提示音开关状态
-#define EVENT_QUERY_VERSION (1 << 20)               // 已获取版本号
+#define EVENT_GET_DIR_FILE (1 << 16)                // 已获取当前目录下的一个文件名
+#define EVENT_GET_DIR_FILE_NAMES (1 << 17)          // 已获取当前目录下所有音频文件名
+#define EVENT_ALL_DURATION_COMPLETE (1 << 18)       // 已获取完音乐库每首歌的总时长
+#define EVENT_GET_DEVICE_STATE (1 << 19)            // 已获取设备状态
+#define EVENT_CHANGE_PROMPT_TONE (1 << 20)          // 已修改提示音开关状态
+#define EVENT_QUERY_VERSION (1 << 21)               // 已获取版本号
+#define EVENT_ERROR_ERROR_ERROR (1 << 22)           // 不管了, 总之就是出错
+#define EVENT_REFRESH_COMPLETE (1 << 23)            // 写的什么狗屁, 用于指示刷新完成, 给特殊状况用
 
 
 #define NATURE_SOUND_COUNT 4
@@ -121,10 +128,10 @@ void open_bath_channel(void);
 
 void AT_MV(void);
 void AT_CL(int channel);
-void AT_CM(int mode);
-void AT_M6(int dir_id);
+esp_err_t AT_CM(int mode);
+esp_err_t AT_M6(int dir_id);
 void AT_M4(int m4_targer);
-void AT_M2(void);
+esp_err_t AT_M2(void);
 void AT_MT(void);
 void AT_CC(void);
 void AT_AF(int music_id);
@@ -132,11 +139,15 @@ void AT_CN(int cmd);
 void AT_AA0(void);
 void AT_TD(void);
 void AT_TE(void);
-void AT_BD(char *name);
-void AT_BE(char *pass);
+void AT_BD(const char *name);
+void AT_BE(const char *pass);
 void AT_CA(int volume);
 void AT_CQ(int equalizer);
 void AT_CB(void);
 void AT_QV(void);
+
+#ifdef __cplusplus
+} /*extern "C"*/
+#endif
 
 #endif // BLUETOOTH_H

@@ -19,7 +19,7 @@ SET(SOURCES components/ui_comp_header_volume.c
     ui.c
     components/ui_comp_hook.c
     ui_helpers.c
-    ui_events.c
+    ui_events.cpp
     images/ui_img_1621519077.c
     images/ui_img_2087007852.c
     images/ui_img_227802216.c

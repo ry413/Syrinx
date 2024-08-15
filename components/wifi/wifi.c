@@ -16,8 +16,8 @@ EventGroupHandle_t wifi_event_group = NULL;
 
 bool wifi_is_connected = false;
 uint8_t wifi_enabled = 0;
-char *wifi_ssid = "12345678";
-char *wifi_password = "12345678";
+char *wifi_ssid;
+char *wifi_password;
 static TaskHandle_t wifi_connect_task_handle = NULL;
 static bool should_reconnect = true;        // 断开后是否重连
 

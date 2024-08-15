@@ -1313,6 +1313,42 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_style_text_font(ui_PleaseRestartMsgText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_PleaseRestartMsgText, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_System_Password = lv_obj_create(ui_Settings_Window);
+    lv_obj_set_width( ui_System_Password, 480);
+    lv_obj_set_height( ui_System_Password, 480);
+    lv_obj_set_align( ui_System_Password, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_System_Password, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_set_style_bg_img_src( ui_System_Password, &ui_img_861711258, LV_PART_MAIN | LV_STATE_DEFAULT );
+
+    ui_System_Password_Text = lv_textarea_create(ui_System_Password);
+    lv_obj_set_width( ui_System_Password_Text, 264);
+    lv_obj_set_height( ui_System_Password_Text, LV_SIZE_CONTENT);   /// 70
+    lv_obj_set_x( ui_System_Password_Text, 0 );
+    lv_obj_set_y( ui_System_Password_Text, -130 );
+    lv_obj_set_align( ui_System_Password_Text, LV_ALIGN_CENTER );
+    lv_textarea_set_max_length(ui_System_Password_Text,4);
+    lv_textarea_set_text(ui_System_Password_Text,"");
+    lv_textarea_set_one_line(ui_System_Password_Text,true);
+    lv_obj_set_style_text_color(ui_System_Password_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_text_opa(ui_System_Password_Text, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_System_Password_Text, &ui_font_IdleTime_MS100B2, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_System_Password_Text, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_bg_opa(ui_System_Password_Text, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_System_Password_Text, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_border_opa(ui_System_Password_Text, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    lv_obj_set_style_border_color(ui_System_Password_Text, lv_color_hex(0x000000), LV_PART_CURSOR | LV_STATE_DEFAULT );
+    lv_obj_set_style_border_opa(ui_System_Password_Text, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_System_Password_Keyboard = lv_keyboard_create(ui_System_Password);
+    lv_keyboard_set_mode(ui_System_Password_Keyboard,LV_KEYBOARD_MODE_NUMBER);
+    lv_obj_set_width( ui_System_Password_Keyboard, 480);
+    lv_obj_set_height( ui_System_Password_Keyboard, 279);
+    lv_obj_set_x( ui_System_Password_Keyboard, 0 );
+    lv_obj_set_y( ui_System_Password_Keyboard, 101 );
+    lv_obj_set_align( ui_System_Password_Keyboard, LV_ALIGN_CENTER );
+    lv_keyboard_set_textarea(ui_System_Password_Keyboard, ui_System_Password_Text);
+
 
     ui_BackToMainWindowBtn8 = lv_imgbtn_create(ui_Settings_Window);
     lv_imgbtn_set_src(ui_BackToMainWindowBtn8, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
@@ -1362,4 +1398,5 @@ void ui_Settings_Window_screen_init(void)
     
     lv_obj_add_event_cb(ui_BackToMainWindowBtn8, ui_event_BackToMainWindowBtn8, LV_EVENT_ALL, NULL);
 
+    lv_obj_add_event_cb(ui_System_Password_Text, ui_event_System_Password_Text, LV_EVENT_ALL, NULL);
 }

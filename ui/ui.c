@@ -407,6 +407,10 @@ lv_obj_t *ui_TrackRefreshMsgPanel;
 lv_obj_t *ui_TrackRefreshMsgText;
 lv_obj_t *ui_PleaseRestartMsgPanel;
 lv_obj_t *ui_PleaseRestartMsgText;
+lv_obj_t *ui_System_Password;
+lv_obj_t *ui_System_Password_Keyboard;
+void ui_event_System_Password_Text(lv_event_t * e);
+lv_obj_t *ui_System_Password_Text;
 void ui_event_System_Settings_Verify_Btn(lv_event_t * e);
 lv_obj_t * ui_System_Settings_Verify_Btn;
 lv_obj_t * ui_System_Settings_Verify_Btn_Text;
@@ -1167,6 +1171,14 @@ void ui_event_BackToMainWindowBtn8(lv_event_t * e)
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_screen_change(&ui_Main_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Main_Window_screen_init);
         _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
+void ui_event_System_Password_Text(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        system_password_input(e);
     }
 }
 void ui_event_Bluetooth_Name_Input2(lv_event_t * e)

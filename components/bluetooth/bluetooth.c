@@ -190,25 +190,46 @@ void add_file_name(char **temp_file_names, const char *file_name) {
 void get_all_file_names(void) {
     // 切换到音乐模式
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (1/12)");
-    AT_CM(2);
+    if (AT_CM(2) != ESP_OK) {
+        xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
+        return;
+    }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (2/12)");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     // 必须进入目录才能保证得到对的M2数值
-    AT_M6(2);
-    AT_M2();
+    if (AT_M6(2) != ESP_OK) {
+        xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
+        return;
+    }
+    if (AT_M2() != ESP_OK) {
+        xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
+        return;
+    }
     music_files_count = current_dir_files_count;
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (3/12)");
     // 再弄个bath目录的文件数
-    AT_M6(1);
-    AT_M2();
+    if (AT_M6(1) != ESP_OK) {
+        xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
+        return;
+    }
+    if (AT_M2() != ESP_OK) {
+        xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
+        return;
+    }
     bath_files_count = current_dir_files_count;
 
     // ringtone
-    AT_M6(3);
-    AT_M2();
+    if (AT_M6(3) != ESP_OK) {
+        xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
+        return;
+    }
+    if (AT_M2() != ESP_OK) {
+        xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
+        return;
+    }
     ringtone_files_count = current_dir_files_count;
 
     printf("music: %ld, bath: %ld, ringtone: %ld\n", music_files_count, bath_files_count, ringtone_files_count);
@@ -260,8 +281,11 @@ void get_all_file_names(void) {
     // 获取各个目录的文件名列表
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (6/12)");
     AT_M4(2);
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (7/12)");
     AT_M4(1);
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (8/12)");
     AT_M4(3);
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (9/12)");
     AT_M4(4);
 
     // 储存文件名们到nvs里
@@ -287,18 +311,17 @@ void get_all_file_names(void) {
     // 不回到空闲模式, 因为接下来要同步歌的总时长
     // AT_CM(0);
 
-    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (9/12)");
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (10/12)");
     // 宣布初始化完毕
     printf("\n GET FILE NAME LIST END\n");
     xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
 }
 // 获得音乐库中所有歌的总时长并储存到nvs中
 void get_all_music_duration(void) {
-    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (10/12)");
+    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (11/12)");
     AT_M6(2);
 
     // 获得durations
-    lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (11/12)");
     uint32_t tmp_music_durations[music_files_count];
     for (int i = 0; i < music_files_count; i++) {
         AT_MT();
@@ -510,7 +533,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.7.1-Zephyr";
+                    char *esp32_version = "v0.7.3-Zephyr";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {
@@ -544,6 +567,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                 printf("UTF8编码的字符串: %s\n", utf8);
                 add_file_name(temp_file_names, utf8);
                 free(utf8);
+                xEventGroupSetBits(bt_event_group, EVENT_GET_DIR_FILE);
             } else if (strncmp(response, "ERR", 3) == 0) {
                 sscanf(response, "ERR%d", &at_error_code);
             } else {
@@ -619,7 +643,7 @@ void AT_CL(int channel) {
 }
 
 // 切换工作模式
-void AT_CM(int mode) {
+esp_err_t AT_CM(int mode) {
     EventBits_t bits = 0;
 
     if (mode == 0) {
@@ -633,27 +657,32 @@ void AT_CM(int mode) {
         bits = xEventGroupWaitBits(bt_event_group, EVENT_CHANGE_TO_MUSIC, pdTRUE, pdFALSE, 1000 / portTICK_PERIOD_MS);
     } else {
         ESP_LOGE(TAG, "Error mode: %d", mode);
-        return;
+        return ESP_FAIL;
     }
     
     if (bits != 0) {
         work_mode = mode;
+        return ESP_OK;
     } else {
         char str[4];
         snprintf(str, sizeof(str), "CM%d", mode);
         show_error_info(str);
+        return ESP_FAIL;
     }
 }
 // 获得当前目录下的曲目数
-void AT_M2(void) {
+esp_err_t AT_M2(void) {
     bluetooth_send_at_command("AT+M2", CMD_GET_DIR_FILE_COUNT);
     EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_COUNT, pdTRUE, pdFALSE, 200 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_GET_DIR_FILE_COUNT)) {
         show_error_info("M2");
+        return ESP_FAIL;
+    } else {
+        return ESP_OK;
     }
 }
 // 进入指定目录
-void AT_M6(int dir_id) {
+esp_err_t AT_M6(int dir_id) {
     char command[10];
     snprintf(command, sizeof(command), "AT+M6%02d", dir_id);
     bluetooth_send_at_command(command, CMD_CHANGE_DIR);
@@ -662,6 +691,9 @@ void AT_M6(int dir_id) {
         char str[5];
         snprintf(str, sizeof(str), "M6%02d", dir_id);
         show_error_info(str);
+        return ESP_FAIL;
+    } else {
+        return ESP_OK;
     }
 }
 // 开始获得当前目录下所有曲目名
@@ -669,11 +701,25 @@ void AT_M4(int m4_target) {
     char command[10];
     snprintf(command, sizeof(command), "AT+M4%02d", m4_target);
     bluetooth_send_at_command(command, CMD_GET_DIR_FILE_NAMES);
-    EventBits_t bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, portMAX_DELAY);
-    if (!(bits & EVENT_GET_DIR_FILE_NAMES)) {
-        char str[5];
-        snprintf(str, sizeof(str), "M4%02d", m4_target);
-        show_error_info(str);
+    EventBits_t bits;
+    while (1) {
+        // 等待两种
+        bits = xEventGroupWaitBits(bt_event_group, EVENT_GET_DIR_FILE | EVENT_GET_DIR_FILE_NAMES, pdTRUE, pdFALSE, 3000 / portTICK_PERIOD_MS);
+        // 如果是获得到一个文件的事件, 就下一个
+        if (bits & EVENT_GET_DIR_FILE) {
+            continue;
+        }
+        // 如果所有都获得完了就跳出
+        else if (bits & EVENT_GET_DIR_FILE_NAMES) {
+            break;
+        }
+        // 否则就是超时
+        else {
+            char str[5];
+            snprintf(str, sizeof(str), "M4%02d", m4_target);
+            show_error_info(str);
+            break;
+        }
     }
 }
 // 获得当前曲目的总时长
@@ -741,7 +787,7 @@ void AT_TE(void) {
     }
 }
 // 设置蓝牙密码
-void AT_BE(char *pass) {
+void AT_BE(const char *pass) {
     char command[20];
     snprintf(command, sizeof(command), "AT+BE%s", pass);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_PASSWORD);
@@ -751,7 +797,7 @@ void AT_BE(char *pass) {
     }
 }
 // 设置蓝牙名称
-void AT_BD(char *name) {
+void AT_BD(const char *name) {
     char command[20];
     snprintf(command, sizeof(command), "AT+BD%s", name);
     bluetooth_send_at_command(command, CMD_BLUETOOTH_SET_NAME);

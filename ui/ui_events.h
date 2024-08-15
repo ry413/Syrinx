@@ -99,6 +99,8 @@ void create_inactive_timer(void);
 void del_inactive_timer(void);
 void attempt_enter_settings_window(void);
 void reset_a_bunch_settings(void);
+void system_password_input(lv_event_t *e);
+
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif
