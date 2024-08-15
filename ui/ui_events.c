@@ -13,7 +13,7 @@
 #include <nvs.h>
 #include "nvs_flash.h"
 #include <stdio.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "backlight.h"
 #include "bluetooth.h"
@@ -27,6 +27,7 @@
 #include "esp_http_client.h"
 #include "esp_ota_ops.h"
 #include "esp_https_ota.h"
+#include "esp_crt_bundle.h"
 
 //////////////////// DEFINITIONS ////////////////////
 #define MAX_ITEMS_PER_LIST 5                        // 每个MusicList里有几首歌
@@ -1033,6 +1034,11 @@ void saveTimeSetting(lv_event_t *e) {
     if (update_time_task_handle == NULL) {
         xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
     }
+    
+    struct timeval now = {
+        .tv_sec = global_time
+    };
+    settimeofday(&now, NULL);
 }
 // 不保存时间设置
 void cancelSaveTimeSettings(lv_event_t *e) {
@@ -2397,17 +2403,70 @@ void attempt_enter_settings_window(void) {
         lv_scr_load(ui_Settings_Window);
     }
 }
+static esp_err_t ota_http_event_handler(esp_http_client_event_t *evt) {
+    static int binary_file_length = 0;
+    static int total_length = 0;
+    static float last_reported_progress = 0;  // 上一次报告的进度
+    const float progress_threshold = 1.0;     // 设定进度的变化阈值(1%)
+
+    switch(evt->event_id) {
+        case HTTP_EVENT_ERROR:
+            ESP_LOGE("ota", "HTTP_EVENT_ERROR");
+            break;
+        case HTTP_EVENT_ON_CONNECTED:
+            ESP_LOGI("ota", "HTTP_EVENT_ON_CONNECTED");
+            break;
+        case HTTP_EVENT_HEADER_SENT:
+            ESP_LOGI("ota", "HTTP_EVENT_HEADER_SENT");
+            break;
+        case HTTP_EVENT_ON_HEADER:
+            ESP_LOGI("ota", "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+            if (strcmp(evt->header_key, "Content-Length") == 0) {
+                total_length = atoi(evt->header_value);
+            }
+            break;
+        case HTTP_EVENT_ON_DATA:
+            if (!esp_http_client_is_chunked_response(evt->client)) {
+                binary_file_length += evt->data_len;
+                if (total_length > 0) {
+                    float progress = (binary_file_length * 100.0) / total_length;
+                    if (progress - last_reported_progress >= progress_threshold) {
+                        ESP_LOGI("ota", "Download progress: %.2f%%", progress);
+                        lv_label_set_text_fmt(ui_OTA_Progress_Text, "%d%%", (int)progress);
+                        lv_bar_set_value(ui_OTA_Progress_Bar, progress, LV_ANIM_OFF);
+                        last_reported_progress = progress;
+                    }
+                }
+            }
+            break;
+        case HTTP_EVENT_ON_FINISH:
+            ESP_LOGI("ota", "HTTP_EVENT_ON_FINISH");
+            break;
+        case HTTP_EVENT_DISCONNECTED:
+            ESP_LOGI("ota", "HTTP_EVENT_DISCONNECTED");
+            break;
+        case HTTP_EVENT_REDIRECT:
+            ESP_LOGI("ota", "HTTP_EVENT_REDIRECT");
+            break;
+    }
+    return ESP_OK;
+}
+void ota_progress_cb(void *param) {
+    lv_obj_clear_flag(ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN);
+}
 void ota_task(void *pvParameter)
 {
     ESP_LOGI("ota", "Starting OTA example task");
     esp_http_client_config_t config = {
-        .url = "http://192.168.2.7:8000/Syrinx.bin",
-        // .crt_bundle_attach = esp_crt_bundle_attach,
-        // .event_handler = _http_event_handler,
+        // .url = "http://xzota-1302399879.cos.ap-guangzhou.myqcloud.com/wenkongq/Syrinx.bin",
+        .url = "http://192.168.2.7:8000/build/Syrinx.bin",
+        .crt_bundle_attach = esp_crt_bundle_attach,
+        .event_handler = ota_http_event_handler,
         .keep_alive_enable = true,
         .skip_cert_common_name_check = true,
+        .use_global_ca_store = true,
     };
-
+    lv_async_call(ota_progress_cb, NULL);
     esp_https_ota_config_t ota_config = {
         .http_config = &config,
     };
@@ -2418,6 +2477,10 @@ void ota_task(void *pvParameter)
         esp_restart();
     } else {
         ESP_LOGE("ota", "Firmware upgrade failed");
+        lv_label_set_text(ui_OTA_Progress_Text, "升级失败, 发生错误");
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
+        lv_obj_add_flag(ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN);
+        vTaskDelete(NULL);
     }
     while (1) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);

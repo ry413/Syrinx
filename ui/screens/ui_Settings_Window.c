@@ -286,7 +286,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_x(ui_Enter_Idle_Time_Text, 0);
     lv_obj_set_y(ui_Enter_Idle_Time_Text, -30);
     lv_obj_set_align(ui_Enter_Idle_Time_Text, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Enter_Idle_Time_Text, "背光时间");
+    lv_label_set_text(ui_Enter_Idle_Time_Text, "待机时间");
     lv_obj_set_style_text_color(ui_Enter_Idle_Time_Text, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Enter_Idle_Time_Text, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_Enter_Idle_Time_Text, 2, LV_PART_MAIN | LV_STATE_DEFAULT);

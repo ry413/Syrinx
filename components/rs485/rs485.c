@@ -214,6 +214,9 @@ void process_command(rs485_packet_t *packet, size_t len) {
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
             lv_obj_t *scr = lv_scr_act();
+            if (scr == ui_Idle_Window) {
+                onScreen(NULL);
+            }
             switch (work_mode)
             {
                 case 0:
@@ -305,6 +308,9 @@ void process_command(rs485_packet_t *packet, size_t len) {
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
             lv_obj_t *scr = lv_scr_act();
+            if (scr == ui_Idle_Window) {
+                onScreen(NULL);
+            }
             switch (work_mode) {
             case 0:
             case 1:
@@ -374,6 +380,9 @@ void process_command(rs485_packet_t *packet, size_t len) {
         ESP_LOGI(TAG, "Command: 上一首");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
+            if (lv_scr_act() == ui_Idle_Window) {
+                onScreen(NULL);
+            }
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     prev_bath_track();
@@ -396,6 +405,9 @@ void process_command(rs485_packet_t *packet, size_t len) {
         ESP_LOGI(TAG, "Command: 下一首");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
+            if (lv_scr_act() == ui_Idle_Window) {
+                onScreen(NULL);
+            }
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     next_bath_track();
@@ -418,6 +430,9 @@ void process_command(rs485_packet_t *packet, size_t len) {
         ESP_LOGI(TAG, "Command: 播放/暂停");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
+            if (lv_scr_act() == ui_Idle_Window) {
+                onScreen(NULL);
+            }
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     playPause(NULL);
@@ -429,7 +444,20 @@ void process_command(rs485_packet_t *packet, size_t len) {
                     ESP_LOGE(TAG, "音乐模式, 但什么都不在播放");
                 }
             } else {
-                ESP_LOGI(TAG, "并不在音乐模式, 拒绝播放/暂停指令");
+                ESP_LOGI(TAG, "并不在音乐模式, 尝试播放浴室音乐");
+                rs485_packet_t packet;
+                packet.header = 0x7F;
+                packet.command[0] = 0xA8;
+                packet.command[1] = 0x00;
+                packet.command[2] = 0x00;
+                packet.command[3] = 0x00;
+                packet.command[4] = 0x02;
+                packet.checksum = 0x29;
+                packet.footer = 0x7E;
+                xSemaphoreGive(rs485_handle_semaphore);
+                printf("已释放信号量\n");
+                process_command(&packet, PACKET_SIZE);
+                return;
             }
             xSemaphoreGive(rs485_handle_semaphore);
             printf("已释放信号量\n");

@@ -478,6 +478,40 @@ void ui_Main_Window_screen_init(void)
     lv_obj_set_style_shadow_color(ui_esp32_restart_btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_shadow_opa(ui_esp32_restart_btn, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_OTA_Progress = lv_obj_create(ui_Main_Window);
+    lv_obj_remove_style_all(ui_OTA_Progress);
+    lv_obj_set_width( ui_OTA_Progress, 480);
+    lv_obj_set_height( ui_OTA_Progress, 480);
+    lv_obj_set_align( ui_OTA_Progress, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN );
+    lv_obj_clear_flag( ui_OTA_Progress, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+    ui_OTA_Progress_Panel = lv_obj_create(ui_OTA_Progress);
+    lv_obj_set_width( ui_OTA_Progress_Panel, 205);
+    lv_obj_set_height( ui_OTA_Progress_Panel, 86);
+    lv_obj_set_align( ui_OTA_Progress_Panel, LV_ALIGN_CENTER );
+    lv_obj_clear_flag( ui_OTA_Progress_Panel, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_set_style_bg_color(ui_OTA_Progress_Panel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_bg_opa(ui_OTA_Progress_Panel, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_OTA_Progress_Text = lv_label_create(ui_OTA_Progress_Panel);
+    lv_obj_set_width( ui_OTA_Progress_Text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_OTA_Progress_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_OTA_Progress_Text, 0 );
+    lv_obj_set_y( ui_OTA_Progress_Text, 15 );
+    lv_obj_set_align( ui_OTA_Progress_Text, LV_ALIGN_CENTER );
+    lv_obj_set_style_text_font(ui_OTA_Progress_Text, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_OTA_Progress_Bar = lv_bar_create(ui_OTA_Progress_Panel);
+    lv_bar_set_value(ui_OTA_Progress_Bar,0,LV_ANIM_OFF);
+    lv_bar_set_start_value(ui_OTA_Progress_Bar, 0, LV_ANIM_OFF);
+    lv_obj_set_width( ui_OTA_Progress_Bar, 150);
+    lv_obj_set_height( ui_OTA_Progress_Bar, 10);
+    lv_obj_set_x( ui_OTA_Progress_Bar, 0 );
+    lv_obj_set_y( ui_OTA_Progress_Bar, -8 );
+    lv_obj_set_align( ui_OTA_Progress_Bar, LV_ALIGN_CENTER );
+    
+
     lv_obj_add_event_cb(ui_Music_Btn, ui_event_Music_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Nature_Sound_Btn, ui_event_Nature_Sound_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Bluetooth_Btn, ui_event_Bluetooth_Btn, LV_EVENT_ALL, NULL);
