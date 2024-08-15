@@ -48,7 +48,7 @@ static bool playing = false;            // 播放状态
 static lv_timer_t *progressTimer = NULL;// 音频进度条定时器
 static int currentPlayTime = 0;         // 音频进度条的当前值
 
-static lv_obj_t **music_obj_list = NULL;    // 储存所有歌的MusicItem对象, 用于实习当前播放高亮
+static lv_obj_t **music_obj_list = NULL;    // 储存所有歌的MusicItem对象, 用于实现当前播放高亮
 static lv_obj_t *current_playing_music_obj; // 当前歌的MusicItem对象, 同样用于实现当前播放高亮
 
 static lv_timer_t *inactive_timer;       // 不活动就返回主界面, 的定时器
@@ -185,6 +185,11 @@ static void create_music_item(void) {
         return;
     }
     err = nvs_get_u32(nvs_handle, "bath_count", &bath_files_count);
+    if (err != ESP_OK) {
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_get_u32(nvs_handle, "ringtone_count", &ringtone_files_count);
     if (err != ESP_OK) {
         nvs_close(nvs_handle);
         return;
@@ -1551,7 +1556,7 @@ void verifyResetFactory(lv_event_t *e)
     bluetooth_ui_pass = "0000";
     lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
     xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
-    vTaskDelay(2000 / portTICK_PERIOD_MS);  // 等待蓝牙复位
+    vTaskDelay(3000 / portTICK_PERIOD_MS);  // 等待蓝牙复位
     ESP_LOGI("verifyResetFactory", "蓝牙设置重置为name: %s, pass: %s", bluetooth_ui_name, bluetooth_ui_pass);
 
 
@@ -1577,14 +1582,107 @@ void cancelResetFactory(lv_event_t *e)
 void track_refresh_task_callback(void *pvParameter) {
     lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
+    // lv_obj_add_flag(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN);
+    
 }
 static void track_refresh_task(void *pvParameters) {
-    // 获得文件名列表
+    // 清除nvs中的曲目名
+    nvs_handle_t nvs_handle;
+    esp_err_t err;
+    err = nvs_open("filenames", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("track_refresh_task", "Failed to open NVS filenames");
+        return;
+    }
+    err = nvs_erase_all(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("track_refresh_task", "Failed to erase NVS filenames");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("track_refresh_task", "Failed to commit changes in NVS filenames");
+    }
+    nvs_close(nvs_handle);
+    ESP_LOGI("track_refresh_task", "Successfully erased and cleaned NVS filenames");
+
+    // 清除durations
+    err = nvs_open("music_durations", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("track_refresh_task", "Failed to open NVS music_durations");
+        return;
+    }
+    err = nvs_erase_all(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("track_refresh_task", "Failed to erase NVS music_durations");
+        nvs_close(nvs_handle);
+        return;
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("track_refresh_task", "Failed to commit changes in NVS music_durations");
+    }
+    nvs_close(nvs_handle);
+    ESP_LOGI("track_refresh_task", "Successfully erased and cleaned NVS music_durations");
+
+
+    // 然后再获得一遍
+
+    // 获得文件名列表写入nvs
     get_all_file_names();
     xEventGroupWaitBits(bt_event_group, EVENT_FILE_LIST_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
-    // 获得音乐库的歌的时长
+    // 获得音乐库的歌的时长写入nvs
     get_all_music_duration();
     xEventGroupWaitBits(bt_event_group, EVENT_ALL_DURATION_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+
+    // 释放已分配的一堆东西
+    // if (file_names != NULL) {
+    //     for (int i = 0; i < music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT; i++) {
+    //         if (file_names[i] != NULL) {
+    //             free(file_names[i]);
+    //             file_names[i] = NULL;
+    //         }
+    //     }
+    //     free(file_names);
+    //     file_names = NULL;
+    // }
+    // if (music_obj_list != NULL) {
+    //     for (int i = 0; i < music_files_count; i++) {
+    //         if (music_obj_list[i] != NULL) {
+    //             // 通过lvgl的API销毁
+    //             lv_obj_del(music_obj_list[i]);
+    //             music_obj_list[i] = NULL;
+    //         }
+    //     }
+    //     free(music_obj_list);
+    //     music_obj_list = NULL;
+    // }
+    // for (int i = 0; i < numMusicLists; i++) {
+    //     if (musicLists[i] != NULL) {
+    //         // 销毁每个音乐列表对象
+    //         lv_obj_del(musicLists[i]);
+    //         musicLists[i] = NULL;
+    //     }
+    // }
+    // if (bath_file_ids != NULL) {
+    //     free(bath_file_ids);
+    //     bath_file_ids = NULL;
+    // }
+    // if (ringtone_file_ids != NULL) {
+    //     free(ringtone_file_ids);
+    //     ringtone_file_ids = NULL;
+    // }
+    // music_files_count = 0;
+    // bath_files_count = 0;
+    // ringtone_files_count = 0;
+    // currentListIndex = 0;
+    // numMusicLists = 0;
+    // create_music_item_complete = false;
+
+    // // 然后再创建一次
+    // create_music_item();
+
     lv_async_call(track_refresh_task_callback, NULL);
     vTaskDelete(NULL);
 }
