@@ -60,7 +60,7 @@ cui_HourText = lv_label_create(cui_TimeSelector);
 lv_obj_set_width( cui_HourText, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( cui_HourText, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( cui_HourText, -55 );
-lv_obj_set_y( cui_HourText, 2 );
+lv_obj_set_y( cui_HourText, 0 );
 lv_obj_set_align( cui_HourText, LV_ALIGN_CENTER );
 lv_label_set_text(cui_HourText,"时");
 lv_obj_set_style_text_font(cui_HourText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -165,7 +165,7 @@ cui_MinText = lv_label_create(cui_TimeSelector);
 lv_obj_set_width( cui_MinText, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( cui_MinText, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( cui_MinText, 115 );
-lv_obj_set_y( cui_MinText, 2 );
+lv_obj_set_y( cui_MinText, 0 );
 lv_obj_set_align( cui_MinText, LV_ALIGN_CENTER );
 lv_label_set_text(cui_MinText,"分");
 lv_obj_set_style_text_font(cui_MinText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);

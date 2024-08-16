@@ -85,7 +85,7 @@ void ui_Guide_Window_screen_init(void)
     lv_obj_clear_flag(ui_More_Info_Close_Btn, LV_OBJ_FLAG_PRESS_LOCK);      /// Flags
 
     ui_QR_Code = lv_img_create(ui_Popup_WIndow);
-    // lv_img_set_src(ui_QR_Code, &ui_img_6695340);
+    lv_img_set_src(ui_QR_Code, &ui_img_6695340);
     lv_obj_set_width(ui_QR_Code, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_QR_Code, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_QR_Code, LV_ALIGN_CENTER);

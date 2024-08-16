@@ -57,6 +57,10 @@ static lv_timer_t *close_volume_adjust_timer;       // 自动关闭音量调节�
 
 
 // ******************** 闹钟 ********************
+
+// 被选中的铃声, 在ringtone_file_ids中的索引
+static int selected_ringtone_index = 0;
+
 // 延时更新闹钟时间, 为了更好看
 static lv_timer_t *delay_update_alarm_clock_timer;
 
@@ -71,6 +75,12 @@ bool alarm_clock_enabled = true;
 
 // 真正的闹钟timer
 static TimerHandle_t alarm_clock_itself_timer = NULL;
+
+// 闹钟是否准备响了, 用于几个特殊界面
+static bool alarm_clock_ready_shouting = false;
+
+// 闹钟响后, 循环播放闹铃的任务
+TaskHandle_t alarm_clock_cycle_shout_task_handle = NULL;
 
 // ******************** 闹钟 ********************
 
@@ -256,7 +266,7 @@ static void create_music_item(void) {
         return;
     }
 
-    // 生成列表UI
+    // 生成音乐库的音乐item
     musicLists[currentListIndex] = ui_Music_List_create(ui_Music_List_Container);
     numMusicLists++;
     int items_added = 0;
@@ -277,8 +287,8 @@ static void create_music_item(void) {
         // 创建musicItem
         lv_obj_t *obj = ui_Music_Item_create(musicLists[currentListIndex]);
 
-        lv_obj_t *icon = lv_obj_get_child(obj, 2);
-        lv_img_set_src(icon, &ui_img_35201459);
+        // lv_obj_t *icon = lv_obj_get_child(obj, 2);
+        // lv_img_set_src(icon, &ui_img_35201459);
 
         lv_obj_t *name_label = lv_obj_get_child(obj, 0);
         lv_label_set_text(name_label, file_names[i] + 2);
@@ -289,6 +299,21 @@ static void create_music_item(void) {
     }
     // 将当前显示的设置为第一个列表
     currentListIndex = 0;
+
+    // 初始化闹铃选择界面的音乐item
+    for (int i = 0; i < ringtone_files_count; i++) {
+        // 闹铃应该不会怎么变, 所以当作只有4个吧
+        lv_obj_t *obj = ui_Music_Item_create(ui_Ringtone_List);
+        lv_obj_t *icon = lv_obj_get_child(obj, 2);
+        lv_img_set_src(icon, &ui_img_tick_png);
+        if (i != 0) {
+            lv_obj_add_flag(icon, LV_OBJ_FLAG_HIDDEN);  // 默认选中第一个铃声, 所以这里不隐藏它的✅
+        }
+
+        lv_obj_t *name_label = lv_obj_get_child(obj, 0);
+        lv_label_set_text_fmt(name_label, "铃声%d", i + 1);
+    }
+    
     // 顺便初始化一下进度条
     initProgressBar();
 
@@ -394,8 +419,10 @@ static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, ui
 // 当退出蓝牙界面时, 需要关闭一堆东西
 static void cleanBluetoothTask(void *pvParameter) {
     // 进入空闲模式
-    AT_CM(0);
-    AT_CL(0);
+    if (!alarm_clock_ready_shouting) {
+        AT_CM(0);
+        AT_CL(0);
+    }
     // 关闭提示音以防止进音乐模式时播放"tf卡模式"
     AT_CN(1);
     // 删除蓝牙状态监听任务
@@ -664,6 +691,12 @@ void wakeupScrLoaded(lv_event_t *e) {
         lv_roller_set_selected(ui_alarm_clock_hour_roller, alarm_clock_selected_hour, LV_ANIM_OFF);
         lv_roller_set_selected(ui_alarm_clock_min_roller, alarm_clock_selected_min, LV_ANIM_OFF);
     }
+    // 为了预览铃声, 预先保证在音乐模式
+    if (work_mode != 2) {
+        AT_CM(2);
+        open_living_room_channel();
+        vTaskDelay(300 / portTICK_PERIOD_MS);
+    }
 }
 void guideScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Guide_Time);
@@ -717,10 +750,6 @@ void leaveMainWindow(lv_event_t *e) {
     else if (new_scr == ui_Settings_Window) {
 
     }
-    // 指南界面当然不创建
-    else if (new_scr == ui_Guide_Window) {
-        
-    }
     // 通常都创建不活动定时器, 无操作一定时间后回到主界面
     else {
         printf("别的界面, 创建不活动定时器\n");
@@ -736,9 +765,12 @@ void leaveMusicWindow(lv_event_t *e) {
         vTaskDelete(music_play_task_handle);
         music_play_task_handle = NULL;
 
-        ESP_LOGI("leaveMusicWindow", "退出音乐库, 关闭功放, 退出音乐模式");
-        AT_CL(0);
-        AT_CM(0);
+        ESP_LOGI("leaveMusicWindow", "退出音乐库");
+        // 如果闹钟准备响, 就不操作这两个
+        if (!alarm_clock_ready_shouting) {
+            AT_CL(0);
+            AT_CM(0);
+        }
 
         lv_timer_pause(progressTimer);
 
@@ -754,9 +786,11 @@ void leaveMusicPlayWindow(lv_event_t * e) {
 }
 void leaveNatureSoundWindow(lv_event_t *e) {
     printf("Leave Nature\n");
-    // 主动或自动退出自然之音界面时, 关闭功放并进入空闲模式
-    AT_CL(0);
-    AT_CM(0);
+    // 主动或自动退出自然之音界面时, 关闭功放并进入空闲模式, 闹钟除外
+    if (!alarm_clock_ready_shouting) {
+        AT_CL(0);
+        AT_CM(0);
+    }
 
     if (nature_play_task_handle != NULL) {
         vTaskDelete(nature_play_task_handle);
@@ -770,7 +804,25 @@ void leaveNatureSoundWindow(lv_event_t *e) {
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 }
 void leaveBlutoothWindow(lv_event_t *e) { 
-    xTaskCreate(cleanBluetoothTask, "cleanBluetoothTask", 4096, NULL, 5, NULL);
+    // xTaskCreate(cleanBluetoothTask, "cleanBluetoothTask", 4096, NULL, 5, NULL);
+    // 进入空闲模式
+    if (!alarm_clock_ready_shouting) {
+        AT_CM(0);
+        AT_CL(0);
+    }
+    // 关闭提示音以防止进音乐模式时播放"tf卡模式"
+    AT_CN(1);
+    // 删除蓝牙状态监听任务
+    if (bluetooth_monitor_state_task_handle != NULL) {
+        vTaskDelete(bluetooth_monitor_state_task_handle);
+        bluetooth_monitor_state_task_handle = NULL;
+    }
+    // 删除浴室播放任务
+    if (bath_play_task_handle != NULL) {
+        vTaskDelete(bath_play_task_handle);
+        bath_play_task_handle = NULL;
+        lv_async_call(hide_bath_sound_icon_callback, NULL);
+    }
 }
 void leaveModeWindow(lv_event_t *e) {
 
@@ -778,6 +830,11 @@ void leaveModeWindow(lv_event_t *e) {
 void leaveWakeupWindow(lv_event_t *e) {
     cancel_save_alarm_clock(NULL);
     lv_obj_add_flag(ui_AlarmClockTime, LV_OBJ_FLAG_HIDDEN);
+    cancel_preview_ringtone(NULL);
+    if (work_mode == 2 && !alarm_clock_ready_shouting) {
+        AT_CM(0);
+        AT_CL(0);
+    }
 }
 void leaveGuideWindow(lv_event_t *e) {
 
@@ -2421,6 +2478,30 @@ void selectSeaSound(lv_event_t *e) {
 
 // ******************** 闹钟相关 ********************
 
+// 选择铃声
+void select_ringtone(lv_event_t *e) {
+    lv_obj_t *obj = lv_event_get_target(e);
+    // 获得id
+    lv_obj_t *label = lv_obj_get_child(obj, 0);
+    char *name = lv_label_get_text(label);
+    selected_ringtone_index = name[strlen(name) - 1] - '1';
+
+    for (int i = 0; i < ringtone_files_count; i++) {
+        lv_obj_t *item = lv_obj_get_child(ui_Ringtone_List, i);
+        lv_obj_add_flag(lv_obj_get_child(item, 2), LV_OBJ_FLAG_HIDDEN);
+    }
+    // 显示被选中的✅
+    lv_obj_t *icon = lv_obj_get_child(obj, 2);
+    lv_obj_clear_flag(icon, LV_OBJ_FLAG_HIDDEN);
+
+    // 预览铃声, 音乐模式在进入界面时就开了
+    AT_AF(ringtone_file_ids[selected_ringtone_index]);
+}
+// 退出选择铃声界面时调用
+void cancel_preview_ringtone(lv_event_t *e) {
+    AT_AA0();
+}
+
 // 等滑动完滚筒后, 等一会再更新时间值
 static void delay_update_alarm_clock_time_callback(lv_timer_t *timer) {
     lv_async_call([](void *param) {
@@ -2443,21 +2524,78 @@ void change_alarm_clock_min(lv_event_t *e) {
     lv_timer_reset(delay_update_alarm_clock_timer);
     lv_timer_resume(delay_update_alarm_clock_timer);
 }
+
+// 让闹钟一直叫
+static void alarm_clock_cycle_shout_task(void *param) {
+    while (1) {
+        xEventGroupWaitBits(bt_event_group, EVENT_END_PLAY, pdTRUE, pdFALSE, portMAX_DELAY);
+        AT_AF(ringtone_file_ids[selected_ringtone_index]);
+    }
+}
 // 闹钟响了!
 static void alarm_clock_shout_callback(TimerHandle_t xTimer) {
-    
-    printf("shout!!!!\n");
-    printf("shout!!!!\n");
-    printf("shout!!!!\n");
-    printf("shout!!!!\n");
-    
+    lv_obj_t *scr = lv_scr_act();
+
+    alarm_clock_ready_shouting = true;
+    // 回到主界面
+    lv_scr_load(ui_Main_Window);
+    // 如果原先在音乐库, 自然之音之类的地方, 那个界面的unloaded都做了clean了, 所以写点不正常的
+    // 如果原先在音乐播放界面, 这里直接跑主界面, 就得做一下clean
+    if (scr == ui_Music_Play_Window) {
+        vTaskDelete(music_play_task_handle);
+        music_play_task_handle = NULL;
+        // 关闭当前音乐名高亮
+        if (current_playing_music_obj != NULL) {
+            lv_obj_clear_state(lv_obj_get_child(current_playing_music_obj, 0), LV_STATE_CHECKED);
+            current_playing_music_obj = NULL;
+        }
+        ESP_LOGI("alarm_clock_shout_callback", "已关闭音乐库播放");
+    }
+    // 浴室可没有自己的界面
+    if (bath_play_task_handle != NULL) {
+        vTaskDelete(bath_play_task_handle);
+        bath_play_task_handle = NULL;
+        lv_async_call(hide_bath_sound_icon_callback, NULL);
+        ESP_LOGI("alarm_clock_shout_callback", "已关闭浴室音乐");
+    }
+
+    // 显示出闹钟并大喊大叫
+    lv_label_set_text_fmt(ui_shouting_alarm_clock_time, "%d:%d", alarm_clock_hour, alarm_clock_min);
+    lv_obj_clear_flag(ui_shouting_alarm_clock, LV_OBJ_FLAG_HIDDEN);
+    if (work_mode != 2) {
+        AT_CM(2);
+    }
+    open_living_room_channel();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    AT_AF(ringtone_file_ids[selected_ringtone_index]);
+    // 显然, 闹钟响铃时不能回到待机界面
+    del_enter_idle_timer();
+
+    // 打开闹铃循环播放的任务, 天呐
+    assert(alarm_clock_cycle_shout_task_handle == NULL);
+    xTaskCreate(alarm_clock_cycle_shout_task, "alarm_clock_cycle_shout_task", 2048, NULL, 4, &alarm_clock_cycle_shout_task_handle);
+
+    // 删除闹钟倒计时timer    
     if (xTimerDelete(xTimer, 0) == pdPASS) {
         alarm_clock_itself_timer = NULL;
-        printf("已删除闹钟\n");
+        printf("已删除闹钟timer\n");
         lv_obj_add_flag(ui_alarm_clock_icon, LV_OBJ_FLAG_HIDDEN);
     } else {
         ESP_LOGE("alarm_clock_shout_callback", "删除闹钟timer失败");
     }
+}
+// 关闭大喊大叫的闹钟
+void close_shouting_alarm_clock(lv_event_t * e) {
+    // 关闭逻辑
+    AT_CL(0);
+    AT_CM(0);
+    alarm_clock_ready_shouting = false;
+    vTaskDelete(alarm_clock_cycle_shout_task_handle);
+    alarm_clock_cycle_shout_task_handle = NULL;
+    // 关闭界面
+    lv_obj_add_flag(ui_shouting_alarm_clock, LV_OBJ_FLAG_HIDDEN);
+    // 恢复待机timer
+    create_enter_idle_timer(enter_idle_time_level_to_second(enter_idle_time_level));
 }
 // 保存闹钟
 void save_alarm_clock(lv_event_t *e) {
@@ -2499,7 +2637,10 @@ void cancel_save_alarm_clock(lv_event_t *e) {
     }
 }
 
-
+// 给485用的
+void set_alarm_clock_ready_shouting(bool value) {
+    alarm_clock_ready_shouting = value;
+}
 // ******************** 真的找不到分类 ********************
 
 // 试图进入设置界面
@@ -2577,7 +2718,7 @@ void ota_task(void *pvParameter)
 
     // config.url = "http://xzota-1302399879.cos.ap-guangzhou.myqcloud.com/wenkongq/Syrinx.bin",
     config.url = "http://192.168.2.7:8000/build/Syrinx.bin";
-    config.crt_bundle_attach = esp_crt_bundle_attach;
+    config.crt_bundle_attach = esp_crt_bundle_attach; 
     config.event_handler = ota_http_event_handler;
     config.keep_alive_enable = true;
     config.skip_cert_common_name_check = true;

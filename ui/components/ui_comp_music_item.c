@@ -12,7 +12,11 @@ void ui_event_comp_Music_Item_Music_Item(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     lv_obj_t ** comp_Music_Item = lv_event_get_user_data(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        playSelectedMusic(e);
+        if (lv_scr_act() == ui_Music_Window) {
+            playSelectedMusic(e);
+        } else if (lv_scr_act() == ui_Wake_up_Window) {
+            select_ringtone(e);
+        }
     }
 }
 

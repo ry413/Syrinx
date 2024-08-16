@@ -62,6 +62,7 @@ SET(SOURCES components/ui_comp_header_volume.c
     images/ui_img_899744137.c
     images/ui_img_542960551.c
     images/ui_img_bath_sound_png.c
+    images/ui_img_tick_png.c
     images/ui_img_alarmclock_png.c
     fonts/ui_font_IdleTime_MS100B2.c
     fonts/ui_font_IdleDate_MS30B2.c

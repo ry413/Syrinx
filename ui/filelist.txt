@@ -31,6 +31,7 @@ images/ui_img_1742736079.c
 images/ui_img_35201459.c
 images/ui_img_2101671624.c
 images/ui_img_bath_sound_png.c
+images/ui_img_tick_png.c
 images/ui_img_alarmclock_png.c
 images/ui_img_490182776.c
 images/ui_img_861711258.c

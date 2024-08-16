@@ -495,9 +495,11 @@ void bluetooth_monitor_task(void *pvParameters) {
                 sscanf(response, "MT+%lu", &current_music_duration);
                 xEventGroupSetBits(music_event_group, EVENT_GET_DURATION);
             } else if (strncmp(response, "btlink", 6) == 0) {
+                ESP_LOGI(TAG, "btlink");
                 bluetooth_state = 2;
                 xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_CONNECTED);
             } else if (strncmp(response, "btunlink", 8) == 0) {
+                ESP_LOGI(TAG, "btunlink");
                 bluetooth_state = 1;
                 xEventGroupSetBits(bt_event_group, EVENT_BLUETOOTH_DISCONNECTED);
             } else if (strncmp(response, "END", 3) == 0) {
@@ -533,7 +535,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.7.3-Zephyr";
+                    char *esp32_version = "v0.8.0-Shamash";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {

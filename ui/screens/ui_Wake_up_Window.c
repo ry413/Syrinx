@@ -166,6 +166,31 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_add_flag(ui_Wakeup_Window_Volume_adjust, LV_OBJ_FLAG_HIDDEN);
 
 
+    ui_Ringtone_Select = lv_obj_create(ui_Wake_up_Window);
+    lv_obj_set_width( ui_Ringtone_Select, 480);
+    lv_obj_set_height( ui_Ringtone_Select, 480);
+    lv_obj_set_align( ui_Ringtone_Select, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_Ringtone_Select, LV_OBJ_FLAG_HIDDEN );
+    lv_obj_clear_flag( ui_Ringtone_Select, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_set_style_bg_img_src( ui_Ringtone_Select, &ui_img_861711258, LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_border_color(ui_Ringtone_Select, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_border_opa(ui_Ringtone_Select, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_Ringtone_List = ui_Music_List_create(ui_Ringtone_Select);
+
+    ui_Exit_Ringtone_Select_Btn = lv_imgbtn_create(ui_Ringtone_Select);
+    lv_imgbtn_set_src(ui_Exit_Ringtone_Select_Btn, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_348826415, NULL);
+    lv_imgbtn_set_src(ui_Exit_Ringtone_Select_Btn, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_348826415, NULL);
+    lv_obj_set_height(ui_Exit_Ringtone_Select_Btn, 50);
+    lv_obj_set_width(ui_Exit_Ringtone_Select_Btn, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x(ui_Exit_Ringtone_Select_Btn, -212);
+    lv_obj_set_y(ui_Exit_Ringtone_Select_Btn, -212);
+    lv_obj_set_align(ui_Exit_Ringtone_Select_Btn, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Exit_Ringtone_Select_Btn, LV_OBJ_FLAG_PRESS_LOCK);      /// Flags
+    lv_obj_set_style_img_recolor(ui_Exit_Ringtone_Select_Btn, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_PRESSED);
+    lv_obj_set_style_img_recolor_opa(ui_Exit_Ringtone_Select_Btn, 100, LV_PART_MAIN | LV_STATE_PRESSED);
+
+
     ui_AlarmClockTime = lv_obj_create(ui_Wake_up_Window);
     lv_obj_remove_style_all(ui_AlarmClockTime);
     lv_obj_set_width( ui_AlarmClockTime, 480);
@@ -299,7 +324,8 @@ void ui_Wake_up_Window_screen_init(void)
     lv_obj_set_style_text_font(ui_AlarmClockTimeCancelBtnText, &ui_font_Main_MS22B4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
-    // lv_obj_add_event_cb(ui_Custom_Ringtone_Btn, ui_event_Custom_Ringtone_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Custom_Ringtone_Btn, ui_event_Custom_Ringtone_Btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Exit_Ringtone_Select_Btn, ui_event_Exit_Ringtone_Select_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Wakeup_Time_Btn, ui_event_Wakeup_Time_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_AlarmClockTimeSelector, ui_event_AlarmClockTimeSelector, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_AlarmClockTimeVerifyBtn, ui_event_ui_AlarmClockTimeVerifyBtn, LV_EVENT_ALL, NULL);

@@ -75,6 +75,11 @@ void ui_event_TFCardNotFoundMsg(lv_event_t * e);
 void ui_event_Main_On_Screen_Range(lv_event_t * e);
 lv_obj_t * ui_On_Main_Screen_Range;
 lv_obj_t * ui_Disabled_Touch_Range;
+lv_obj_t * ui_shouting_alarm_clock;
+void ui_event_close_shouting_alarm_clock_btn(lv_event_t * e);
+lv_obj_t * ui_close_shouting_alarm_clock_btn;
+lv_obj_t * ui_close_shouting_alarm_clock_btn_text;
+lv_obj_t * ui_shouting_alarm_clock_time;
 
 
 // SCREEN: ui_Music_Window
@@ -220,6 +225,10 @@ lv_obj_t * ui_Wakeup_Time_Line;
 void ui_event_Wakeup_Time_Btn(lv_event_t * e);
 lv_obj_t * ui_Wakeup_Time_Btn;
 lv_obj_t * ui_Wakeup_Time_Decora_Icon;
+lv_obj_t * ui_Ringtone_Select;
+lv_obj_t * ui_Ringtone_List;
+void ui_event_Exit_Ringtone_Select_Btn(lv_event_t * e);
+lv_obj_t * ui_Exit_Ringtone_Select_Btn;
 lv_obj_t * ui_AlarmClockTime;
 lv_obj_t * ui_AlarmClockTimePanel;
 lv_obj_t * ui_AlarmClockTimeText;
@@ -710,6 +719,14 @@ void ui_event_esp32_restart_btn(lv_event_t * e)
         attempt_restart_esp32();
     }
 }
+void ui_event_close_shouting_alarm_clock_btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        close_shouting_alarm_clock(e);
+    }
+}
 void ui_event_Music_On_Screen_Range(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -931,14 +948,23 @@ void ui_event_Wake_up_Window(lv_event_t * e)
         leaveWakeupWindow(e);
     }
 }
-// void ui_event_Custom_Ringtone_Btn(lv_event_t * e)
-// {
-//     lv_event_code_t event_code = lv_event_get_code(e);
-//     lv_obj_t * target = lv_event_get_target(e);
-//     if(event_code == LV_EVENT_SHORT_CLICKED) {
-//         _ui_flag_modify(ui_Backlight_Time_Panel2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
-//     }
-// }
+void ui_event_Custom_Ringtone_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        _ui_flag_modify(ui_Ringtone_Select, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+    }
+}
+void ui_event_Exit_Ringtone_Select_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        cancel_preview_ringtone(e);
+        _ui_flag_modify(ui_Ringtone_Select, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
 void ui_event_Wakeup_Time_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);

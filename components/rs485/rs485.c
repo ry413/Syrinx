@@ -171,13 +171,28 @@ void process_command(rs485_packet_t *packet, size_t len) {
             // 触摸缓冲好像删不掉, 所以开一个遮罩防止在拔卡后积累触摸事件
             lv_obj_clear_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN);
 
-            AT_CM(0);
+
             lv_scr_load(ui_Main_Window);  // 回到主界面理应会删掉音乐播放任务和自然之音播放任务, 浴室的在这里删
             if (bath_play_task_handle != NULL) {
                 vTaskDelete(bath_play_task_handle);
                 bath_play_task_handle = NULL;
                 lv_async_call(hide_bath_sound_icon_callback, NULL);
             }
+            assert(music_play_task_handle == NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
+            AT_CL(0);
+            if (work_mode != 0) {
+                AT_CM(0);
+            }
+            
+            // 关闭可能存在的闹钟
+            if (alarm_clock_cycle_shout_task_handle != NULL) {
+                vTaskDelete(alarm_clock_cycle_shout_task_handle);
+                alarm_clock_cycle_shout_task_handle = NULL;
+            }
+            set_alarm_clock_ready_shouting(false);
+            lv_obj_add_flag(ui_shouting_alarm_clock, LV_OBJ_FLAG_HIDDEN);
+
+            
             // clear一堆设置到默认状态
             reset_a_bunch_settings();
             xSemaphoreGive(rs485_handle_semaphore);
@@ -294,8 +309,14 @@ void process_command(rs485_packet_t *packet, size_t len) {
                             ESP_LOGI(TAG, "音乐模式, 蓝牙界面, 蓝牙未连接, 此时理应是在播放浴室音乐, 拒绝播放指令");
                             assert(bath_play_task_handle != NULL && music_play_task_handle == NULL && nature_play_task_handle == NULL);
                         }
-                    } else {
-                        ESP_LOGI(TAG, "音乐模式, 非音乐库, 播放, 自然之音, 蓝牙界面之一, 此时应该在播放浴室音乐, 拒绝播放指令");
+                    } 
+                    // 闹钟界面
+                    else if (scr == ui_Wake_up_Window) {
+                        ESP_LOGI(TAG, "音乐模式, 闹钟界面, 拒绝播放指令");
+                        assert(music_play_task_handle != NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
+                    }
+                    else {
+                        ESP_LOGI(TAG, "音乐模式, 非音乐库, 播放, 自然之音, 蓝牙, 闹钟界面之一, 此时理应在播放浴室音乐, 拒绝播放指令");
                     }
             }
             xSemaphoreGive(rs485_handle_semaphore);

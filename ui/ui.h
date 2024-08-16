@@ -84,6 +84,12 @@ extern lv_obj_t * ui_Main_Window_Volume_adjust;
 void ui_event_Main_On_Screen_Range(lv_event_t * e);
 extern lv_obj_t * ui_On_Main_Screen_Range;
 extern lv_obj_t * ui_Disabled_Touch_Range;
+extern lv_obj_t * ui_shouting_alarm_clock;
+void ui_event_close_shouting_alarm_clock_btn(lv_event_t * e);
+extern lv_obj_t * ui_close_shouting_alarm_clock_btn;
+extern lv_obj_t * ui_close_shouting_alarm_clock_btn_text;
+extern lv_obj_t * ui_shouting_alarm_clock_time;
+
 // SCREEN: ui_Music_Window
 void ui_Music_Window_screen_init(void);
 void ui_event_Music_Window(lv_event_t * e);
@@ -227,6 +233,10 @@ extern lv_obj_t * ui_Wakeup_Time_Line;
 void ui_event_Wakeup_Time_Btn(lv_event_t * e);
 extern lv_obj_t * ui_Wakeup_Time_Btn;
 extern lv_obj_t * ui_Wakeup_Time_Decora_Icon;
+extern lv_obj_t * ui_Ringtone_Select;
+extern lv_obj_t * ui_Ringtone_List;
+void ui_event_Exit_Ringtone_Select_Btn(lv_event_t * e);
+extern lv_obj_t * ui_Exit_Ringtone_Select_Btn;
 extern lv_obj_t * ui_AlarmClockTime;
 extern lv_obj_t * ui_AlarmClockTimePanel;
 extern lv_obj_t * ui_AlarmClockTimeText;
@@ -624,6 +634,7 @@ LV_IMG_DECLARE(ui_img_899744137);    // assets/丽枫UI/播放.png
 LV_IMG_DECLARE(ui_img_542960551);    // assets/丽枫UI/下一首.png
 LV_IMG_DECLARE(ui_img_607840074);    // assets/丽枫UI/tfcard.png
 LV_IMG_DECLARE(ui_img_bath_sound_png);    // assets/bath_sound.png
+LV_IMG_DECLARE(ui_img_tick_png);    // assets/tick.png
 LV_IMG_DECLARE(ui_img_alarmclock_png);    // assets/ui_img_alarmclock.png
 
 

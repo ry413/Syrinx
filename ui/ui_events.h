@@ -86,10 +86,13 @@ void playSelectedMusic(lv_event_t * e);
 void musicPlayScrLoaded(lv_event_t * e);
 void attempt_enter_music_window(lv_event_t * e);
 void attempt_enter_nature_window(lv_event_t * e);
+void select_ringtone(lv_event_t *e);
+void cancel_preview_ringtone(lv_event_t *e);
 void change_alarm_clock_hour(lv_event_t *e);
 void change_alarm_clock_min(lv_event_t *e);
 void save_alarm_clock(lv_event_t *e);
 void cancel_save_alarm_clock(lv_event_t *e);
+void close_shouting_alarm_clock(lv_event_t *e);
 
 
 void sleep_mode(void);
@@ -100,7 +103,7 @@ void del_inactive_timer(void);
 void attempt_enter_settings_window(void);
 void reset_a_bunch_settings(void);
 void system_password_input(lv_event_t *e);
-
+void set_alarm_clock_ready_shouting(bool value);
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

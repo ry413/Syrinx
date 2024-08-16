@@ -512,6 +512,43 @@ void ui_Main_Window_screen_init(void)
     lv_label_set_text(ui_TFCardNotFoundMsgText,"");
     lv_obj_set_style_text_font(ui_TFCardNotFoundMsgText, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
+    ui_shouting_alarm_clock = lv_obj_create(ui_Main_Window);
+    lv_obj_set_width( ui_shouting_alarm_clock, 480);
+    lv_obj_set_height( ui_shouting_alarm_clock, 480);
+    lv_obj_set_align( ui_shouting_alarm_clock, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_shouting_alarm_clock, LV_OBJ_FLAG_HIDDEN );
+    lv_obj_clear_flag( ui_shouting_alarm_clock, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+    lv_obj_set_style_bg_img_src( ui_shouting_alarm_clock, &ui_img_861711258, LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_border_color(ui_shouting_alarm_clock, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_border_opa(ui_shouting_alarm_clock, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_close_shouting_alarm_clock_btn = lv_btn_create(ui_shouting_alarm_clock);
+    lv_obj_set_width( ui_close_shouting_alarm_clock_btn, 100);
+    lv_obj_set_height( ui_close_shouting_alarm_clock_btn, 100);
+    lv_obj_set_x( ui_close_shouting_alarm_clock_btn, 0 );
+    lv_obj_set_y( ui_close_shouting_alarm_clock_btn, 136 );
+    lv_obj_set_align( ui_close_shouting_alarm_clock_btn, LV_ALIGN_CENTER );
+    lv_obj_set_style_radius(ui_close_shouting_alarm_clock_btn, 50, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_close_shouting_alarm_clock_btn, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_bg_opa(ui_close_shouting_alarm_clock_btn, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_close_shouting_alarm_clock_btn_text = lv_label_create(ui_close_shouting_alarm_clock_btn);
+    lv_obj_set_width( ui_close_shouting_alarm_clock_btn_text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_close_shouting_alarm_clock_btn_text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_close_shouting_alarm_clock_btn_text, LV_ALIGN_CENTER );
+    lv_label_set_text(ui_close_shouting_alarm_clock_btn_text,"关闭闹钟");
+    lv_obj_set_style_text_font(ui_close_shouting_alarm_clock_btn_text, &ui_font_Vice_MS20B4, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+    ui_shouting_alarm_clock_time = lv_label_create(ui_shouting_alarm_clock);
+    lv_obj_set_width( ui_shouting_alarm_clock_time, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_shouting_alarm_clock_time, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_shouting_alarm_clock_time, 0 );
+    lv_obj_set_y( ui_shouting_alarm_clock_time, -55 );
+    lv_obj_set_align( ui_shouting_alarm_clock_time, LV_ALIGN_CENTER );
+    lv_obj_set_style_text_color(ui_shouting_alarm_clock_time, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+    lv_obj_set_style_text_opa(ui_shouting_alarm_clock_time, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_shouting_alarm_clock_time, &ui_font_IdleTime_MS100B2, LV_PART_MAIN| LV_STATE_DEFAULT);
+
 
     lv_obj_add_event_cb(ui_Music_Btn, ui_event_Music_Btn, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Nature_Sound_Btn, ui_event_Nature_Sound_Btn, LV_EVENT_ALL, NULL);
@@ -524,4 +561,5 @@ void ui_Main_Window_screen_init(void)
     lv_obj_add_event_cb(ui_On_Main_Screen_Range, ui_event_Main_On_Screen_Range, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Main_Window, ui_event_Main_Window, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_esp32_restart_btn, ui_event_esp32_restart_btn, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_close_shouting_alarm_clock_btn, ui_event_close_shouting_alarm_clock_btn, LV_EVENT_ALL, NULL);
 }

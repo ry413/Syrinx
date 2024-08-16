@@ -126,7 +126,7 @@ static void wifi_connect_task(void *pvParameter) {
         ESP_LOGI(TAG, "WiFi已连接 SSID:%s", params->ssid);
         wifi_is_connected = true;
         lv_async_call(update_wifi_icon_callback, NULL);
-        obtain_time();
+        // obtain_time();
         srand(global_time);
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGW(TAG, "WiFi未连接 SSID:%s", params->ssid);
