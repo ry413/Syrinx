@@ -23,15 +23,31 @@ static bool should_reconnect = true;        // 断开后是否重连
 
 static int reconnect_attempts = 0;      // 重连次数
 
-
+static void update_wifi_icon_callback(void *Param) {
+    if (wifi_is_connected) {
+        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
+    } else {
+        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
+    }
+}
 
 static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        wifi_event_sta_disconnected_t* event = (wifi_event_sta_disconnected_t*) event_data;
+        ESP_LOGI(TAG, "WiFi断开, 原因: %d", event->reason);
+        wifi_is_connected = false;
+        lv_async_call(update_wifi_icon_callback, NULL);
+
+        // 检查热点是否被手动关闭 (通常 reason 为 WIFI_REASON_NO_AP_FOUND 或 WIFI_REASON_BEACON_TIMEOUT)
+        if (event->reason == WIFI_REASON_NO_AP_FOUND || event->reason == WIFI_REASON_BEACON_TIMEOUT) {
+            ESP_LOGW(TAG, "WiFi已关闭或不可达");
+        }
+        
         reconnect_attempts++;
         if (should_reconnect && reconnect_attempts <= MAX_RECONNECT_ATTEMPTS) {
-            ESP_LOGI(TAG, "WiFi连接中: (%d/%d)", reconnect_attempts, MAX_RECONNECT_ATTEMPTS);
+            ESP_LOGI(TAG, "WiFi试图连接中: (%d/%d)", reconnect_attempts, MAX_RECONNECT_ATTEMPTS);
             esp_wifi_connect();
             xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
         } else {
@@ -40,7 +56,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
                 xEventGroupSetBits(wifi_event_group, WIFI_FAIL_BIT);
                 should_reconnect = false;
             } else {
-                ESP_LOGI(TAG, "WiFi已断开");
+                ESP_LOGI(TAG, "WiFi已断开");    // 这里好像打不出来
             }
         }
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
@@ -71,13 +87,7 @@ void wifi_init(void) {
     wifi_event_group = xEventGroupCreate();
     ESP_LOGI(TAG, "WiFi initialized.");
 }
-static void update_wifi_icon_callback(void *Param) {
-    if (wifi_is_connected) {
-        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_1742736079);
-    } else {
-        lv_img_set_src(ui_Wifi_States_Icon, &ui_img_236134236);
-    }
-}
+
 static void wifi_connect_task(void *pvParameter) {
     struct wifi_config_params* params = (struct wifi_config_params*) pvParameter;
 
@@ -127,7 +137,7 @@ static void wifi_connect_task(void *pvParameter) {
         wifi_is_connected = true;
         lv_async_call(update_wifi_icon_callback, NULL);
         // obtain_time();
-        srand(global_time);
+        // srand(global_time);
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGW(TAG, "WiFi未连接 SSID:%s", params->ssid);
         wifi_is_connected = false;

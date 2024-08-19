@@ -25,6 +25,14 @@ typedef struct {
     uint8_t footer;
 } rs485_packet_t;
 
+// 状态机的状态
+typedef enum {
+    WAIT_FOR_HEADER,
+    RECEIVE_DATA,
+    WAIT_FOR_FOOTER,
+    PROCESS_DATA
+} rs485_state_t;
+
 esp_err_t rs485_init(void) {
     const uart_config_t uart_config = {
         .baud_rate = RS485_BAUD_RATE,
@@ -124,18 +132,18 @@ void create_bath_play_task(void) {
 // 判断指令类型并处理
 void process_command(rs485_packet_t *packet, size_t len) {
     
-    // 确保包长度正确
-    if (len != PACKET_SIZE) {
-        ESP_LOGE(TAG, "Invalid packet length: %d", len);
-        return;
-    }
+    // // 确保包长度正确
+    // if (len != PACKET_SIZE) {
+    //     ESP_LOGE(TAG, "Invalid packet length: %d", len);
+    //     return;
+    // }
 
-    // 检查包头和包尾
-    if (packet->header != PACKET_HEADER || packet->footer != PACKET_FOOTER) {
-        ESP_LOGE(TAG, "Invalid packet header/footer: ");
-        print_rs485_packet(packet);
-        return;
-    }
+    // // 检查包头和包尾
+    // if (packet->header != PACKET_HEADER || packet->footer != PACKET_FOOTER) {
+    //     ESP_LOGE(TAG, "Invalid packet header/footer: ");
+    //     print_rs485_packet(packet);
+    //     return;
+    // }
 
     // 检查校验和
     uint8_t calculated_chk = calculate_checksum(packet);
@@ -407,6 +415,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     prev_bath_track();
+                    set_playing(true);
+                    lv_async_call(show_bath_sound_icon_callback, NULL);
                 } else if (music_play_task_handle != NULL) {
                     prevTrack(NULL);
                 } else if (nature_play_task_handle != NULL) {
@@ -432,6 +442,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     next_bath_track();
+                    set_playing(true);
+                    lv_async_call(show_bath_sound_icon_callback, NULL);
                 } else if (music_play_task_handle) {
                     nextTrack(NULL);
                 } else if (nature_play_task_handle != NULL) {
@@ -503,6 +515,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
             // 使用时间戳进行后续处理
             printf("Received timestamp: %lu\n", timestamp);
             global_time = timestamp + 8 * 3600;
+            srand(global_time);
 
             // 启动定时器
             if (update_time_task_handle == NULL) {
@@ -518,13 +531,69 @@ void process_command(rs485_packet_t *packet, size_t len) {
     }
     // uart_write_bytes(RS485_UART_PORT, (const char *)packet, sizeof(rs485_packet_t)); // 谁写的这个?
 }
+// void rs485_monitor_task(void *pvParameter) {
+//     rs485_packet_t packet;
+//     while (1) {
+//         int len = uart_read_bytes(RS485_UART_PORT, (uint8_t*)&packet, PACKET_SIZE, portMAX_DELAY);
+//         // print_rs485_packet(&packet);
+//         if (len > 0) {
+//             process_command(&packet, len);
+//         } else if (len < 0) {
+//             ESP_LOGE(TAG, "UART read error: %d", len);
+//         }
+//     }
+// }
 void rs485_monitor_task(void *pvParameter) {
+    uint8_t byte;
     rs485_packet_t packet;
+    rs485_state_t state = WAIT_FOR_HEADER;
+    int byte_index = 0;
+
     while (1) {
-        int len = uart_read_bytes(RS485_UART_PORT, (uint8_t*)&packet, PACKET_SIZE, portMAX_DELAY);
-        // print_rs485_packet(&packet);
+        // 读取单个字节
+        int len = uart_read_bytes(RS485_UART_PORT, &byte, 1, portMAX_DELAY);
         if (len > 0) {
-            process_command(&packet, len);
+            switch (state) {
+                case WAIT_FOR_HEADER:
+                    if (byte == PACKET_HEADER) {
+                        // printf("header: 0x%02x\n",byte);
+                        state = RECEIVE_DATA;
+                        byte_index = 0;
+                        memset(&packet, 0, sizeof(rs485_packet_t)); // 重置包结构
+                        packet.header = byte;
+                    }
+                    break;
+
+                case RECEIVE_DATA:
+                    ((uint8_t*)&packet)[++byte_index] = byte;
+                    // printf("data: 0x%02x\n", byte);
+                    if (byte_index == PACKET_SIZE - 2) {
+                        state = WAIT_FOR_FOOTER;
+                    }
+                    break;
+
+                case WAIT_FOR_FOOTER:
+                    // printf("footer: 0x%02x\n", byte);
+                    packet.footer = byte;
+                    if (packet.footer == PACKET_FOOTER) {
+                        // printf("包尾正确\n");
+                        state = PROCESS_DATA;
+                        // printf("process\n");
+                        process_command(&packet, PACKET_SIZE);
+                        state = WAIT_FOR_HEADER; // 处理完数据后，重新等待下一包
+                    } else {
+                        printf("包尾不正确，重新开始\n");
+                        state = WAIT_FOR_HEADER; // 若包尾不正确，重新开始
+                    }
+                    break;
+
+                case PROCESS_DATA:
+                    break;
+                    // printf("process\n");
+                    // process_command(&packet, PACKET_SIZE);
+                    // state = WAIT_FOR_HEADER; // 处理完数据后，重新等待下一包
+                    // break;
+            }
         } else if (len < 0) {
             ESP_LOGE(TAG, "UART read error: %d", len);
         }

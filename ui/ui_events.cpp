@@ -28,11 +28,12 @@
 #include "esp_ota_ops.h"
 #include "esp_https_ota.h"
 #include "esp_crt_bundle.h"
+#include "esp_mac.h"
 
 //////////////////// DEFINITIONS ////////////////////
 #define MAX_ITEMS_PER_LIST 5                        // 每个MusicList里有几首歌
 #define MAX_LISTS 10                                // 假设最多有 10 个 MusicList
-#define INACTIVE_TIME 0.5 * 60 * 1000               // 无操作几分钟就返回主界面的几
+#define INACTIVE_TIME 1 * 60 * 1000                 // 无操作几分钟就返回主界面的几
 #define MAX_VOLUME_LIMIT 30                         // 真实的音量上限
 #define ENTER_SETTINGS_WINDOW_CLICK_COUNT 5         // 进入设置界面需要点击的次数
 #define ENTER_SETTINGS_WINDOW_CLICK_RESET_TIME 500  // 进入设置界面点击的间隔, 每两次点击间隔不能超过500ms
@@ -87,8 +88,8 @@ TaskHandle_t alarm_clock_cycle_shout_task_handle = NULL;
 // ******************** 设置界面UI ********************
 
 // 蓝牙名称与密码
-const char *bluetooth_ui_name = NULL;
-const char *bluetooth_ui_pass = NULL;
+char bluetooth_ui_name[13];
+char bluetooth_ui_pass[5];
 
 // 当前音量
 int current_volume;
@@ -450,14 +451,12 @@ static void inactive_callback(lv_timer_t *timer) {
 }
 // 创建不活动定时器
 void create_inactive_timer(void) {
-    printf("创建inactive: %d\n", inactive_timer != NULL);
     if (inactive_timer == NULL) {
         inactive_timer = lv_timer_create(inactive_callback, INACTIVE_TIME, NULL);
     }
 }
 // 删除不活动定时器
 void del_inactive_timer(void) {
-    printf("删除inactive: %d\n", inactive_timer != NULL);
     if (inactive_timer != NULL) {
         lv_timer_del(inactive_timer);
         inactive_timer = NULL;
@@ -586,6 +585,7 @@ void initActions(lv_event_t *e) {
     if (device_state == 2) {
         // 只要识别到卡就试图初始化音乐列表
         create_music_item();
+
         init_durations_for_nvs();
     } else {
         ESP_LOGW("initActions", "未识别到TF卡");
@@ -603,6 +603,7 @@ void initActions(lv_event_t *e) {
 
     // 默认选择自然均衡器
     select_eq_nature(NULL);
+
 }
 
 // ******************** 各界面加载完成后的回调 ********************
@@ -694,7 +695,6 @@ void wakeupScrLoaded(lv_event_t *e) {
     // 为了预览铃声, 预先保证在音乐模式
     if (work_mode != 2) {
         AT_CM(2);
-        open_living_room_channel();
         vTaskDelay(300 / portTICK_PERIOD_MS);
     }
 }
@@ -713,7 +713,8 @@ void idleScrLoaded(lv_event_t *e) {
     if (global_time > 0) update_current_time_label(true);
 }
 void settingsScrLoaded(lv_event_t *e) {
-
+    // 写的什么b, 只能写这了
+    lv_obj_add_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
 }
 // ******************** 离开各界面后的回调 ********************
 
@@ -829,12 +830,22 @@ void leaveModeWindow(lv_event_t *e) {
 }
 void leaveWakeupWindow(lv_event_t *e) {
     cancel_save_alarm_clock(NULL);
+    lv_obj_add_flag(ui_Ringtone_Select, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_AlarmClockTime, LV_OBJ_FLAG_HIDDEN);
     cancel_preview_ringtone(NULL);
+
     if (work_mode == 2 && !alarm_clock_ready_shouting) {
         AT_CM(0);
         AT_CL(0);
     }
+
+    if (bath_play_task_handle != NULL) {
+        vTaskDelete(bath_play_task_handle);
+        bath_play_task_handle = NULL;
+        lv_async_call(hide_bath_sound_icon_callback, NULL);
+        ESP_LOGI("leaveWakeupWindow", "已关闭浴室音乐");
+    }
+    assert(music_play_task_handle == NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
 }
 void leaveGuideWindow(lv_event_t *e) {
 
@@ -1017,17 +1028,17 @@ static void bluetooth_cfg_task(void *pvParameter) {
     bluetooth_sync_cfg();
     vTaskDelete(NULL);
 }
-// 同步蓝牙界面与蓝牙的真实配置
+// 将蓝牙的真实配置读到这边的界面上来
 static void bluetooth_sync_cfg(void) {
     AT_CM(1);
     AT_TD();
     AT_TE();
     AT_CM(0);
-    bluetooth_ui_name = bluetooth_name;
+    strncpy(bluetooth_ui_name, bluetooth_name, sizeof (bluetooth_ui_name));
     lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetooth_ui_name);
     lv_label_set_text(ui_Bluetooth_Name_Value, bluetooth_ui_name);
 
-    bluetooth_ui_pass = bluetooth_password;
+    strncpy(bluetooth_ui_pass, bluetooth_password, sizeof (bluetooth_ui_pass));
     lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
     lv_label_set_text(ui_Bluetooth_Password_Value, bluetooth_ui_pass);
 }
@@ -1035,16 +1046,57 @@ static void bluetooth_sync_cfg(void) {
 // 初始化蓝牙设置
 void initBluetoothSettings(lv_event_t *e) {
     if (xSemaphoreTake(init_phase_semaphore, portMAX_DELAY) == pdTRUE) {
-        bluetooth_sync_cfg();
+        // 读nvs, 查看蓝牙名称是否已经初始化过了
+        nvs_handle_t nvs_handle;
+        esp_err_t err = nvs_open("bluetoothCfg", NVS_READWRITE, &nvs_handle);
+        if (err != ESP_OK) {
+            ESP_LOGE("initBluetoothSettings", "Failed to open NVS");
+            return;
+        }
+        uint8_t is_inited = 0;
+        err = nvs_get_u8(nvs_handle, "isInited", &is_inited);
+        if (err == ESP_ERR_NVS_NOT_FOUND) {
+            ESP_LOGW("initBluetoothSettings", "NVS中未找到'isInited', 将进行蓝牙名称初始化");
+            // 将它设为已初始化的状态
+            err = nvs_set_u8(nvs_handle, "isInited", 1);
+            if (err != ESP_OK) {
+                ESP_LOGE("initBluetoothSettings", "Failed to set isInited in NVS: %s", esp_err_to_name(err));
+            } else {
+                nvs_commit(nvs_handle);
+            }
+        } else if (err != ESP_OK) {
+            ESP_LOGE("initBluetoothSettings", "Failed to get isInited from NVS: %s", esp_err_to_name(err));
+        }
+        nvs_close(nvs_handle);
+
+        // 如果已经初始化过, 就进入正常的同步信息环节, 否则进行初始化
+        if (is_inited) {
+            bluetooth_sync_cfg();
+        } else {
+            uint8_t mac[6];
+            esp_read_mac(mac, ESP_MAC_WIFI_STA);
+            snprintf(bluetooth_ui_name, sizeof(bluetooth_ui_name), "BT-%02d%02d", mac[4], mac[5]);
+            lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetooth_ui_name);
+            
+            snprintf(bluetooth_ui_pass, sizeof(bluetooth_ui_pass), "%d", 8888);
+            lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
+            xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
+            vTaskDelay(3000 / portTICK_PERIOD_MS);  // 等待蓝牙复位
+            ESP_LOGI("verifyResetFactory", "蓝牙设置重置为name: %s, pass: %s", bluetooth_ui_name, bluetooth_ui_pass);
+        }
         xSemaphoreGive(init_phase_semaphore);
     }
 }
 // 确认保存蓝牙设置
 void saveBluetoothSetting(lv_event_t *e) {
     const char *name = lv_textarea_get_text(ui_Bluetooth_Name_Input2);
-    bluetooth_ui_name = strdup(name);
+    strncpy(bluetooth_ui_name, name, sizeof(bluetooth_ui_name));
+    bluetooth_ui_name[sizeof(bluetooth_ui_name) - 1] = '\0';
+    
     const char *password = lv_textarea_get_text(ui_Bluetooth_Password_Input2);
-    bluetooth_ui_pass = strdup(password);
+    strncpy(bluetooth_ui_pass, password, sizeof(bluetooth_ui_pass));
+    bluetooth_ui_pass[sizeof(bluetooth_ui_pass) - 1] = '\0';
+
     xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
 }
 // 不保存蓝牙设置
@@ -1386,7 +1438,7 @@ void initSystemSettings(lv_event_t *e) {
     // 读取 ID
     err = nvs_get_u32(nvs_handle, "ID", &system_id);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
-        system_id = 1;
+        system_id = 0;
         ESP_LOGW("initSystemSettings", "NVS中未找到'ID', 将写入默认值 %ld", system_id);
         err = nvs_set_u32(nvs_handle, "ID", system_id);
         if (err != ESP_OK) {
@@ -1461,6 +1513,7 @@ void verifyResetFactory(lv_event_t *e)
     } else {
         ESP_LOGI("verifyResetFactory", "NVS擦除成功");
     }
+    // return;
     // 初始化nvs
     err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -1618,10 +1671,14 @@ void verifyResetFactory(lv_event_t *e)
 
 
     // 重置蓝牙配置(虽然这个不操作nvs)
-    bluetooth_ui_name = "Hotel";
+    uint8_t mac[6];
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    snprintf(bluetooth_ui_name, sizeof(bluetooth_ui_name), "BT-%02d%02d", mac[4], mac[5]);
     lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetooth_ui_name);
-    bluetooth_ui_pass = "0000";
+    
+    snprintf(bluetooth_ui_pass, sizeof(bluetooth_ui_pass), "%d", 8888);
     lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
+
     xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
     vTaskDelay(3000 / portTICK_PERIOD_MS);  // 等待蓝牙复位
     ESP_LOGI("verifyResetFactory", "蓝牙设置重置为name: %s, pass: %s", bluetooth_ui_name, bluetooth_ui_pass);
@@ -2203,10 +2260,10 @@ void playPause(lv_event_t *e) {
         // 如果在放浴室音乐, 更改主界面上的浴室状态图标
         else if (bath_play_task_handle != NULL) {
             if (playing) {
-                lv_obj_clear_flag(ui_bath_sound_icon, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(ui_bath_sound_icon, LV_OBJ_FLAG_HIDDEN);
                 playing = false;
             } else {
-                lv_obj_add_flag(ui_bath_sound_icon, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_bath_sound_icon, LV_OBJ_FLAG_HIDDEN);
                 playing = true;
             }
         }
@@ -2493,7 +2550,8 @@ void select_ringtone(lv_event_t *e) {
     // 显示被选中的✅
     lv_obj_t *icon = lv_obj_get_child(obj, 2);
     lv_obj_clear_flag(icon, LV_OBJ_FLAG_HIDDEN);
-
+    
+    open_living_room_channel();
     // 预览铃声, 音乐模式在进入界面时就开了
     AT_AF(ringtone_file_ids[selected_ringtone_index]);
 }
@@ -2558,6 +2616,7 @@ static void alarm_clock_shout_callback(TimerHandle_t xTimer) {
         lv_async_call(hide_bath_sound_icon_callback, NULL);
         ESP_LOGI("alarm_clock_shout_callback", "已关闭浴室音乐");
     }
+    assert(music_play_task_handle == NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
 
     // 显示出闹钟并大喊大叫
     lv_label_set_text_fmt(ui_shouting_alarm_clock_time, "%d:%d", alarm_clock_hour, alarm_clock_min);
@@ -2671,6 +2730,9 @@ static esp_err_t ota_http_event_handler(esp_http_client_event_t *evt) {
     switch(evt->event_id) {
         case HTTP_EVENT_ERROR:
             ESP_LOGE("ota", "HTTP_EVENT_ERROR");
+            binary_file_length = 0;
+            total_length = 0;
+            last_reported_progress = 0;
             break;
         case HTTP_EVENT_ON_CONNECTED:
             ESP_LOGI("ota", "HTTP_EVENT_ON_CONNECTED");
@@ -2785,4 +2847,8 @@ void system_password_input(lv_event_t *e) {
             lv_obj_add_flag(ui_System_Password, LV_OBJ_FLAG_HIDDEN);
         }
     }
+}
+
+void set_playing(bool val) {
+    playing = val;
 }
