@@ -300,6 +300,13 @@ void get_all_file_names(void) {
             return;
         }
     }
+    // 释放内存, 不过这可能没必要, 因为这get_all_file_names执行完后, 还有后面一堆操作, 之后就复位了
+    for (int i = 0; i < (music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT); i++) {
+        if (temp_file_names[i] != NULL) {
+            free(temp_file_names[i]); // 释放每个文件名的内存
+        }
+    }
+    free(temp_file_names); // 释放指针数组本身的内存
 
     err = nvs_commit(nvs_handle);
     if (err != ESP_OK) {
@@ -535,7 +542,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.8.4-Shamash";
+                    char *esp32_version = "v0.8.6-Shamash";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {

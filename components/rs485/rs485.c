@@ -5,6 +5,7 @@
 #include "string.h"
 #include "../../ui/ui.h"
 #include "rs485.h"
+#include "esp_heap_trace.h"
 
 static const char *TAG = "rs485";
 
@@ -525,6 +526,13 @@ void process_command(rs485_packet_t *packet, size_t len) {
             printf("已释放信号量\n");
         }
     }
+    else if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x03, 0x26, 0x01}, (size_t)5) == 0) {
+        heap_trace_start(HEAP_TRACE_ALL);
+    }
+    else if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x04, 0x26, 0x01}, (size_t)5) == 0) {
+        heap_trace_stop();
+        heap_trace_dump();
+    }
     // 未知指令
     else {
         // ESP_LOGE(TAG, "Unknown command");
@@ -556,7 +564,6 @@ void rs485_monitor_task(void *pvParameter) {
             switch (state) {
                 case WAIT_FOR_HEADER:
                     if (byte == PACKET_HEADER) {
-                        // printf("header: 0x%02x\n",byte);
                         state = RECEIVE_DATA;
                         byte_index = 0;
                         memset(&packet, 0, sizeof(rs485_packet_t)); // 重置包结构
@@ -566,19 +573,15 @@ void rs485_monitor_task(void *pvParameter) {
 
                 case RECEIVE_DATA:
                     ((uint8_t*)&packet)[++byte_index] = byte;
-                    // printf("data: 0x%02x\n", byte);
                     if (byte_index == PACKET_SIZE - 2) {
                         state = WAIT_FOR_FOOTER;
                     }
                     break;
 
                 case WAIT_FOR_FOOTER:
-                    // printf("footer: 0x%02x\n", byte);
                     packet.footer = byte;
                     if (packet.footer == PACKET_FOOTER) {
-                        // printf("包尾正确\n");
                         state = PROCESS_DATA;
-                        // printf("process\n");
                         process_command(&packet, PACKET_SIZE);
                         state = WAIT_FOR_HEADER; // 处理完数据后，重新等待下一包
                     } else {

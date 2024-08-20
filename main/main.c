@@ -435,13 +435,13 @@ static void lvgl_task(void *pvParameter)
     //优先使用内部MALLOC_CAP_DMA 刷屏会提高一个档次
     //优先使用双buffer
 
-    buf1 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 120 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);//MALLOC_CAP_SPIRAM
+    buf1 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 480 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);//MALLOC_CAP_SPIRAM
     assert(buf1);
-    buf2 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 120 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);//MALLOC_CAP_DMA
+    buf2 = heap_caps_malloc(EXAMPLE_LCD_H_RES * 480 * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);//MALLOC_CAP_DMA
     assert(buf2);
 
     // initialize LVGL draw buffers
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, EXAMPLE_LCD_H_RES * 120);
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, EXAMPLE_LCD_H_RES * 480);
 #endif // CONFIG_EXAMPLE_DOUBLE_FB
 
     ESP_LOGI(TAG, "Register display driver to LVGL");
@@ -508,12 +508,13 @@ static void monitor_task(void *pvParameter)
 {
 	while(1)
 	{
-		vTaskDelay(500000 / portTICK_PERIOD_MS);
-    	ESP_LOGI(TAG,"-INTERNAL RAM left %dKB",heap_caps_get_free_size( MALLOC_CAP_INTERNAL )/1024);
-        ESP_LOGI(TAG, "-     DMA left %dkB",heap_caps_get_free_size( MALLOC_CAP_DMA )/1024);
-		#ifdef CONFIG_SPIRAM
-    	ESP_LOGI(TAG,"-     SPI RAM left %dkB",heap_caps_get_free_size( MALLOC_CAP_SPIRAM )/1024);
-		#endif
+		vTaskDelay(5000 / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "%d %d %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), heap_caps_get_free_size( MALLOC_CAP_DMA ), heap_caps_get_free_size( MALLOC_CAP_SPIRAM ));
+    	// ESP_LOGI(TAG,"-INTERNAL RAM left %dB",heap_caps_get_free_size( MALLOC_CAP_INTERNAL ));
+        // ESP_LOGI(TAG, "-     DMA left %dB",heap_caps_get_free_size( MALLOC_CAP_DMA ));
+		// #ifdef CONFIG_SPIRAM
+    	// ESP_LOGI(TAG,"-     SPI RAM left %dB",heap_caps_get_free_size( MALLOC_CAP_SPIRAM ));
+		// #endif
 	    #ifdef CONFIG_FREERTOS_USE_TRACE_FACILITY
 		vTaskList((char *)&pWriteBuffer);
 		printf("task_name   task_state  priority   stack  tasK_num\n");
@@ -536,6 +537,13 @@ void enable_touch(void) {
 /**********************
  *   APPLICATION MAIN
  **********************/
+void ta(void *param) {
+    while (1)
+    {
+        vTaskDelay(30000 / portTICK_PERIOD_MS);
+    }
+    
+}
 void app_main() {
     // 擦除nvs
     // esp_err_t err = nvs_flash_erase();

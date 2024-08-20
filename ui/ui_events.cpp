@@ -29,6 +29,7 @@
 #include "esp_https_ota.h"
 #include "esp_crt_bundle.h"
 #include "esp_mac.h"
+#include "esp_heap_trace.h"
 
 //////////////////// DEFINITIONS ////////////////////
 #define MAX_ITEMS_PER_LIST 5                        // 每个MusicList里有几首歌
@@ -417,28 +418,6 @@ static time_t convertToTimestamp(uint32_t year, uint32_t month, uint32_t day, ui
     // 返回时间戳
     return timestamp;
 }
-// 当退出蓝牙界面时, 需要关闭一堆东西
-static void cleanBluetoothTask(void *pvParameter) {
-    // 进入空闲模式
-    if (!alarm_clock_ready_shouting) {
-        AT_CM(0);
-        AT_CL(0);
-    }
-    // 关闭提示音以防止进音乐模式时播放"tf卡模式"
-    AT_CN(1);
-    // 删除蓝牙状态监听任务
-    if (bluetooth_monitor_state_task_handle != NULL) {
-        vTaskDelete(bluetooth_monitor_state_task_handle);
-        bluetooth_monitor_state_task_handle = NULL;
-    }
-    // 删除浴室播放任务
-    if (bath_play_task_handle != NULL) {
-        vTaskDelete(bath_play_task_handle);
-        bath_play_task_handle = NULL;
-        lv_async_call(hide_bath_sound_icon_callback, NULL);
-    }
-    vTaskDelete(NULL);
-}
 // 不活动定时器的回调, 在非main界面无操作一定时间后, 从xx界面回到main界面
 static void inactive_callback(lv_timer_t *timer) {
     // 记录当前screen
@@ -550,8 +529,16 @@ static void close_volume_adjust_timer_callback(lv_timer_t *timer) {
 
 // ******************** initial actions ********************
 
+// 设置用于堆跟踪的记录容量
+#define TRACE_RECORDS 100
+static heap_trace_record_t trace_records[TRACE_RECORDS];
+
 // 除了这个, 还有各个init[****]Settings函数也在initital actions
 void initActions(lv_event_t *e) {
+    esp_err_t err = heap_trace_init_standalone(trace_records, TRACE_RECORDS);
+    if (err != ESP_OK) {
+        ESP_LOGE("HEAP_TRACE", "Heap trace init failed: %d", err);
+    }
         // 等待上电的主动返回值被丢掉
         // xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
 
@@ -1761,62 +1748,22 @@ static void track_refresh_task(void *pvParameters) {
     get_all_music_duration();
     xEventGroupWaitBits(bt_event_group, EVENT_ALL_DURATION_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
 
-    // 释放已分配的一堆东西
-    // if (file_names != NULL) {
-    //     for (int i = 0; i < music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT; i++) {
-    //         if (file_names[i] != NULL) {
-    //             free(file_names[i]);
-    //             file_names[i] = NULL;
-    //         }
-    //     }
-    //     free(file_names);
-    //     file_names = NULL;
-    // }
-    // if (music_obj_list != NULL) {
-    //     for (int i = 0; i < music_files_count; i++) {
-    //         if (music_obj_list[i] != NULL) {
-    //             // 通过lvgl的API销毁
-    //             lv_obj_del(music_obj_list[i]);
-    //             music_obj_list[i] = NULL;
-    //         }
-    //     }
-    //     free(music_obj_list);
-    //     music_obj_list = NULL;
-    // }
-    // for (int i = 0; i < numMusicLists; i++) {
-    //     if (musicLists[i] != NULL) {
-    //         // 销毁每个音乐列表对象
-    //         lv_obj_del(musicLists[i]);
-    //         musicLists[i] = NULL;
-    //     }
-    // }
-    // if (bath_file_ids != NULL) {
-    //     free(bath_file_ids);
-    //     bath_file_ids = NULL;
-    // }
-    // if (ringtone_file_ids != NULL) {
-    //     free(ringtone_file_ids);
-    //     ringtone_file_ids = NULL;
-    // }
-    // music_files_count = 0;
-    // bath_files_count = 0;
-    // ringtone_files_count = 0;
-    // currentListIndex = 0;
-    // numMusicLists = 0;
-    // create_music_item_complete = false;
-
-    // // 然后再创建一次
-    // create_music_item();
-
-    lv_async_call([](void *param) {
-        lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
-    }, nullptr);
     xEventGroupSetBits(bt_event_group, EVENT_REFRESH_COMPLETE);
     vTaskDelete(NULL);
 }
 void track_refresh(lv_event_t *e) {
     xTaskCreate(track_refresh_task, "track_refresh_task", 8192, NULL, 5, NULL);
+    xTaskCreate([](void *param) {
+        xEventGroupWaitBits(bt_event_group, EVENT_REFRESH_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+        lv_async_call([](void *param) {
+            lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
+            lv_label_set_text(ui_PleaseRestartMsgText, "刷新完成, 3秒后自动重启");
+            lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
+        }, nullptr);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
+        esp_restart();
+        // vTaskDelete(NULL);
+    }, "wait_track_refresh", 2048, NULL, 5, NULL);
 }
 
 // ******************** Wifi相关 ********************
@@ -2457,8 +2404,8 @@ static void selectNatureSoundTask(void *pvParameter) {
 
     int id = -1;
     for (int i = 0; i < 4; i++) {
-        if(strncmp(file_names[music_files_count + bath_files_count + i] + 2, sound_name, 3) == 0) {
-            sscanf(file_names[music_files_count + bath_files_count + i], "%2d", &id);
+        if(strncmp(file_names[music_files_count + bath_files_count + ringtone_files_count + i] + 2, sound_name, 3) == 0) {
+            sscanf(file_names[music_files_count + bath_files_count + ringtone_files_count + i], "%2d", &id);
             break;
         }
     }
