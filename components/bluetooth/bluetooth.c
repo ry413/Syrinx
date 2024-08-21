@@ -29,7 +29,7 @@ static QueueHandle_t uart_queue;
 EventGroupHandle_t bt_event_group = NULL;
 EventGroupHandle_t music_event_group = NULL;
 
-uint32_t bath_channel_bit = 3;
+uint32_t bath_channel_bit = 2;
 
 const char *error_cmd = NULL;
 int at_error_code = -1;
@@ -542,7 +542,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.8.6-Shamash";
+                    char *esp32_version = "v0.8.7-Shamash";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {

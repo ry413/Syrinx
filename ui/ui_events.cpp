@@ -1062,7 +1062,8 @@ void initBluetoothSettings(lv_event_t *e) {
         } else {
             uint8_t mac[6];
             esp_read_mac(mac, ESP_MAC_WIFI_STA);
-            snprintf(bluetooth_ui_name, sizeof(bluetooth_ui_name), "BT-%02d%02d", mac[4], mac[5]);
+            int combined = (mac[4] % 100) * 100 + (mac[5] % 100); // 将两个字节组合成四位数字
+            snprintf(bluetooth_ui_name, sizeof(bluetooth_ui_name), "BT-%04d", combined); // 使用四位数字格式
             lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetooth_ui_name);
             
             snprintf(bluetooth_ui_pass, sizeof(bluetooth_ui_pass), "%d", 8888);
@@ -1557,7 +1558,7 @@ void verifyResetFactory(lv_event_t *e)
     }
     uint32_t new_default_volume = 8;
     uint32_t new_max_volume = 15;
-    uint32_t new_bath_channel = 3; 
+    uint32_t new_bath_channel = 2; 
     err = nvs_set_u32(nvs_handle, "defaultVolume", new_default_volume);
     if (err != ESP_OK) {
         ESP_LOGE("verifyResetFactory", "Failed to set defaultVolume: %s", esp_err_to_name(err));
@@ -1660,7 +1661,8 @@ void verifyResetFactory(lv_event_t *e)
     // 重置蓝牙配置(虽然这个不操作nvs)
     uint8_t mac[6];
     esp_read_mac(mac, ESP_MAC_WIFI_STA);
-    snprintf(bluetooth_ui_name, sizeof(bluetooth_ui_name), "BT-%02d%02d", mac[4], mac[5]);
+    int combined = (mac[4] % 100) * 100 + (mac[5] % 100); // 将两个字节组合成四位数字
+    snprintf(bluetooth_ui_name, sizeof(bluetooth_ui_name), "BT-%04d", combined); // 使用四位数字格式
     lv_textarea_set_text(ui_Bluetooth_Name_Input2, bluetooth_ui_name);
     
     snprintf(bluetooth_ui_pass, sizeof(bluetooth_ui_pass), "%d", 8888);
