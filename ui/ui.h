@@ -67,6 +67,8 @@ extern lv_obj_t * ui_TFCardNotFoundMsgPanel;
 extern lv_obj_t * ui_TFCardNotFoundMsgText;
 void ui_event_esp32_restart_btn(lv_event_t * e);
 extern lv_obj_t * ui_esp32_restart_btn;
+void ui_event_ota_btn(lv_event_t * e);
+extern lv_obj_t * ui_esp32_ota_btn;
 extern lv_obj_t * ui_OTA_Progress;
 extern lv_obj_t * ui_OTA_Progress_Panel;
 extern lv_obj_t * ui_OTA_Progress_Text;

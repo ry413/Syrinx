@@ -58,6 +58,8 @@ lv_obj_t * ui_TFCardNotFoundMsgPanel;
 lv_obj_t * ui_TFCardNotFoundMsgText;
 void ui_event_esp32_restart_btn(lv_event_t * e);
 lv_obj_t * ui_esp32_restart_btn;
+void ui_event_ota_btn(lv_event_t * e);
+lv_obj_t * ui_esp32_ota_btn;
 lv_obj_t * ui_OTA_Progress;
 lv_obj_t * ui_OTA_Progress_Panel;
 lv_obj_t * ui_OTA_Progress_Text;
@@ -717,6 +719,14 @@ void ui_event_esp32_restart_btn(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         attempt_restart_esp32();
+    }
+}
+void ui_event_ota_btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        attempt_ota_esp32();
     }
 }
 void ui_event_close_shouting_alarm_clock_btn(lv_event_t * e)

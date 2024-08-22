@@ -7,6 +7,7 @@
 #include "string.h"
 #include "../timesync/timesync.h"
 #include "../../ui/ui.h"
+#include "../my_mqtt/mqtt.h"
 
 
 #define MAX_RECONNECT_ATTEMPTS  5
@@ -136,6 +137,8 @@ static void wifi_connect_task(void *pvParameter) {
         ESP_LOGI(TAG, "WiFi已连接 SSID:%s", params->ssid);
         wifi_is_connected = true;
         lv_async_call(update_wifi_icon_callback, NULL);
+
+        mqtt_app_start();
         // obtain_time();
         // srand(global_time);
     } else if (bits & WIFI_FAIL_BIT) {
@@ -184,6 +187,8 @@ void wifi_disconnect(void) {
     if (err == ESP_OK) {
         ESP_LOGI(TAG, "WiFi disconnected successfully.");
         wifi_is_connected = false;
+        mqtt_app_stop();
+        mqtt_app_cleanup();
         xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
         if (wifi_connect_task_handle != NULL) {
             vTaskDelete(wifi_connect_task_handle);

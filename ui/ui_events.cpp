@@ -25,9 +25,6 @@
 #include "rs485.h"
 
 #include "esp_http_client.h"
-#include "esp_ota_ops.h"
-#include "esp_https_ota.h"
-#include "esp_crt_bundle.h"
 #include "esp_mac.h"
 #include "esp_heap_trace.h"
 
@@ -2670,97 +2667,6 @@ void attempt_enter_settings_window(void) {
         lv_scr_load(ui_Settings_Window);
     }
 }
-static esp_err_t ota_http_event_handler(esp_http_client_event_t *evt) {
-    static int binary_file_length = 0;
-    static int total_length = 0;
-    static float last_reported_progress = 0;  // 上一次报告的进度
-    const float progress_threshold = 1.0;     // 设定进度的变化阈值(1%)
-
-    switch(evt->event_id) {
-        case HTTP_EVENT_ERROR:
-            ESP_LOGE("ota", "HTTP_EVENT_ERROR");
-            binary_file_length = 0;
-            total_length = 0;
-            last_reported_progress = 0;
-            break;
-        case HTTP_EVENT_ON_CONNECTED:
-            ESP_LOGI("ota", "HTTP_EVENT_ON_CONNECTED");
-            break;
-        case HTTP_EVENT_HEADER_SENT:
-            ESP_LOGI("ota", "HTTP_EVENT_HEADER_SENT");
-            break;
-        case HTTP_EVENT_ON_HEADER:
-            ESP_LOGI("ota", "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
-            if (strcmp(evt->header_key, "Content-Length") == 0) {
-                total_length = atoi(evt->header_value);
-            }
-            break;
-        case HTTP_EVENT_ON_DATA:
-            if (!esp_http_client_is_chunked_response(evt->client)) {
-                binary_file_length += evt->data_len;
-                if (total_length > 0) {
-                    float progress = (binary_file_length * 100.0) / total_length;
-                    if (progress - last_reported_progress >= progress_threshold) {
-                        ESP_LOGI("ota", "Download progress: %.2f%%", progress);
-                        lv_label_set_text_fmt(ui_OTA_Progress_Text, "%d%%", (int)progress);
-                        lv_bar_set_value(ui_OTA_Progress_Bar, progress, LV_ANIM_OFF);
-                        last_reported_progress = progress;
-                    }
-                }
-            }
-            break;
-        case HTTP_EVENT_ON_FINISH:
-            ESP_LOGI("ota", "HTTP_EVENT_ON_FINISH");
-            break;
-        case HTTP_EVENT_DISCONNECTED:
-            ESP_LOGI("ota", "HTTP_EVENT_DISCONNECTED");
-            break;
-        case HTTP_EVENT_REDIRECT:
-            ESP_LOGI("ota", "HTTP_EVENT_REDIRECT");
-            break;
-    }
-    return ESP_OK;
-}
-void ota_task(void *pvParameter)
-{
-    ESP_LOGI("ota", "Starting OTA example task");
-    esp_http_client_config_t config;
-    memset(&config, 0, sizeof(config));
-
-    // config.url = "http://xzota-1302399879.cos.ap-guangzhou.myqcloud.com/wenkongq/Syrinx.bin",
-    config.url = "http://192.168.2.7:8000/build/Syrinx.bin";
-    config.crt_bundle_attach = esp_crt_bundle_attach; 
-    config.event_handler = ota_http_event_handler;
-    config.keep_alive_enable = true;
-    config.skip_cert_common_name_check = true;
-    config.use_global_ca_store = true;
-
-    esp_https_ota_config_t ota_config;
-    memset(&ota_config, 0, sizeof(ota_config));
-    ota_config.http_config = &config;
-    ESP_LOGI("ota", "Attempting to download update from %s", config.url);
-
-    lv_async_call([](void *param) {
-        lv_obj_clear_flag(ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN);
-    }, nullptr);
-    del_enter_idle_timer();
-    
-    esp_err_t ret = esp_https_ota(&ota_config);
-    if (ret == ESP_OK) {
-        ESP_LOGI("ota", "OTA Succeed, Rebooting...");
-        esp_restart();
-    } else {
-        ESP_LOGE("ota", "Firmware upgrade failed");
-        lv_label_set_text(ui_OTA_Progress_Text, "升级失败, 发生错误");
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
-        lv_obj_add_flag(ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN);
-        create_enter_idle_timer(enter_idle_time_level_to_second(enter_idle_time_level));
-        vTaskDelete(NULL);
-    }
-    while (1) {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
 // 位于主界面的隐藏复位按钮
 void attempt_restart_esp32(void) {
     static uint8_t click_count = 0;
@@ -2777,8 +2683,27 @@ void attempt_restart_esp32(void) {
 
     if (click_count >= ENTER_SETTINGS_WINDOW_CLICK_COUNT) {
         click_count = 0; // 达到点击次数后重置计数
-        xTaskCreate(ota_task, "ota", 8192, NULL, 5, NULL);
-        // esp_restart();
+        esp_restart();
+    }
+}
+
+// 位于主界面另一侧的ota按钮
+void attempt_ota_esp32(void) {
+    static uint8_t click_count = 0;
+    static uint32_t last_click_time = 0;
+
+    uint32_t current_time = lv_tick_get();
+
+    if (current_time - last_click_time > RESTART_ESP32_CLICK_RESET_TIME) {
+        click_count = 0; // 如果时间间隔超出设定的时间，重置点击计数
+    }
+
+    last_click_time = current_time;
+    click_count++;
+
+    if (click_count >= ENTER_SETTINGS_WINDOW_CLICK_COUNT) {
+        click_count = 0; // 达到点击次数后重置计数
+        // xTaskCreate(ota_task, "ota", 8192, NULL, 5, NULL);
     }
 }
 

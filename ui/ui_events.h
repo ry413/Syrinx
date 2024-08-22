@@ -97,6 +97,7 @@ void close_shouting_alarm_clock(lv_event_t *e);
 
 void sleep_mode(void);
 void attempt_restart_esp32(void);
+void attempt_ota_esp32(void);
 void reset_inactive_timer(void);
 void create_inactive_timer(void);
 void del_inactive_timer(void);
