@@ -160,9 +160,11 @@ void process_command(rs485_packet_t *packet, size_t len) {
         ESP_LOGI(TAG, "Command: 插卡");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
+            lv_scr_load(ui_Main_Window);
             set_backlight(backlight_level);
             // enable_touch();
-            lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN);
+            // lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
 
             // clear一堆设置到默认状态
             reset_a_bunch_settings();
@@ -176,31 +178,32 @@ void process_command(rs485_packet_t *packet, size_t len) {
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
             set_backlight(0);
-            // disabled_touch();
-            // 触摸缓冲好像删不掉, 所以开一个遮罩防止在拔卡后积累触摸事件
-            lv_obj_clear_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN);
 
+            if (lv_scr_act() == ui_Idle_Window) {
+                offScreen(NULL);
+            } else {
+                lv_scr_load(ui_Idle_Window);
+                lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+            }
 
-            lv_scr_load(ui_Main_Window);  // 回到主界面理应会删掉音乐播放任务和自然之音播放任务, 浴室的在这里删
+            if (music_play_task_handle != NULL) {
+                vTaskDelete(music_play_task_handle);
+                music_play_task_handle = NULL;
+            }
             if (bath_play_task_handle != NULL) {
                 vTaskDelete(bath_play_task_handle);
                 bath_play_task_handle = NULL;
                 lv_async_call(hide_bath_sound_icon_callback, NULL);
             }
-            assert(music_play_task_handle == NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
+            if (nature_play_task_handle != NULL) {
+                vTaskDelete(nature_play_task_handle);
+                nature_play_task_handle = NULL;
+            }
+            // assert(music_play_task_handle == NULL && bath_play_task_handle == NULL && nature_play_task_handle == NULL);
             AT_CL(0);
             if (work_mode != 0) {
                 AT_CM(0);
             }
-            
-            // 关闭可能存在的闹钟
-            if (alarm_clock_cycle_shout_task_handle != NULL) {
-                vTaskDelete(alarm_clock_cycle_shout_task_handle);
-                alarm_clock_cycle_shout_task_handle = NULL;
-            }
-            set_alarm_clock_ready_shouting(false);
-            lv_obj_add_flag(ui_shouting_alarm_clock, LV_OBJ_FLAG_HIDDEN);
-
             
             // clear一堆设置到默认状态
             reset_a_bunch_settings();

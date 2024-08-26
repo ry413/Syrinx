@@ -2543,7 +2543,7 @@ static void alarm_clock_shout_callback(TimerHandle_t xTimer) {
     alarm_clock_ready_shouting = true;
     // 回到主界面
     lv_scr_load(ui_Main_Window);
-    // 如果原先在音乐库, 自然之音之类的地方, 那个界面的unloaded都做了clean了, 所以写点不正常的
+    // 如果原先在音乐库, 自然之音之类的地方, 那个界面的unloaded都做了clean了, 所以写点不正常的:
     // 如果原先在音乐播放界面, 这里直接跑主界面, 就得做一下clean
     if (scr == ui_Music_Play_Window) {
         vTaskDelete(music_play_task_handle);
@@ -2711,6 +2711,22 @@ void attempt_ota_esp32(void) {
 void reset_a_bunch_settings(void) {
     AT_CA(defaultVolume);
     select_eq_nature(NULL);
+
+    // 闹钟
+    lv_async_call([](void *param) {
+        lv_obj_clear_state(ui_AlarmClockSwitch, LV_STATE_CHECKED);
+        lv_obj_add_flag(ui_shouting_alarm_clock, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_alarm_clock_icon, LV_OBJ_FLAG_HIDDEN);
+    }, nullptr);
+    alarm_clock_ready_shouting = false;
+    if (alarm_clock_itself_timer != NULL) {
+        xTimerDelete(alarm_clock_itself_timer, 0);
+        alarm_clock_itself_timer = NULL;
+    }
+    if (alarm_clock_cycle_shout_task_handle != NULL) {
+        vTaskDelete(alarm_clock_cycle_shout_task_handle);
+        alarm_clock_cycle_shout_task_handle = NULL;
+    }
 }
 
 // 进入设置界面时输入密码
