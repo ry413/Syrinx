@@ -180,7 +180,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
 
-        if (strncmp(event->topic, full_topic, event->topic_len) == 0) {
+        if (strncmp(event->topic, full_topic, event->topic_len) == 0 || strncmp(event->topic, "/XZBGS3DOWN/FFFF", event->topic_len) == 0) {
             printf("验证通过\n");
             if (parse_data(event->data)) {
 

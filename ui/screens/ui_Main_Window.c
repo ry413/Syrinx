@@ -468,8 +468,8 @@ void ui_Main_Window_screen_init(void)
 
     ui_OTA_Progress = lv_obj_create(ui_Main_Window);
     lv_obj_remove_style_all(ui_OTA_Progress);
-    lv_obj_set_width( ui_OTA_Progress, 480);
-    lv_obj_set_height( ui_OTA_Progress, 480);
+    lv_obj_set_width( ui_OTA_Progress, 205);
+    lv_obj_set_height( ui_OTA_Progress, 86);
     lv_obj_set_align( ui_OTA_Progress, LV_ALIGN_CENTER );
     lv_obj_add_flag( ui_OTA_Progress, LV_OBJ_FLAG_HIDDEN );
     lv_obj_clear_flag( ui_OTA_Progress, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
