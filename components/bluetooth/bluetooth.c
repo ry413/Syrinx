@@ -543,7 +543,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.9.2-Orion";
+                    char *esp32_version = "v0.9.3-Orion";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {
@@ -756,6 +756,7 @@ void AT_AF(int music_id) {
     xEventGroupClearBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID);
     bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
     EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID, pdTRUE, pdFALSE, 500 / portTICK_PERIOD_MS);
+    set_playing(true);
     if (!(bits & EVENT_PLAY_MUSIC_WITH_ID)) {
         char str[5];
         snprintf(str, sizeof(str), "AF%02d", music_id);
