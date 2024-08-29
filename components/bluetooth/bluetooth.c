@@ -42,6 +42,7 @@ uint32_t bath_files_count = 0;          // bath目录下的文件数
 uint32_t ringtone_files_count = 0;      // ringtone目录下的文件数
 int *bath_file_ids = NULL;              // bath目录下的文件们的id数组
 int *ringtone_file_ids = NULL;          // ringtone目录下的文件们的id数组
+int *nature_file_ids = NULL;            // 自然之音也这样存得了, 依次是鸟叫, 虫鸣, 森林, 大海固定四个
 
 int current_playing_index = 0;          // 播放阶段使用, 当前在放的音频, 在file_names中的索引, 我也不知道为什么要定义在这里
 uint32_t current_music_duration = 0;
@@ -542,7 +543,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.9.1-Orion";
+                    char *esp32_version = "v0.9.2-Orion";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {
@@ -749,10 +750,12 @@ void AT_CC(void) {
 }
 // 播放指定物理序号的音乐
 void AT_AF(int music_id) {
+    vTaskDelay(50 / portTICK_PERIOD_MS);
     char command[10];
     snprintf(command, sizeof(command), "AT+AF%02d", music_id);
+    xEventGroupClearBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID);
     bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
-    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID, pdTRUE, pdFALSE, 300 / portTICK_PERIOD_MS);
+    EventBits_t bits = xEventGroupWaitBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID, pdTRUE, pdFALSE, 500 / portTICK_PERIOD_MS);
     if (!(bits & EVENT_PLAY_MUSIC_WITH_ID)) {
         char str[5];
         snprintf(str, sizeof(str), "AF%02d", music_id);

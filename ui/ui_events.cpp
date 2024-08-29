@@ -154,6 +154,10 @@ SemaphoreHandle_t init_phase_semaphore = NULL;
 
 static bool create_music_item_complete = false;     // 如果已插入卡, 但是没有刷新音乐列表就进音乐库什么的会出事
 
+// ******************** 屎山 ********************
+static int current_nature_id;
+
+
 //////////////////// STATIC FUNCTION DECLARATIONS ////////////////////
 // 真有必要写这些吗
 
@@ -343,6 +347,19 @@ static void create_music_item(void) {
         // 提取id
         char id_str[3] = { file_names[music_files_count + bath_files_count + i][0], file_names[music_files_count + bath_files_count + i][1], '\0' };
         ringtone_file_ids[i] = atoi(id_str);
+    }
+
+
+    // 搜集nature_sound的id
+    nature_file_ids = (int *)malloc(4 * sizeof(int));
+    if (nature_file_ids == NULL) {
+        ESP_LOGE("create_music_item", "Failed to allocate memory nature");
+        return;
+    }
+    for (int i = 0; i < 4; i++) {
+        // 提取id
+        char id_str[3] = { file_names[music_files_count + bath_files_count + ringtone_files_count + i][0], file_names[music_files_count + bath_files_count + ringtone_files_count + i][1], '\0' };
+        nature_file_ids[i] = atoi(id_str);
     }
 
 
@@ -631,6 +648,8 @@ void natureSoundScrLoaded(lv_event_t *e) {
     current_screen_volume_adjust = ui_Nature_Window_Volume_adjust;
     current_screen_on_screen_range = ui_Nature_On_Screen_Range;
     update_header_volume();
+
+    open_living_room_channel();
 }
 void bluetoothScrLoaded(lv_event_t *e) {
     set_time_label(ui_Header_Bluetooth_Time);
@@ -2399,19 +2418,6 @@ static void selectNatureSoundTask(void *pvParameter) {
     // 只要开始播放任意一个自然之音, 就删除不活动定时器, 无论如何都不自动返回主界面, 仅能手动返回
     del_inactive_timer();
 
-    char *sound_name = (char *)pvParameter;
-
-    int id = -1;
-    for (int i = 0; i < 4; i++) {
-        if(strncmp(file_names[music_files_count + bath_files_count + ringtone_files_count + i] + 2, sound_name, 3) == 0) {
-            sscanf(file_names[music_files_count + bath_files_count + ringtone_files_count + i], "%2d", &id);
-            break;
-        }
-    }
-    if (id == -1) {
-        ESP_LOGE("selectNatureSoundTask", "未找到自然之音, name: %s", sound_name);
-    }
-    open_living_room_channel();
     while (1) {
         // 如果浴室在播放, 关掉它
         if (bath_play_task_handle != NULL) {
@@ -2420,8 +2426,8 @@ static void selectNatureSoundTask(void *pvParameter) {
             lv_async_call(hide_bath_sound_icon_callback, NULL);
             ESP_LOGI("selectNatureSoundTask", "已关闭浴室音乐");
         }
-        AT_AF(id);
         xEventGroupWaitBits(bt_event_group, EVENT_END_PLAY, pdTRUE, pdFALSE, portMAX_DELAY);
+        AT_AF(current_nature_id);
     }
 }
 
@@ -2431,12 +2437,12 @@ void selectBirdSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    char sound_name[] = "Bird";
-    if (nature_play_task_handle != NULL) {
-        vTaskDelete(nature_play_task_handle);
-        nature_play_task_handle = NULL;
+    current_nature_id = nature_file_ids[0];
+
+    AT_AF(current_nature_id);
+    if (nature_play_task_handle == NULL) {
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
     }
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }
 void selectBugSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Bird_Sound_Btn, LV_STATE_CHECKED);
@@ -2444,12 +2450,11 @@ void selectBugSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    char sound_name[] = "Bug";
-    if (nature_play_task_handle != NULL) {
-        vTaskDelete(nature_play_task_handle);
-        nature_play_task_handle = NULL;
+    current_nature_id = nature_file_ids[1];
+    AT_AF(current_nature_id);
+    if (nature_play_task_handle == NULL) {
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
     }
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }
 void selectForestSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Bird_Sound_Btn, LV_STATE_CHECKED);
@@ -2457,12 +2462,11 @@ void selectForestSound(lv_event_t *e) {
     lv_obj_add_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    char sound_name[] = "Forest";
-    if (nature_play_task_handle != NULL) {
-        vTaskDelete(nature_play_task_handle);
-        nature_play_task_handle = NULL;
+    current_nature_id = nature_file_ids[2];
+    AT_AF(current_nature_id);
+    if (nature_play_task_handle == NULL) {
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
     }
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }
 void selectSeaSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Bird_Sound_Btn, LV_STATE_CHECKED);
@@ -2470,12 +2474,11 @@ void selectSeaSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_add_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    char sound_name[] = "Sea";
-    if (nature_play_task_handle != NULL) {
-        vTaskDelete(nature_play_task_handle);
-        nature_play_task_handle = NULL;
+    current_nature_id = nature_file_ids[3];
+    AT_AF(current_nature_id);
+    if (nature_play_task_handle == NULL) {
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
     }
-    xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, (void *)&sound_name, 5, &nature_play_task_handle);
 }
 
 
@@ -2683,6 +2686,7 @@ void attempt_restart_esp32(void) {
 
     if (click_count >= ENTER_SETTINGS_WINDOW_CLICK_COUNT) {
         click_count = 0; // 达到点击次数后重置计数
+        bluetooth_send_at_command("AT+CZ", CMD_REBOOT);
         esp_restart();
     }
 }

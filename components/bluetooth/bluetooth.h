@@ -97,6 +97,7 @@ extern uint32_t bath_files_count;
 extern uint32_t ringtone_files_count;
 extern int *bath_file_ids;
 extern int *ringtone_file_ids;
+extern int *nature_file_ids;
 extern int current_dir_files_count;
 
 extern int current_playing_index;
