@@ -188,11 +188,11 @@ static void create_music_item(void) {
     err = nvs_open("filenames", NVS_READONLY, &nvs_handle);
     // 如果没有找到就自动刷新
     if (err != ESP_OK) {
-        ESP_LOGE("create_music_item", "NVS中未找到filenames命名空间, 需要刷新");
+        ESP_LOGE("create_music_item", "NVS中未找到filenames命名空间, 即将开始刷新");
         xEventGroupClearBits(bt_event_group, EVENT_REFRESH_COMPLETE);
         track_refresh(NULL);
         xEventGroupWaitBits(bt_event_group, EVENT_REFRESH_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
-        create_music_item();
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
         return;
     }
 
@@ -200,16 +200,31 @@ static void create_music_item(void) {
     err = nvs_get_u32(nvs_handle, "music_count", &music_files_count);
     if (err != ESP_OK) {
         nvs_close(nvs_handle);
+        ESP_LOGE("create_music_item", "NVS中未找到music_count命名空间, 即将开始刷新");
+        xEventGroupClearBits(bt_event_group, EVENT_REFRESH_COMPLETE);
+        track_refresh(NULL);
+        xEventGroupWaitBits(bt_event_group, EVENT_REFRESH_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
         return;
     }
     err = nvs_get_u32(nvs_handle, "bath_count", &bath_files_count);
     if (err != ESP_OK) {
         nvs_close(nvs_handle);
+        ESP_LOGE("create_music_item", "NVS中未找到bath_files_count命名空间, 即将开始刷新");
+        xEventGroupClearBits(bt_event_group, EVENT_REFRESH_COMPLETE);
+        track_refresh(NULL);
+        xEventGroupWaitBits(bt_event_group, EVENT_REFRESH_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
         return;
     }
     err = nvs_get_u32(nvs_handle, "ringtone_count", &ringtone_files_count);
     if (err != ESP_OK) {
         nvs_close(nvs_handle);
+        ESP_LOGE("create_music_item", "NVS中未找到ringtone_files_count命名空间, 即将开始刷新");
+        xEventGroupClearBits(bt_event_group, EVENT_REFRESH_COMPLETE);
+        track_refresh(NULL);
+        xEventGroupWaitBits(bt_event_group, EVENT_REFRESH_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
         return;
     }
 
@@ -234,6 +249,11 @@ static void create_music_item(void) {
             }
             free(file_names);
             nvs_close(nvs_handle);
+            ESP_LOGE("create_music_item", "NVS中未找到文件名, 即将开始刷新");
+            xEventGroupClearBits(bt_event_group, EVENT_REFRESH_COMPLETE);
+            track_refresh(NULL);
+            xEventGroupWaitBits(bt_event_group, EVENT_REFRESH_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
             return;
         }
         
@@ -260,6 +280,7 @@ static void create_music_item(void) {
         }
     }
     nvs_close(nvs_handle);
+
 
     // 以上只是从nvs中读文件名, 以下才是创建音乐item, 或许应该拆成两个函数
 
@@ -549,10 +570,10 @@ static heap_trace_record_t trace_records[TRACE_RECORDS];
 
 // 除了这个, 还有各个init[****]Settings函数也在initital actions
 void initActions(lv_event_t *e) {
-    esp_err_t err = heap_trace_init_standalone(trace_records, TRACE_RECORDS);
-    if (err != ESP_OK) {
-        ESP_LOGE("HEAP_TRACE", "Heap trace init failed: %d", err);
-    }
+    // esp_err_t err = heap_trace_init_standalone(trace_records, TRACE_RECORDS);
+    // if (err != ESP_OK) {
+    //     ESP_LOGE("HEAP_TRACE", "Heap trace init failed: %d", err);
+    // }
         // 等待上电的主动返回值被丢掉
         // xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
 
@@ -583,15 +604,6 @@ void initActions(lv_event_t *e) {
 
     xSemaphoreGive(init_phase_semaphore);
 
-    if (device_state == 2) {
-        // 只要识别到卡就试图初始化音乐列表
-        create_music_item();
-
-        init_durations_for_nvs();
-    } else {
-        ESP_LOGW("initActions", "未识别到TF卡");
-    }
-
     // 设置待机界面的日期label, 只能写在这了, 毕竟日期就这个地方会显示
     set_date_label(ui_Idle_Window_Date);
     // 设置待机screen, 为了不让多余的文件include "ui_events.h"只好这么写了
@@ -611,6 +623,20 @@ void initActions(lv_event_t *e) {
 // 各个screen loaded时, 将screen的时间label设置为time_label上, 保持全局时间显示, Settings界面没有这东西
 
 void mainScrLoaded(lv_event_t *e) {
+    static bool isRefreshed = false;
+    if (!isRefreshed && device_state == 2) {
+        // 只要识别到卡就试图初始化音乐列表
+        xTaskCreate([](void *param) {
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            create_music_item();
+            init_durations_for_nvs();
+            isRefreshed = true;
+            vTaskDelete(NULL);
+        }, "create_music_item", 8192, NULL, 5, NULL);
+    } else {
+        ESP_LOGW("initActions", "未识别到TF卡");
+    }
+
     set_time_label(ui_Header_Main_Time);
     if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Main_Header_Volume;
@@ -1776,6 +1802,7 @@ void track_refresh(lv_event_t *e) {
         lv_async_call([](void *param) {
             lv_obj_add_flag(ui_TrackRefreshMsgPanel, LV_OBJ_FLAG_HIDDEN);
             lv_label_set_text(ui_PleaseRestartMsgText, "刷新完成, 3秒后自动重启");
+            lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新完成, 3秒后自动重启");
             lv_obj_clear_flag(ui_PleaseRestartMsgPanel, LV_OBJ_FLAG_HIDDEN);
         }, nullptr);
         vTaskDelay(3000 / portTICK_PERIOD_MS);

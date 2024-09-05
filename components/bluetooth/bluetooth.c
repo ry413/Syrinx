@@ -189,14 +189,20 @@ void add_file_name(char **temp_file_names, const char *file_name) {
 }
 // 读取所有音乐文件名并储存于nvs中
 void get_all_file_names(void) {
-    // 切换到音乐模式
+    // 主界面刷新时的进度条, 借用一下
+    lv_obj_clear_flag(ui_TFCardNotFoundMsg, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_event_cb(ui_TFCardNotFoundMsg, ui_event_TFCardNotFoundMsg);
+    
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (1/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (1/12)");
+    // 切换到音乐模式
     if (AT_CM(2) != ESP_OK) {
         xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
         return;
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (2/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (2/12)");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     // 必须进入目录才能保证得到对的M2数值
@@ -211,6 +217,7 @@ void get_all_file_names(void) {
     music_files_count = current_dir_files_count;
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (3/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (3/12)");
     // 再弄个bath目录的文件数
     if (AT_M6(1) != ESP_OK) {
         xEventGroupSetBits(bt_event_group, EVENT_ERROR_ERROR_ERROR);
@@ -236,6 +243,7 @@ void get_all_file_names(void) {
     printf("music: %ld, bath: %ld, ringtone: %ld\n", music_files_count, bath_files_count, ringtone_files_count);
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (4/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (4/12)");
     // 储存文件数
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("filenames", NVS_READWRITE, &nvs_handle);
@@ -261,6 +269,7 @@ void get_all_file_names(void) {
     }
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (5/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (5/12)");
     // 分配内存, 这里面将分别装music, bath, ringtone, theme四个目录的文件名, theme(4首)是自然之音
     temp_file_names = (char **)malloc((music_files_count + bath_files_count + ringtone_files_count + NATURE_SOUND_COUNT) * sizeof(char *));
     if ((temp_file_names == NULL)) {
@@ -281,12 +290,16 @@ void get_all_file_names(void) {
 
     // 获取各个目录的文件名列表
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (6/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (6/12)");
     AT_M4(2);
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (7/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (7/12)");
     AT_M4(1);
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (8/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (8/12)");
     AT_M4(3);
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (9/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (9/12)");
     AT_M4(4);
 
     // 储存文件名们到nvs里
@@ -320,6 +333,7 @@ void get_all_file_names(void) {
     // AT_CM(0);
 
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (10/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (10/12)");
     // 宣布初始化完毕
     printf("\n GET FILE NAME LIST END\n");
     xEventGroupSetBits(bt_event_group, EVENT_FILE_LIST_COMPLETE);
@@ -327,6 +341,7 @@ void get_all_file_names(void) {
 // 获得音乐库中所有歌的总时长并储存到nvs中
 void get_all_music_duration(void) {
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (11/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (11/12)");
     AT_M6(2);
 
     // 获得durations
@@ -339,6 +354,7 @@ void get_all_music_duration(void) {
 
     // 储存durations到nvs里
     lv_label_set_text(ui_TrackRefreshMsgText, "正在刷新曲目清单中 (12/12)");
+    lv_label_set_text(ui_TFCardNotFoundMsgText, "刷新曲目清单中 (12/12)");
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open("music_durations", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
@@ -543,7 +559,7 @@ void bluetooth_monitor_task(void *pvParameters) {
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
 
-                    char *esp32_version = "v0.9.4-Orion";
+                    char *esp32_version = "v0.9.6-Orion";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {
