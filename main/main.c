@@ -27,6 +27,9 @@
 #include "bluetooth.h"
 #include "rs485.h"
 
+#include "esp_lcd_panel_io.h"
+
+
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
 #include "lvgl.h"
@@ -145,6 +148,10 @@ lv_indev_t * indev_touch = NULL;
 #endif
 
 #define EXAMPLE_LVGL_TICK_PERIOD_MS    2
+
+
+RTC_DATA_ATTR uint8_t gt911_addr;
+
 
 // we use two semaphores to sync the VSYNC event and the LVGL task, to avoid potential tearing effect
 #if CONFIG_EXAMPLE_AVOID_TEAR_EFFECT_WITH_SEM
@@ -388,6 +395,7 @@ static void lvgl_task(void *pvParameter)
     ESP_ERROR_CHECK(i2c_driver_install(EXAMPLE_I2C_NUM, i2c_conf.mode, 0, 0, 0));
 
     esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_GT911_CONFIG();
+    
 
     ESP_LOGI(TAG, "Initialize touch IO (I2C)");
     /* Touch IO handle */
@@ -406,7 +414,24 @@ static void lvgl_task(void *pvParameter)
     /* Initialize touch */
 #if CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_GT911
     ESP_LOGI(TAG, "Initialize touch controller GT911");
-    ESP_ERROR_CHECK(esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, &tp));
+    if(esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, &tp) != ESP_OK) {
+        ESP_ERROR_CHECK(esp_lcd_panel_io_del(tp_io_handle));
+
+        if (tp_io_config.dev_addr == 0x5D) {
+            tp_io_config.dev_addr = 0x14;
+        } else if (tp_io_config.dev_addr == 0x14) {
+            tp_io_config.dev_addr = 0x5D;
+        } else {
+            ESP_LOGE(TAG, "tp_io_config.dev_addr: %ld", tp_io_config.dev_addr);
+        }
+        ESP_ERROR_CHECK(esp_lcd_new_panel_io_i2c((esp_lcd_i2c_bus_handle_t)EXAMPLE_I2C_NUM, &tp_io_config, &tp_io_handle));
+        
+        esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, &tp);
+    }
+
+
+
+    
 #elif CONFIG_EXAMPLE_LCD_TOUCH_CONTROLLER_TT21100
     ESP_LOGI(TAG, "Initialize touch controller TT21100");
     ESP_ERROR_CHECK(esp_lcd_touch_new_i2c_tt21100(tp_io_handle, &tp_cfg, &tp));
@@ -545,6 +570,7 @@ void ta(void *param) {
     
 }
 void app_main() {
+
     // 擦除nvs
     // esp_err_t err = nvs_flash_erase();
     // if (err != ESP_OK) {
