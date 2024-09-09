@@ -633,7 +633,7 @@ void mainScrLoaded(lv_event_t *e) {
             isRefreshed = true;
             vTaskDelete(NULL);
         }, "create_music_item", 8192, NULL, 5, NULL);
-    } else {
+    } else if (device_state != 2) {
         ESP_LOGW("initActions", "未识别到TF卡");
     }
 
@@ -1010,12 +1010,19 @@ void sleep_mode(void) {
     set_backlight(0);
     // 如果处于音乐库或音乐播放或自然之音界面, 就不返回主界面, 而是放出唤醒Range
     if (lv_scr_act() == ui_Music_Play_Window || lv_scr_act() == ui_Music_Window || lv_scr_act() == ui_Nature_Sound_Window) {
-        lv_obj_clear_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
+        lv_async_call([](void *param) {
+            lv_obj_clear_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
+            xEventGroupSetBits(rs485_and_lvgl_wtf_group, SLEEP_MODE_DONE);
+        }, nullptr);
     } else {
         // 如果处理睡眠指令时, 处于非播放界面, 就跑到Idle界面来处理, 真是乱套了
-        lv_scr_load(ui_Idle_Window);
-        lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+        lv_async_call([](void *param) {
+            lv_scr_load(ui_Idle_Window);
+            lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+            xEventGroupSetBits(rs485_and_lvgl_wtf_group, SLEEP_MODE_DONE);
+        }, nullptr);
     }
+    xEventGroupWaitBits(rs485_and_lvgl_wtf_group, SLEEP_MODE_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
 }
 
 // 按下待机界面上的熄屏按钮主动进入熄屏
@@ -1024,13 +1031,10 @@ void offScreen(lv_event_t *e) {
     // 熄屏实际上仍然在idle界面, 只是关了背光
     set_backlight(0);
     // 防止想要醒来但再次按到熄屏按钮, 所以把它隐藏掉
-    lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
-}
-// 稍微逆天
-static void wake_set_bl(void *param) {
-    vTaskDelay(160 / portTICK_PERIOD_MS);
-    set_backlight(backlight_level);
-    vTaskDelete(NULL);
+    lv_async_call([](void *param) {
+        lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+        xEventGroupSetBits(rs485_and_lvgl_wtf_group, OFF_SCREEN_DONE);
+    }, nullptr);
 }
 // 从熄屏中醒来, 同时485指令明亮模式也调用这个
 void onScreen(lv_event_t *e) {
@@ -1038,12 +1042,23 @@ void onScreen(lv_event_t *e) {
     // 如果熄屏时在这几个界面, 说明并不想要醒到主界面
     if (lv_scr_act() == ui_Music_Window || lv_scr_act() == ui_Music_Play_Window || lv_scr_act() == ui_Nature_Sound_Window) {
         set_backlight(backlight_level);
-        lv_obj_add_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
+        lv_async_call([](void *param) {
+            lv_obj_add_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
+            xEventGroupSetBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE);
+        }, nullptr);
     } else {
-        lv_scr_load(ui_Main_Window);
+        lv_async_call([](void *param) {
+            lv_scr_load(ui_Main_Window);
+            lv_obj_clear_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+            xEventGroupSetBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE);
+        }, nullptr);
+
         // 等主界面load完了再打开背光
-        xTaskCreate(wake_set_bl, "wake_set_bl", 1024, NULL, 5, NULL);
-        lv_obj_clear_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+        xTaskCreate([](void *param) {
+            vTaskDelay(160 / portTICK_PERIOD_MS);
+            set_backlight(backlight_level);
+            vTaskDelete(NULL);
+        }, "wake_set_bl", 1024, NULL, 5, NULL);
     }
 }
 
@@ -2741,6 +2756,7 @@ void attempt_ota_esp32(void) {
 // 插拔卡时重置一堆设置到默认状态
 void reset_a_bunch_settings(void) {
     AT_CA(defaultVolume);
+    update_header_volume();
     select_eq_nature(NULL);
 
     // 闹钟
@@ -2772,4 +2788,20 @@ void system_password_input(lv_event_t *e) {
 
 void set_playing(bool val) {
     playing = val;
+}
+
+void rs485_add_card_wtf_func(void) {
+    lv_async_call([](void *param) {
+        lv_scr_load(ui_Main_Window);
+        lv_obj_clear_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+        xEventGroupSetBits(rs485_and_lvgl_wtf_group, ADD_CARD_CMD_DONE);
+    }, nullptr);
+}
+
+void rs485_remove_card_wtf_func(void) {
+    lv_async_call([](void *param) {
+        lv_scr_load(ui_Idle_Window);
+        lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+        xEventGroupSetBits(rs485_and_lvgl_wtf_group, REMOVE_CARD_CMD_DONE);
+    }, nullptr);
 }

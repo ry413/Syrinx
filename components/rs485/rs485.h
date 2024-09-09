@@ -42,6 +42,14 @@ extern TaskHandle_t alarm_clock_cycle_shout_task_handle;
 void show_bath_sound_icon_callback(void *param);
 void hide_bath_sound_icon_callback(void *param);
 
+extern EventGroupHandle_t rs485_and_lvgl_wtf_group;
+
+#define ON_SCREEN_DONE (1 << 0)
+#define OFF_SCREEN_DONE (1 << 1)
+#define ADD_CARD_CMD_DONE (1 << 2)
+#define REMOVE_CARD_CMD_DONE (1 << 3)
+#define SLEEP_MODE_DONE (1 << 4)
+
 #ifdef __cplusplus
 }
 #endif

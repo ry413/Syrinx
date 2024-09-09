@@ -106,7 +106,8 @@ void reset_a_bunch_settings(void);
 void system_password_input(lv_event_t *e);
 void set_alarm_clock_ready_shouting(bool value);
 void set_playing(bool val);
-
+void rs485_add_card_wtf_func(void);
+void rs485_remove_card_wtf_func(void);
 
 #ifdef __cplusplus
 } /*extern "C"*/

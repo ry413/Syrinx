@@ -14,7 +14,7 @@ TaskHandle_t music_play_task_handle = NULL;
 TaskHandle_t nature_play_task_handle = NULL;
 static SemaphoreHandle_t rs485_handle_semaphore = NULL; // 防止同时处理多条485
 
-
+EventGroupHandle_t rs485_and_lvgl_wtf_group;
 
 
 int current_bath_playing_index = 0;
@@ -56,6 +56,8 @@ esp_err_t rs485_init(void) {
         ESP_LOGE("initActions", "创建信号量失败");
     }
     xSemaphoreGive(rs485_handle_semaphore);
+    
+    rs485_and_lvgl_wtf_group = xEventGroupCreate();
     return ESP_OK;
 }
 
@@ -160,11 +162,12 @@ void process_command(rs485_packet_t *packet, size_t len) {
         ESP_LOGI(TAG, "Command: 插卡");
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
-            lv_scr_load(ui_Main_Window);
             set_backlight(backlight_level);
+            
+            rs485_add_card_wtf_func();
+            xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ADD_CARD_CMD_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             // enable_touch();
             // lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
 
             // clear一堆设置到默认状态
             reset_a_bunch_settings();
@@ -181,9 +184,10 @@ void process_command(rs485_packet_t *packet, size_t len) {
 
             if (lv_scr_act() == ui_Idle_Window) {
                 offScreen(NULL);
+                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, OFF_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             } else {
-                lv_scr_load(ui_Idle_Window);
-                lv_obj_add_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
+                rs485_remove_card_wtf_func();
+                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, REMOVE_CARD_CMD_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
 
             if (music_play_task_handle != NULL) {
@@ -218,6 +222,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
             printf("已获得信号量\n");
             if (lv_scr_act() == ui_Idle_Window) {
                 offScreen(NULL);
+                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, OFF_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             } else {
                 sleep_mode();
             }
@@ -231,6 +236,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
             onScreen(NULL);
+            xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             xSemaphoreGive(rs485_handle_semaphore);
             printf("已释放信号量\n");
         }
@@ -243,6 +249,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
             lv_obj_t *scr = lv_scr_act();
             if (scr == ui_Idle_Window) {
                 onScreen(NULL);
+                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
             switch (work_mode)
             {
@@ -343,6 +350,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
             lv_obj_t *scr = lv_scr_act();
             if (scr == ui_Idle_Window) {
                 onScreen(NULL);
+                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
             switch (work_mode) {
             case 0:
@@ -415,6 +423,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
             printf("已获得信号量\n");
             if (lv_scr_act() == ui_Idle_Window) {
                 onScreen(NULL);
+                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
@@ -442,6 +451,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
             printf("已获得信号量\n");
             if (lv_scr_act() == ui_Idle_Window) {
                 onScreen(NULL);
+                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
@@ -469,6 +479,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
             printf("已获得信号量\n");
             if (lv_scr_act() == ui_Idle_Window) {
                 onScreen(NULL);
+                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
