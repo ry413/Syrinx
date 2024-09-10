@@ -500,8 +500,11 @@ static void bluetooth_monitor_state_task(void *pvParameter) {
 }
 // 更新当前界面的音量显示
 static void update_header_volume(void) {
-    lv_label_set_text_fmt(lv_obj_get_child(current_screen_header_volume, 1), "%d", current_volume);
-    lv_slider_set_value(lv_obj_get_child(current_screen_volume_adjust, 0), current_volume * 2 * MAX_VOLUME_LIMIT / maxVolume, LV_ANIM_OFF);
+    printf("hello: %d\n", current_volume);
+    lv_async_call([](void *param) {
+        lv_label_set_text_fmt(lv_obj_get_child(current_screen_header_volume, 1), "%d", current_volume);
+        lv_slider_set_value(lv_obj_get_child(current_screen_volume_adjust, 0), current_volume * 2 * MAX_VOLUME_LIMIT / maxVolume, LV_ANIM_OFF);
+    }, nullptr);
 }
 // 洗牌
 static void shufflePlaylist(void) {
@@ -1558,7 +1561,7 @@ void verifyResetFactory(lv_event_t *e)
     } else {
         ESP_LOGI("verifyResetFactory", "NVS擦除成功");
     }
-    // return;
+
     // 初始化nvs
     err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -1613,8 +1616,8 @@ void verifyResetFactory(lv_event_t *e)
         ESP_LOGE("verifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
-    uint32_t new_default_volume = 8;
-    uint32_t new_max_volume = 15;
+    uint32_t new_default_volume = 6;
+    uint32_t new_max_volume = 12;
     uint32_t new_bath_channel = 2; 
     err = nvs_set_u32(nvs_handle, "defaultVolume", new_default_volume);
     if (err != ESP_OK) {
@@ -2756,6 +2759,7 @@ void attempt_ota_esp32(void) {
 // 插拔卡时重置一堆设置到默认状态
 void reset_a_bunch_settings(void) {
     AT_CA(defaultVolume);
+    current_volume = defaultVolume;
     update_header_volume();
     select_eq_nature(NULL);
 
