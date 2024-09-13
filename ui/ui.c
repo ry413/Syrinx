@@ -327,6 +327,19 @@ lv_obj_t * ui_Settings_Time_Icon2;
 lv_obj_t * ui_Settings_Time_Decora_Icon2;
 void ui_event_Settings_Time_Btn2(lv_event_t * e);
 lv_obj_t * ui_Settings_Time_Btn2;
+lv_obj_t * ui_Idle_Time_Settings_Panel;
+lv_obj_t * ui_Idle_Time_Settings_TimeSelector;
+lv_obj_t * ui_Idle_Time_Settings_Panel_Text;
+lv_obj_t * ui_Idle_Time_Settings_Panel_Decora_Text;
+lv_obj_t * ui_Idle_Time_Settings_Begin;
+lv_obj_t * ui_Idle_Time_Settings_End;
+lv_obj_t * ui_Idle_Time_Settings_Keyboard;
+void ui_event_Idle_Time_Settings_Verify_Btn(lv_event_t * e);
+lv_obj_t * ui_Idle_Time_Settings_Verify_Btn;
+lv_obj_t * ui_Idle_Time_Settings_Verify_Btn_Text;
+void ui_event_Idle_Time_Settings_Cancel_Btn(lv_event_t * e);
+lv_obj_t * ui_Idle_Time_Settings_Cancel_Btn;
+lv_obj_t * ui_Idle_Time_Settings_Cancel_Btn_Text;
 lv_obj_t * ui_Settings_System;
 lv_obj_t * ui_Settings_System_Text;
 lv_obj_t * ui_Settings_System_Line;
@@ -1128,9 +1141,52 @@ void ui_event_Settings_Time_Btn2(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        _ui_screen_change(&ui_Settings_Time_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Time_Window_screen_init);
+        _ui_flag_modify(ui_Idle_Time_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
 }
+void ui_event_Idle_Time_Settings_Verify_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        saveIdleTimeSetting(e);
+        _ui_flag_modify(ui_Idle_Time_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
+
+void ui_event_Idle_Time_Settings_Cancel_Btn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        cancelSaveIdleTimeSetting(e);
+        _ui_flag_modify(ui_Idle_Time_Settings_Panel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        _ui_flag_modify(ui_Disabled_Touch_Range_Settings_window, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
+void ui_event_Idle_Time_Settings_Begin(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        _ui_flag_modify(ui_Idle_Time_Settings_Keyboard, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        lv_keyboard_set_textarea(ui_Idle_Time_Settings_Keyboard, ui_Idle_Time_Settings_Begin);
+    }
+}
+
+void ui_event_Idle_Time_Settings_End(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_SHORT_CLICKED) {
+        _ui_flag_modify(ui_Idle_Time_Settings_Keyboard, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+        lv_keyboard_set_textarea(ui_Idle_Time_Settings_Keyboard, ui_Idle_Time_Settings_End);
+    }
+
+}
+
 void ui_event_Settings_Volume_Btn(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -1296,7 +1352,7 @@ void ui_event_BackToSettingsWindow10(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
         _ui_screen_change(&ui_Settings_Window, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Settings_Window_screen_init);
-        cancelSaveTimeSettings(e);
+        cancelSaveIdleTimeSetting(e);
     }
 }
 void ui_event_Time_Enter_Btn(lv_event_t * e)
@@ -1304,7 +1360,7 @@ void ui_event_Time_Enter_Btn(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SHORT_CLICKED) {
-        saveTimeSetting(e);
+        saveIdleTimeSetting(e);
     }
 }
 void ui_event_Wifi_SSID_Input(lv_event_t * e)
@@ -1584,6 +1640,7 @@ void ui_event____initial_actions0(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_SCREEN_LOAD_START) {
         initActions(e);
+        initIdleTimeSetting(e);
         initVolumeSettings(e);
         initBluetoothSettings(e);
         initWifiSettings(e);

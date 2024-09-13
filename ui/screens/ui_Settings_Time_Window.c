@@ -24,7 +24,7 @@ void ui_Settings_Time_Window_screen_init(void)
     lv_obj_set_width(ui_Header_Main_Text5, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Header_Main_Text5, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Header_Main_Text5, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Header_Main_Text5, "时间设置");
+    lv_label_set_text(ui_Header_Main_Text5, "熄屏设置");
     lv_obj_set_style_text_color(ui_Header_Main_Text5, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Header_Main_Text5, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Header_Main_Text5, &ui_font_Vice_MS20B4, LV_PART_MAIN | LV_STATE_DEFAULT);

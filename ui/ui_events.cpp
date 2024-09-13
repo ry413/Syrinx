@@ -500,7 +500,6 @@ static void bluetooth_monitor_state_task(void *pvParameter) {
 }
 // 更新当前界面的音量显示
 static void update_header_volume(void) {
-    printf("hello: %d\n", current_volume);
     lv_async_call([](void *param) {
         lv_label_set_text_fmt(lv_obj_get_child(current_screen_header_volume, 1), "%d", current_volume);
         lv_slider_set_value(lv_obj_get_child(current_screen_volume_adjust, 0), current_volume * 2 * MAX_VOLUME_LIMIT / maxVolume, LV_ANIM_OFF);
@@ -635,7 +634,7 @@ void mainScrLoaded(lv_event_t *e) {
             init_durations_for_nvs();
             isRefreshed = true;
             vTaskDelete(NULL);
-        }, "create_music_item", 8192, NULL, 5, NULL);
+        }, "create_music_item", 4096, NULL, 5, NULL);
     } else if (device_state != 2) {
         ESP_LOGW("initActions", "未识别到TF卡");
     }
@@ -1154,87 +1153,98 @@ void cancelSaveBluetoothSetting(lv_event_t *e) {
     lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
 }
 
-// ******************** 时间相关 ********************
+// ******************** 熄屏时间 ********************
 
-// 确认保存时间与日期
-void saveTimeSetting(lv_event_t *e) {
-    // 检查时间输入
-    const char *hour_text = lv_textarea_get_text(ui_Time_Setting_Hour2);
-    const char *min_text = lv_textarea_get_text(ui_Time_Setting_Min2);
-    int hour = atoi(hour_text);
-    int min = atoi(min_text);
-    if (hour < 0 || hour > 23 || min < 0 || min > 59) {
-        char hour_text[3];
-        snprintf(hour_text, sizeof(hour_text), "%02ld", time_hour);
-        lv_textarea_set_text(ui_Time_Setting_Hour2, hour_text);
-        char min_text[3];
-        snprintf(min_text, sizeof(min_text), "%02ld", time_min);
-        lv_textarea_set_text(ui_Time_Setting_Min2, min_text);
-        ESP_LOGE("saveTimeSetting", "Invalid input: hour=%s, minute=%s", hour_text, min_text);
+// 初始化熄屏时间
+void initIdleTimeSetting(lv_event_t *e) {
+    // 从nvs中读
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("idleTimeCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("initIdleTimeSetting", "Failed to open NVS");
         return;
     }
-    time_hour = hour;
-    time_min = min;
-    // 检查日期输入
-    const char *year_text = lv_textarea_get_text(ui_Date_Setting_Year2);
-    const char *month_text = lv_textarea_get_text(ui_Date_Setting_Month2);
-    const char *day_text = lv_textarea_get_text(ui_Date_Setting_Day2);
-    uint32_t year = (uint32_t)atoi(year_text);
-    uint32_t month = (uint32_t)atoi(month_text);
-    uint32_t day = (uint32_t)atoi(day_text);
-    if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
-        char year_text[5];
-        snprintf(year_text, sizeof(year_text), "%ld", date_year);
-        lv_textarea_set_text(ui_Date_Setting_Year2, year_text);
-        char month_text[3];
-        snprintf(month_text, sizeof(month_text), "%02ld", date_month);
-        lv_textarea_set_text(ui_Date_Setting_Month2, month_text);
-        char day_text[3];
-        snprintf(day_text, sizeof(day_text), "%02ld", date_day);
-        lv_textarea_set_text(ui_Date_Setting_Day2, day_text);
-        ESP_LOGE("saveDateSetting", "Invalid input: year=%s, month=%s, day=%s", year_text, month_text, day_text);
+    uint16_t idle_time_begin;
+    err = nvs_get_u16(nvs_handle, "idleTimeBegin", &idle_time_begin);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        idle_time_begin = 10;
+        ESP_LOGW("initIdleTimeSetting", "NVS中未找到'idleTimeBegin', 将写入默认值 %u", idle_time_begin);
+        err = nvs_set_u16(nvs_handle, "idleTimeBegin", idle_time_begin);
+        if (err != ESP_OK) {
+            ESP_LOGE("initIdleTimeSetting", "Failed to set default idleTimeBegin in NVS: %s", esp_err_to_name(err));
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_commit(nvs_handle);
+        if (err != ESP_OK) {
+            ESP_LOGE("initIdleTimeSetting", "Failed to commit NVS changes: %s", esp_err_to_name(err));
+            nvs_close(nvs_handle);
+            return;
+        }
+    } else if (err != ESP_OK) {
+        ESP_LOGE("initIdleTimeSetting", "Failed to get idleTimeBegin from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
         return;
     }
-    date_year = year;
-    date_month = month;
-    date_day = day;
-    global_time = convertToTimestamp(date_year, date_month, date_day, time_hour, time_min);
-    if (update_time_task_handle == NULL) {
-        xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
+
+    uint16_t idle_time_end;
+    err = nvs_get_u16(nvs_handle, "idleTimeEnd", &idle_time_end);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        idle_time_end = 10;
+        ESP_LOGW("initIdleTimeSetting", "NVS中未找到'idleTimeEnd', 将写入默认值 %u", idle_time_end);
+        err = nvs_set_u16(nvs_handle, "idleTimeEnd", idle_time_end);
+        if (err != ESP_OK) {
+            ESP_LOGE("initIdleTimeSetting", "Failed to set default idleTimeEnd in NVS: %s", esp_err_to_name(err));
+            nvs_close(nvs_handle);
+            return;
+        }
+        err = nvs_commit(nvs_handle);
+        if (err != ESP_OK) {
+            ESP_LOGE("initIdleTimeSetting", "Failed to commit NVS changes: %s", esp_err_to_name(err));
+            nvs_close(nvs_handle);
+            return;
+        }
+    } else if (err != ESP_OK) {
+        ESP_LOGE("initIdleTimeSetting", "Failed to get idleTimeEnd from NVS: %s", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return;
     }
+    nvs_close(nvs_handle);
     
-    struct timeval now = {
-        .tv_sec = global_time,
-        .tv_usec = 0
-    };
-    settimeofday(&now, NULL);
+    lv_roller_set_selected(ui_Idle_Time_Settings_Begin, idle_time_begin, LV_ANIM_OFF);
+    lv_roller_set_selected(ui_Idle_Time_Settings_End, idle_time_end, LV_ANIM_OFF);
 }
-// 不保存时间设置
-void cancelSaveTimeSettings(lv_event_t *e) {
-    // 转换时间小时为字符串并设置文本区域
-    char hour_str[3];  // 假设小时不会超过两位数
-    snprintf(hour_str, sizeof(hour_str), "%02ld", time_hour);
-    lv_textarea_set_text(ui_Time_Setting_Hour2, hour_str);
 
-    // 转换时间分钟为字符串并设置文本区域
-    char min_str[3];  // 假设分钟不会超过两位数
-    snprintf(min_str, sizeof(min_str), "%02ld", time_min);
-    lv_textarea_set_text(ui_Time_Setting_Min2, min_str);
-
-    // 转换日期年份为字符串并设置文本区域
-    char year_str[5];  // 假设年份最多四位数
-    snprintf(year_str, sizeof(year_str), "%ld", date_year);
-    lv_textarea_set_text(ui_Date_Setting_Year2, year_str);
-
-    // 转换日期月份为字符串并设置文本区域
-    char month_str[3];  // 假设月份不会超过两位数
-    snprintf(month_str, sizeof(month_str), "%02ld", date_month);
-    lv_textarea_set_text(ui_Date_Setting_Month2, month_str);
-
-    // 转换日期天数为字符串并设置文本区域
-    char day_str[3];  // 假设日期不会超过两位数
-    snprintf(day_str, sizeof(day_str), "%02ld", date_day);
-    lv_textarea_set_text(ui_Date_Setting_Day2, day_str);
+// 确认保存熄屏时间
+void saveIdleTimeSetting(lv_event_t *e) {
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open("idleTimeCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveIdleTimeSetting", "Failed to open NVS");
+        return;
+    }
+    uint16_t idle_time_begin = lv_roller_get_selected(ui_Idle_Time_Settings_Begin);
+    err = nvs_set_u16(nvs_handle, "idleTimeBegin", idle_time_begin);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveIdleTimeSetting", "Failed to set idleTimeBegin in NVS: %s", esp_err_to_name(err));
+    }
+    uint16_t idle_time_end = lv_roller_get_selected(ui_Idle_Time_Settings_End);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveIdleTimeSetting", "Failed to set idleTimeEnd in NVS: %s", esp_err_to_name(err));
+    }
+    err = nvs_set_u16(nvs_handle, "idleTimeEnd", idle_time_end);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveIdleTimeSetting", "Failed to set idleTimeEnd in NVS: %s", esp_err_to_name(err));
+    }
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("saveIdleTimeSetting", "Failed to commit NVS changes");
+    }
+    nvs_close(nvs_handle);
+}
+// 不保存熄屏时间
+void cancelSaveIdleTimeSetting(lv_event_t *e) {
+    
 }
 // ******************** 声音相关 ********************
 
@@ -1667,6 +1677,33 @@ void verifyResetFactory(lv_event_t *e)
     system_id = new_id;
     lv_label_set_text_fmt(ui_System_ID_Value, "%ld", system_id);
 
+    // 重置熄屏时间
+    err = nvs_open("idleTimeCfg", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("verifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
+        return;
+    }
+    uint16_t new_idle_time_begin = 21;
+    err = nvs_set_u16(nvs_handle, "idleTimeBegin", new_idle_time_begin);
+    if (err != ESP_OK) {
+        ESP_LOGE("verifyResetFactory", "Failed to set default idleTimeBegin: %s", esp_err_to_name(err));
+    }
+    uint16_t new_idle_time_end = 8;
+    err = nvs_set_u16(nvs_handle, "idleTimeEnd", new_idle_time_end);
+    if (err != ESP_OK) {
+        ESP_LOGE("verifyResetFactory", "Failed to set default idleTimeEnd: %s", esp_err_to_name(err));
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE("verifyResetFactory", "Failed to commit NVS changes: %s", esp_err_to_name(err));
+    } else {
+        ESP_LOGI("verifyResetFactory", "熄屏时间重置为 %d:00 至 %d:00", new_idle_time_begin, new_idle_time_end);
+    }
+    nvs_close(nvs_handle);
+    lv_roller_set_selected(ui_Idle_Time_Settings_Begin, new_idle_time_begin, LV_ANIM_OFF);
+    lv_roller_set_selected(ui_Idle_Time_Settings_End, new_idle_time_end, LV_ANIM_OFF);
+
 
     // 重置WiFi设置
     err = nvs_open("WifiCfg", NVS_READWRITE, &nvs_handle);
@@ -1675,8 +1712,8 @@ void verifyResetFactory(lv_event_t *e)
         return;
     }
     uint8_t new_enabled = 0;
-    char new_wifi_ssid[] = "12345678";
-    char new_wifi_password[] = "12345678";
+    char new_wifi_ssid[] = "WX-LAVANDE";
+    char new_wifi_password[] = "LAVANDEHOTELS";
     err = nvs_set_u8(nvs_handle, "enabled", new_enabled);
     if (err != ESP_OK) {
         ESP_LOGE("verifyResetFactory", "Failed to set default value for 'enabled': %s", esp_err_to_name(err));
@@ -1814,7 +1851,7 @@ static void track_refresh_task(void *pvParameters) {
     vTaskDelete(NULL);
 }
 void track_refresh(lv_event_t *e) {
-    xTaskCreate(track_refresh_task, "track_refresh_task", 8192, NULL, 5, NULL);
+    xTaskCreate(track_refresh_task, "track_refresh_task", 4096, NULL, 5, NULL);
     xTaskCreate([](void *param) {
         xEventGroupWaitBits(bt_event_group, EVENT_REFRESH_COMPLETE, pdTRUE, pdFALSE, portMAX_DELAY);
         lv_async_call([](void *param) {
@@ -1885,14 +1922,14 @@ void initWifiSettings(lv_event_t *e) {
         wifi_ssid = tempWifiName;
         lv_textarea_set_text(ui_Wifi_SSID_Input, wifi_ssid);
     } else {
-        ESP_LOGW("initWifiSettings", "NVS中未找到'name', 将写入默认值 12345678");
-        err = nvs_set_str(nvs_handle, "name", "12345678");
+        ESP_LOGW("initWifiSettings", "NVS中未找到'name', 将写入默认值 WX-LAVANDE");
+        err = nvs_set_str(nvs_handle, "name", "WX-LAVANDE");
         if (err != ESP_OK) {
             ESP_LOGE("initWifiSettings", "Failed to set name in NVS");
             nvs_close(nvs_handle);
             return;
         }
-        wifi_ssid = strdup("12345678");
+        wifi_ssid = strdup("WX-LAVANDE");
         lv_textarea_set_text(ui_Wifi_SSID_Input, wifi_ssid);
     }
 
@@ -1921,14 +1958,14 @@ void initWifiSettings(lv_event_t *e) {
         wifi_password = tempWifiPassword;
         lv_textarea_set_text(ui_Wifi_Password_Input, wifi_password);
     } else {
-        ESP_LOGW("initWifiSettings", "NVS中未找到'password', 将写入默认值 12345678");
-        err = nvs_set_str(nvs_handle, "password", "12345678");
+        ESP_LOGW("initWifiSettings", "NVS中未找到'password', 将写入默认值 LAVANDEHOTELS");
+        err = nvs_set_str(nvs_handle, "password", "LAVANDEHOTELS");
         if (err != ESP_OK) {
             ESP_LOGE("initWifiSettings", "Failed to set password in NVS");
             nvs_close(nvs_handle);
             return;
         }
-        wifi_password = strdup("12345678");
+        wifi_password = strdup("LAVANDEHOTELS");
         lv_textarea_set_text(ui_Wifi_Password_Input, wifi_password);
     }
     err = nvs_commit(nvs_handle);
@@ -2752,7 +2789,6 @@ void attempt_ota_esp32(void) {
 
     if (click_count >= ENTER_SETTINGS_WINDOW_CLICK_COUNT) {
         click_count = 0; // 达到点击次数后重置计数
-        // xTaskCreate(ota_task, "ota", 8192, NULL, 5, NULL);
     }
 }
 
