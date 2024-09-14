@@ -23,6 +23,8 @@ extern uint32_t date_day;
 
 extern TaskHandle_t update_time_task_handle;
 
+extern bool is_night;
+
 void update_current_time_label(bool show_symbol);
 void update_current_date_label(void);
 void obtain_time(void);

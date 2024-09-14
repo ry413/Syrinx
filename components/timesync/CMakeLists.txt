@@ -1,2 +1,3 @@
 idf_component_register(SRCS "timesync.c"
-                       INCLUDE_DIRS ".")
+                       INCLUDE_DIRS "."
+                       REQUIRES esp_netif)

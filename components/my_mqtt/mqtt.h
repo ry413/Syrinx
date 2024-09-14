@@ -10,7 +10,7 @@ extern "C" {
 
 #include "mqtt.h"
 
-void mqtt_app_start(void);
+void mqtt_app_start(void *param);
 void mqtt_app_stop(void);
 void mqtt_app_cleanup(void);
 void mqtt_publish_message(const char *message, int qos, int retain);

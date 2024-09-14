@@ -3,6 +3,7 @@
 #include "../lvgl/lvgl.h"
 #include "esp_log.h"
 #include "../../ui/ui.h"
+#include "esp_netif_sntp.h"
 
 // 时间戳
 time_t global_time = 0;
@@ -18,6 +19,8 @@ lv_obj_t *time_label;
 lv_obj_t *date_label;
 
 TaskHandle_t update_time_task_handle = NULL;
+
+bool is_night = false;
 
 void set_time_label(lv_obj_t * label) {
     time_label = label;
@@ -41,7 +44,12 @@ void update_current_time_label(bool showSymbol) {
     } else {
         strftime(timeStr, sizeof(timeStr), "%H %M", &timeinfo);
     }
-    lv_label_set_text(time_label, timeStr);
+    if (time_label != NULL) {
+        lv_label_set_text(time_label, timeStr);
+    } else {
+        ESP_LOGE("update_current_time_label", "time_label is NULL");
+        set_time_label(ui_Header_Main_Time);
+    }
 }
 // 更新日期到date_label上
 void update_current_date_label(void) {
@@ -74,60 +82,54 @@ void update_time_task(void *pvParameter)
         update_current_date_label();   // 更新待机界面的日期label
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         global_time += 1;
+
+        static int count = 0;
+        if (count >= 10) {
+            uint16_t begin = lv_roller_get_selected(ui_Idle_Time_Settings_Begin); // 获取开始时间
+            uint16_t end = lv_roller_get_selected(ui_Idle_Time_Settings_End);     // 获取结束时间
+            int now = localtime(&global_time)->tm_hour;                           // 获取当前小时
+
+            // 如果现在处于设定的时间之间, 还在待机界面, 就进入熄屏
+            if ((begin <= end && now >= begin && now < end) ||                   // 情况1: 时间不跨午夜
+                (begin > end && (now >= begin || now < end))) {                  // 情况2: 时间跨午夜
+                if (!is_night && lv_scr_act() == ui_Idle_Window) {
+                    offScreen(NULL);
+                }
+            }
+            // 否则, 不处于设定的时间之内, 并处于自动熄屏, 就醒来
+            else if (is_night) {
+                onScreen(NULL);
+            }
+            count = 0;
+        }
+        count++;
     }
 }
 
 // 从NTP获取时间
 void obtain_time(void) {
-    // NTP服务器列表, 这是macOS上使用ntpdate测试出的一些延迟低的服务器, 2024.5.15
-    const char* ntp_servers[] = {
-        "cn.ntp.org.cn",
-        // "edu.ntp.org.cn",
-        // "ntp.sjtu.edu.cn",
-        // "ntp.aliyun.com",
-        // "pool.ntp.org",
-    };
-    const int num_ntp_servers = sizeof(ntp_servers) / sizeof(ntp_servers[0]);
+
+    ESP_LOGI("obtain_time", "Initializing and starting SNTP");
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
+    esp_netif_sntp_init(&config);
 
     time_t now = 0;
     struct tm timeinfo = { 0 };
     int retry = 0;
-    const int retry_count = 20;
-    
-    if (esp_sntp_enabled()) {
-        // 放个IP
-        ip_addr_t *addr = NULL;
-        ipaddr_aton("111.230.50.201", addr);
-        esp_sntp_setserver(0, addr);
-
-        esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-        for (int i = 0; i < num_ntp_servers; ++i) {
-            esp_sntp_setservername(i, ntp_servers[i]);
-        }
-        esp_sntp_init();
+    const int retry_count = 30;
+    while (esp_netif_sntp_sync_wait(2000 / portTICK_PERIOD_MS) == ESP_ERR_TIMEOUT && ++retry < retry_count) {
+        ESP_LOGI("obtain_time", "Waiting for system time to be set... (%d/%d)", retry, retry_count);
     }
-
-    while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
-        ESP_LOGI("obtainTime", "等待系统时间设置... (%d/%d) 正在尝试连接服务器: %s", retry, retry_count, ntp_servers[retry % num_ntp_servers]);
-
-        time(&now);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-        localtime_r(&now, &timeinfo);
-    }
-
-    if (retry >= retry_count) {
-        ESP_LOGE("obtainTime", "在 %d 次重试后无法获取时间。请检查您的网络连接。", retry_count);
-    } else {
-        ESP_LOGI("obtainTime", "系统时间已设置。");
-        // 修正时区
-        timeinfo.tm_hour += 8;
-        mktime(&timeinfo);
-        // 保存全局时间
-        global_time = mktime(&timeinfo);
-        // 启动定时器
-        if (update_time_task_handle == NULL) {
-            xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
-        }
+    time(&now);
+    setenv("TZ", "CST-8", 1);
+    tzset();
+    localtime_r(&now, &timeinfo);
+    mktime(&timeinfo);
+    // 保存全局时间
+    global_time = mktime(&timeinfo);
+    // 启动定时器
+    if (update_time_task_handle == NULL) {
+        xTaskCreate(update_time_task, "updateTimeTask", 2048, NULL, 5, &update_time_task_handle);
     }
 }
 

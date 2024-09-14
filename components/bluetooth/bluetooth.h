@@ -112,6 +112,7 @@ extern int device_state;
 
 extern uint32_t bath_channel_bit;   // 浴室功放通道, 代表AT+CL%d
 
+extern char *esp32_version;
 extern char final_version[50];
 
 

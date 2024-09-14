@@ -5,7 +5,6 @@
 #include "string.h"
 #include "../../ui/ui.h"
 #include "rs485.h"
-#include "esp_heap_trace.h"
 
 static const char *TAG = "rs485";
 
@@ -129,7 +128,7 @@ void create_bath_play_task(void) {
         vTaskDelete(bath_play_task_handle);
         bath_play_task_handle = NULL;
     }
-    xTaskCreate(play_bath_music_task, "play_bath_music_task", 4096, NULL, 5, &bath_play_task_handle);
+    xTaskCreate(play_bath_music_task, "play_bath_music_task", 1024, NULL, 5, &bath_play_task_handle);
     
 }
 // 判断指令类型并处理
@@ -529,7 +528,9 @@ void process_command(rs485_packet_t *packet, size_t len) {
                             (packet->command[3] << 8) | packet->command[4];
             // 使用时间戳进行后续处理
             printf("Received timestamp: %lu\n", timestamp);
-            global_time = timestamp + 8 * 3600;
+            setenv("TZ", "CST-8", 1);
+            tzset();
+            global_time = timestamp;
             srand(global_time);
 
             // 启动定时器
@@ -539,13 +540,6 @@ void process_command(rs485_packet_t *packet, size_t len) {
             xSemaphoreGive(rs485_handle_semaphore);
             printf("已释放信号量\n");
         }
-    }
-    else if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x03, 0x26, 0x01}, (size_t)5) == 0) {
-        heap_trace_start(HEAP_TRACE_ALL);
-    }
-    else if (memcmp(packet->command, (uint8_t[]){0x80, 0x01, 0x04, 0x26, 0x01}, (size_t)5) == 0) {
-        heap_trace_stop();
-        heap_trace_dump();
     }
     // 未知指令
     else {

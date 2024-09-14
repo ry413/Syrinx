@@ -26,7 +26,6 @@
 
 #include "esp_http_client.h"
 #include "esp_mac.h"
-#include "esp_heap_trace.h"
 
 //////////////////// DEFINITIONS ////////////////////
 #define MAX_ITEMS_PER_LIST 5                        // 每个MusicList里有几首歌
@@ -566,16 +565,9 @@ static void close_volume_adjust_timer_callback(lv_timer_t *timer) {
 
 // ******************** initial actions ********************
 
-// 设置用于堆跟踪的记录容量
-#define TRACE_RECORDS 100
-static heap_trace_record_t trace_records[TRACE_RECORDS];
 
 // 除了这个, 还有各个init[****]Settings函数也在initital actions
 void initActions(lv_event_t *e) {
-    // esp_err_t err = heap_trace_init_standalone(trace_records, TRACE_RECORDS);
-    // if (err != ESP_OK) {
-    //     ESP_LOGE("HEAP_TRACE", "Heap trace init failed: %d", err);
-    // }
         // 等待上电的主动返回值被丢掉
         // xEventGroupWaitBits(bt_event_group, EVENT_STARTUP_SUCCESS, pdTRUE, pdFALSE, portMAX_DELAY);
 
@@ -638,8 +630,10 @@ void mainScrLoaded(lv_event_t *e) {
     } else if (device_state != 2) {
         ESP_LOGW("initActions", "未识别到TF卡");
     }
-
+    
+    
     set_time_label(ui_Header_Main_Time);
+
     if (global_time > 0) update_current_time_label(true);
     current_screen_header_volume = ui_Main_Header_Volume;
     current_screen_volume_adjust = ui_Main_Window_Volume_adjust;
@@ -694,7 +688,7 @@ void bluetoothScrLoaded(lv_event_t *e) {
 
     // 开启任务, 监听蓝牙
     if (bluetooth_monitor_state_task_handle == NULL) {
-        xTaskCreate(bluetooth_monitor_state_task, "bluetooth_monitor_state_task", 4096, NULL, 5,
+        xTaskCreate(bluetooth_monitor_state_task, "bluetooth_monitor_state_task", 2048, NULL, 5,
                     &bluetooth_monitor_state_task_handle);
     } else {
         ESP_LOGE("bluetoothScrLoaded", "这不可能");
@@ -765,7 +759,7 @@ void leaveMainWindow(lv_event_t *e) {
         AT_CM(2);
 
         assert(music_play_task_handle == NULL);
-        xTaskCreate(music_play_mode_task, "music_play_mode_task", 4096, NULL, 5, &music_play_task_handle);
+        xTaskCreate(music_play_mode_task, "music_play_mode_task", 1024, NULL, 5, &music_play_task_handle);
         if (bath_play_task_handle != NULL) {
             AT_AA0();
             vTaskDelete(bath_play_task_handle);
@@ -1029,6 +1023,7 @@ void sleep_mode(void) {
 
 // 按下待机界面上的熄屏按钮主动进入熄屏
 void offScreen(lv_event_t *e) {
+    is_night = true;
     printf("熄屏\n");
     // 熄屏实际上仍然在idle界面, 只是关了背光
     set_backlight(0);
@@ -1040,6 +1035,7 @@ void offScreen(lv_event_t *e) {
 }
 // 从熄屏中醒来, 同时485指令明亮模式也调用这个
 void onScreen(lv_event_t *e) {
+    is_night = false;
     printf("Wake up\n");
     // 如果熄屏时在这几个界面, 说明并不想要醒到主界面
     if (lv_scr_act() == ui_Music_Window || lv_scr_act() == ui_Music_Play_Window || lv_scr_act() == ui_Nature_Sound_Window) {
@@ -1129,7 +1125,7 @@ void initBluetoothSettings(lv_event_t *e) {
             lv_textarea_set_text(ui_Bluetooth_Password_Input2, bluetooth_ui_pass);
             xTaskCreate(bluetooth_cfg_task, "bluetooth_cfg_task", 4096, NULL, 5, NULL);
             vTaskDelay(3000 / portTICK_PERIOD_MS);  // 等待蓝牙复位
-            ESP_LOGI("verifyResetFactory", "蓝牙设置重置为name: %s, pass: %s", bluetooth_ui_name, bluetooth_ui_pass);
+            ESP_LOGI("initBluetoothSettings", "蓝牙设置重置为name: %s, pass: %s", bluetooth_ui_name, bluetooth_ui_pass);
         }
         xSemaphoreGive(init_phase_semaphore);
     }
@@ -1711,7 +1707,7 @@ void verifyResetFactory(lv_event_t *e)
         ESP_LOGE("verifyResetFactory", "Failed to open NVS: %s", esp_err_to_name(err));
         return;
     }
-    uint8_t new_enabled = 0;
+    uint8_t new_enabled = 1;
     char new_wifi_ssid[] = "WX-LAVANDE";
     char new_wifi_password[] = "LAVANDEHOTELS";
     err = nvs_set_u8(nvs_handle, "enabled", new_enabled);
@@ -1863,7 +1859,7 @@ void track_refresh(lv_event_t *e) {
         vTaskDelay(3000 / portTICK_PERIOD_MS);
         esp_restart();
         // vTaskDelete(NULL);
-    }, "wait_track_refresh", 2048, NULL, 5, NULL);
+    }, "wait_track_refresh", 1024, NULL, 5, NULL);
 }
 
 // ******************** Wifi相关 ********************
@@ -1879,7 +1875,7 @@ void initWifiSettings(lv_event_t *e) {
     // 读取wifi开关状态
     err = nvs_get_u8(nvs_handle, "enabled", &wifi_enabled);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
-        wifi_enabled = 0;
+        wifi_enabled = 1;
         ESP_LOGW("initWifiSettings", "NVS中未找到'enabled', 将写入默认值 %d", wifi_enabled);
         err = nvs_set_u8(nvs_handle, "enabled", wifi_enabled);
         if (err != ESP_OK) {
@@ -2111,11 +2107,6 @@ static void create_protgress_bar(void) {
     lv_timer_reset(progressTimer);  // 重置进度条
     lv_timer_resume(progressTimer); // 然后启动
 }
-// 关闭EVENT_PLAY_MUSIC_WITH_ID位的任务, AT响应实际上非常快, 但还是会阻塞界面, 不知道有没有必要每次都clear, 也许就不管它而在退出音乐库时clear得了
-static void clear_play_event_bit_task(void *pvParameter) {
-    xEventGroupClearBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID);
-    vTaskDelete(NULL);
-}
 // 播放指定index的音乐(file_names里的index)
 static void playMusicWithCurrentIndex(void) {
     // 如果浴室在播放, 关掉它
@@ -2132,7 +2123,12 @@ static void playMusicWithCurrentIndex(void) {
     // 不用AT_AF(), 因为那会阻塞一瞬间的线程
     snprintf(command, sizeof(command), "AT+AF%02d", id);
     bluetooth_send_at_command(command, CMD_PLAY_MUSIC_WITH_ID);
-    xTaskCreate(clear_play_event_bit_task, "clear_play_event_bit_task", 1024, NULL, 2, NULL);
+
+    // 关闭EVENT_PLAY_MUSIC_WITH_ID位的任务, AT响应实际上非常快, 但还是会阻塞界面, 不知道有没有必要每次都clear, 也许就不管它而在退出音乐库时clear得了
+    xTaskCreate([](void *param) {
+        xEventGroupClearBits(music_event_group, EVENT_PLAY_MUSIC_WITH_ID);
+        vTaskDelete(NULL);
+    }, "clear_play_event_bit_task", 1024, NULL, 2, NULL);
 
     create_protgress_bar();
 
@@ -2519,11 +2515,11 @@ void selectBirdSound(lv_event_t *e) {
     lv_obj_clear_state(ui_Forest_Sound_Btn, LV_STATE_CHECKED);
     lv_obj_clear_state(ui_Sea_Sound_Btn, LV_STATE_CHECKED);
 
-    current_nature_id = nature_file_ids[0];
 
+    current_nature_id = nature_file_ids[0];
     AT_AF(current_nature_id);
     if (nature_play_task_handle == NULL) {
-        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 1024, NULL, 5, &nature_play_task_handle);
     }
 }
 void selectBugSound(lv_event_t *e) {
@@ -2535,7 +2531,7 @@ void selectBugSound(lv_event_t *e) {
     current_nature_id = nature_file_ids[1];
     AT_AF(current_nature_id);
     if (nature_play_task_handle == NULL) {
-        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 1024, NULL, 5, &nature_play_task_handle);
     }
 }
 void selectForestSound(lv_event_t *e) {
@@ -2547,7 +2543,7 @@ void selectForestSound(lv_event_t *e) {
     current_nature_id = nature_file_ids[2];
     AT_AF(current_nature_id);
     if (nature_play_task_handle == NULL) {
-        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 1024, NULL, 5, &nature_play_task_handle);
     }
 }
 void selectSeaSound(lv_event_t *e) {
@@ -2559,7 +2555,7 @@ void selectSeaSound(lv_event_t *e) {
     current_nature_id = nature_file_ids[3];
     AT_AF(current_nature_id);
     if (nature_play_task_handle == NULL) {
-        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 1024, NULL, 5, &nature_play_task_handle);
     }
 }
 
@@ -2628,6 +2624,7 @@ static void alarm_clock_shout_callback(TimerHandle_t xTimer) {
     alarm_clock_ready_shouting = true;
     // 回到主界面
     lv_scr_load(ui_Main_Window);
+    onScreen(NULL);
     // 如果原先在音乐库, 自然之音之类的地方, 那个界面的unloaded都做了clean了, 所以写点不正常的:
     // 如果原先在音乐播放界面, 这里直接跑主界面, 就得做一下clean
     if (scr == ui_Music_Play_Window) {

@@ -533,7 +533,7 @@ static void monitor_task(void *pvParameter)
 {
 	while(1)
 	{
-		vTaskDelay(5000 / portTICK_PERIOD_MS);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
         ESP_LOGI(TAG, "%d %d %d", heap_caps_get_free_size(MALLOC_CAP_INTERNAL), heap_caps_get_free_size( MALLOC_CAP_DMA ), heap_caps_get_free_size( MALLOC_CAP_SPIRAM ));
     	// ESP_LOGI(TAG,"-INTERNAL RAM left %dB",heap_caps_get_free_size( MALLOC_CAP_INTERNAL ));
         // ESP_LOGI(TAG, "-     DMA left %dB",heap_caps_get_free_size( MALLOC_CAP_DMA ));
@@ -548,17 +548,17 @@ static void monitor_task(void *pvParameter)
 	}
 }
 
-void disabled_touch(void) {
-    if (indev_touch) {
-        lv_indev_enable(indev_touch, false);
-    }
-}
-void enable_touch(void) {
-    if (indev_touch) {
-        lv_indev_reset(NULL, NULL);
-        lv_indev_enable(indev_touch, true);
-    }
-}
+// void disabled_touch(void) {
+//     if (indev_touch) {
+//         lv_indev_enable(indev_touch, false);
+//     }
+// }
+// void enable_touch(void) {
+//     if (indev_touch) {
+//         lv_indev_reset(NULL, NULL);
+//         lv_indev_enable(indev_touch, true);
+//     }
+// }
 /**********************
  *   APPLICATION MAIN
  **********************/
@@ -595,11 +595,12 @@ void app_main() {
     wifi_init();
     // 蓝牙
     bluetooth_init();
-    xTaskCreate(bluetooth_monitor_task, "bluetooth_monitor_task", 8192, NULL, 3, NULL);
+    xTaskCreate(bluetooth_monitor_task, "bluetooth_monitor_task", 5120, NULL, 3, NULL);
     // rs485
     rs485_init();
     xTaskCreate(rs485_monitor_task, "rs485_monitor_task", 4096, NULL, 5, NULL);
 
-    xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 8192, NULL, 6, NULL, 1);
-    xTaskCreate(monitor_task, "monitor", 4096, NULL, 1, NULL);
+    xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 5120, NULL, 6, NULL, 1);
+
+    // xTaskCreate(monitor_task, "monitor", 2048, NULL, 1, NULL);
 }

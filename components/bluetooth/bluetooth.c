@@ -34,6 +34,8 @@ uint32_t bath_channel_bit = 2;
 const char *error_cmd = NULL;
 int at_error_code = -1;
 
+char *esp32_version = "v0.9.14-Orion";
+
 
 char **temp_file_names = NULL;          // 储存文件名的数组
 int current_dir_files_count = 0;        // M2的返回值临时接收变量
@@ -558,8 +560,6 @@ void bluetooth_monitor_task(void *pvParameters) {
                     char month[4];
                     int day, year;
                     sscanf(bt_ver_date_start, "%s %d %d", month, &day, &year);
-
-                    char *esp32_version = "v0.9.10-Orion";
 
                     snprintf(final_version, sizeof(final_version), "%s       v%s %s %d %d", esp32_version, bt_version, month, day, year);
                 } else {

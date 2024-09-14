@@ -11,6 +11,8 @@ extern "C" {
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
+#define WIFI_CONNECTED_2   BIT2
+#define WIFI_FAIL_2        BIT3
 
 struct wifi_config_params {
     char ssid[32];

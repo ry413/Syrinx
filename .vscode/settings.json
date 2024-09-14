@@ -68,7 +68,8 @@
         "lv_roller.h": "c",
         "numbers": "c",
         "mqtt.h": "c",
-        "mqtt_client.h": "c"
+        "mqtt_client.h": "c",
+        "esp_netif_sntp.h": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",

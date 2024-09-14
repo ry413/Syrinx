@@ -52,15 +52,6 @@ void set_backlight(uint32_t level) {
 static void enter_idle_callback(lv_timer_t * timer) {
     ESP_LOGI("enter_idle_callback", "进入待机界面");
     lv_scr_load(idle_window);
-
-    // 如果现在处于设定的时间之间, 则接着进入熄屏
-    uint16_t begin = lv_roller_get_selected(ui_Idle_Time_Settings_Begin); // 获取开始时间
-    uint16_t end = lv_roller_get_selected(ui_Idle_Time_Settings_End);     // 获取结束时间
-    int now = localtime(&global_time)->tm_hour;                           // 获取当前小时
-    if ((begin <= end && now >= begin && now < end) ||                   // 情况1: 时间不跨午夜
-        (begin > end && (now >= begin || now < end))) {                  // 情况2: 时间跨午夜
-        offScreen(NULL);
-    }
 }
 
 // 初始化背光控制（使用GPIO电平控制）

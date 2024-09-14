@@ -75,9 +75,9 @@ void wifi_init(void) {
     // 初始化 WiFi 配置
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     cfg.static_rx_buf_num = 10;  // 设置静态接收缓冲区数量
-    cfg.dynamic_rx_buf_num = 32; // 设置动态接收缓冲区数量
+    cfg.dynamic_rx_buf_num = 16; // 设置动态接收缓冲区数量
     cfg.static_tx_buf_num = 10;  // 设置静态发送缓冲区数量
-    cfg.dynamic_tx_buf_num = 32; // 设置动态发送缓冲区数量
+    cfg.dynamic_tx_buf_num = 16; // 设置动态发送缓冲区数量
 
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
@@ -138,23 +138,34 @@ static void wifi_connect_task(void *pvParameter) {
         wifi_is_connected = true;
         lv_async_call(update_wifi_icon_callback, NULL);
 
-        mqtt_app_start();
-        // obtain_time();
-        // srand(global_time);
+        obtain_time();
+        srand(global_time);
+        xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_2);
+        // printf("准备start\n");
+        // vTaskDelay(3000 / portTICK_PERIOD_MS);
+        // mqtt_app_start();
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGW(TAG, "WiFi未连接 SSID:%s", params->ssid);
         wifi_is_connected = false;
+        xEventGroupSetBits(wifi_event_group, WIFI_FAIL_2);
         lv_async_call(update_wifi_icon_callback, NULL);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
         wifi_is_connected = false;
+        xEventGroupSetBits(wifi_event_group, WIFI_FAIL_2);
     }
 
     free(params);
     wifi_connect_task_handle = NULL;
     vTaskDelete(NULL);
 }
-
+void mqtt_wait_wifi_connected_task(void * pvParameter) {
+    EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_2 | WIFI_FAIL_2, pdTRUE, pdFALSE, portMAX_DELAY);
+    if (bits & WIFI_CONNECTED_2) {
+        xTaskCreate(mqtt_app_start, "mqtt_app_start", 5120, NULL, 5, NULL);
+    }
+    vTaskDelete(NULL);
+}
 void start_wifi_connect_task(const char* ssid, const char* password) {
     if (wifi_is_connected) {
         ESP_LOGI(TAG, "WIFI已连接, 拒绝重复连接");
@@ -174,7 +185,9 @@ void start_wifi_connect_task(const char* ssid, const char* password) {
     snprintf(params->ssid, sizeof(params->ssid), "%s", ssid);
     snprintf(params->password, sizeof(params->password), "%s", password);
     assert(wifi_connect_task_handle == NULL);
-    xTaskCreate(&wifi_connect_task, "wifi_connect_task", 4096, (void*) params, 5, &wifi_connect_task_handle);
+    xTaskCreate(wifi_connect_task, "wifi_connect_task", 4096, (void*) params, 5, &wifi_connect_task_handle);
+
+    xTaskCreate(mqtt_wait_wifi_connected_task, "mqtt_wait_wifi_connected_task", 2048, NULL, 2, NULL);
 }
 
 void wifi_disconnect(void) {

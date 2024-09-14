@@ -10,6 +10,7 @@
 #include "esp_https_ota.h"
 #include "esp_crt_bundle.h"
 
+#include "../bluetooth/bluetooth.h"
 #include "../../ui/ui.h"
 
 
@@ -24,9 +25,9 @@ typedef struct {
     bool force_update;               // 是否强制升级
     char cmd_type[7];                // 命令类型
     char ota_url[128];               // 众望所归的OTA URL
-    char ota_ver[10];                // OTA 版本
+    char ota_ver[20];                // OTA 版本
     char device_name[10];            // 设备名称, XZ-BGS3-A
-    char latest_version[10];         // 世界上, 此时固件最新的版本号
+    char latest_version[20];         // 世界上, 此时固件最新的版本号, 暂时没用
 } ParsedData_t;
 
 ParsedData_t parsed;
@@ -191,8 +192,14 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 printf("Device Name: %s\n", parsed.device_name);
                 printf("Latest Version: %s\n", parsed.latest_version);
 
-                if (parsed.force_update) {
-                    xTaskCreate(ota_task, "ota", 8192, NULL, 5, NULL);
+                if (parsed.force_update && strcmp(parsed.cmd_type, "bg3ota") == 0
+                    && strcmp(parsed.device_name, "XZ-BGS3-A") == 0
+                    && strcmp(parsed.ota_ver, esp32_version) != 0) {
+
+                    xTaskCreate(ota_task, "ota", 5120, NULL, 5, NULL);
+                } else {
+                    ESP_LOGE(TAG, "OTA 未启动:\nforce_update: %d\nstrcmp(parsed.cmd_type, bg3ota): %d\nstrcmp(parsed.device_name, XZ-BGS3-A): %d\nstrcmp(parsed.ota_ver, esp32_version): %d",
+                    parsed.force_update, strcmp(parsed.cmd_type, "bg3ota"), strcmp(parsed.device_name, "XZ-BGS3-A"), strcmp(parsed.ota_ver, esp32_version));
                 }
             } else {
                 ESP_LOGE(TAG, "解析错误");
@@ -206,13 +213,13 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-void mqtt_app_start(void)
-{
+void mqtt_app_start(void * param) {
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.address.uri = "mqtt://xiaozhuiot.cn:1883",
         .session.protocol_ver = MQTT_PROTOCOL_V_5,
         .credentials.username = "xiaozhu",
-        .credentials.authentication.password = "ieTOIugSDfieWw23gfiwefg"
+        .credentials.authentication.password = "ieTOIugSDfieWw23gfiwefg",
+        .task.stack_size = 4096
     };
 
     uint8_t mac[6];
@@ -224,6 +231,7 @@ void mqtt_app_start(void)
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
+    vTaskDelete(NULL);
 }
 void mqtt_app_stop(void) {
     esp_mqtt_client_stop(client);
