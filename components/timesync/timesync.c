@@ -93,6 +93,7 @@ void update_time_task(void *pvParameter)
             if ((begin <= end && now >= begin && now < end) ||                   // 情况1: 时间不跨午夜
                 (begin > end && (now >= begin || now < end))) {                  // 情况2: 时间跨午夜
                 if (!is_night && lv_scr_act() == ui_Idle_Window) {
+                    is_night = true;
                     offScreen(NULL);
                 }
             }

@@ -1023,7 +1023,6 @@ void sleep_mode(void) {
 
 // 按下待机界面上的熄屏按钮主动进入熄屏
 void offScreen(lv_event_t *e) {
-    is_night = true;
     printf("熄屏\n");
     // 熄屏实际上仍然在idle界面, 只是关了背光
     set_backlight(0);
