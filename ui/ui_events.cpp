@@ -759,7 +759,7 @@ void leaveMainWindow(lv_event_t *e) {
         AT_CM(2);
 
         assert(music_play_task_handle == NULL);
-        xTaskCreate(music_play_mode_task, "music_play_mode_task", 1024, NULL, 5, &music_play_task_handle);
+        xTaskCreate(music_play_mode_task, "music_play_mode_task", 4096, NULL, 5, &music_play_task_handle);
         if (bath_play_task_handle != NULL) {
             AT_AA0();
             vTaskDelete(bath_play_task_handle);
@@ -2519,7 +2519,7 @@ void selectBirdSound(lv_event_t *e) {
     current_nature_id = nature_file_ids[0];
     AT_AF(current_nature_id);
     if (nature_play_task_handle == NULL) {
-        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 1024, NULL, 5, &nature_play_task_handle);
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
     }
 }
 void selectBugSound(lv_event_t *e) {
@@ -2531,7 +2531,7 @@ void selectBugSound(lv_event_t *e) {
     current_nature_id = nature_file_ids[1];
     AT_AF(current_nature_id);
     if (nature_play_task_handle == NULL) {
-        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 1024, NULL, 5, &nature_play_task_handle);
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
     }
 }
 void selectForestSound(lv_event_t *e) {
@@ -2543,7 +2543,7 @@ void selectForestSound(lv_event_t *e) {
     current_nature_id = nature_file_ids[2];
     AT_AF(current_nature_id);
     if (nature_play_task_handle == NULL) {
-        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 1024, NULL, 5, &nature_play_task_handle);
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
     }
 }
 void selectSeaSound(lv_event_t *e) {
@@ -2555,7 +2555,7 @@ void selectSeaSound(lv_event_t *e) {
     current_nature_id = nature_file_ids[3];
     AT_AF(current_nature_id);
     if (nature_play_task_handle == NULL) {
-        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 1024, NULL, 5, &nature_play_task_handle);
+        xTaskCreate(selectNatureSoundTask, "selectNatureSoundTask", 4096, NULL, 5, &nature_play_task_handle);
     }
 }
 

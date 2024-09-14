@@ -128,7 +128,7 @@ void create_bath_play_task(void) {
         vTaskDelete(bath_play_task_handle);
         bath_play_task_handle = NULL;
     }
-    xTaskCreate(play_bath_music_task, "play_bath_music_task", 1024, NULL, 5, &bath_play_task_handle);
+    xTaskCreate(play_bath_music_task, "play_bath_music_task", 4096, NULL, 5, &bath_play_task_handle);
     
 }
 // 判断指令类型并处理
