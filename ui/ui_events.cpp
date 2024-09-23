@@ -1162,7 +1162,7 @@ void initIdleTimeSetting(lv_event_t *e) {
     uint16_t idle_time_begin;
     err = nvs_get_u16(nvs_handle, "idleTimeBegin", &idle_time_begin);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
-        idle_time_begin = 10;
+        idle_time_begin = 21;
         ESP_LOGW("initIdleTimeSetting", "NVS中未找到'idleTimeBegin', 将写入默认值 %u", idle_time_begin);
         err = nvs_set_u16(nvs_handle, "idleTimeBegin", idle_time_begin);
         if (err != ESP_OK) {
@@ -1185,7 +1185,7 @@ void initIdleTimeSetting(lv_event_t *e) {
     uint16_t idle_time_end;
     err = nvs_get_u16(nvs_handle, "idleTimeEnd", &idle_time_end);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
-        idle_time_end = 10;
+        idle_time_end = 8;
         ESP_LOGW("initIdleTimeSetting", "NVS中未找到'idleTimeEnd', 将写入默认值 %u", idle_time_end);
         err = nvs_set_u16(nvs_handle, "idleTimeEnd", idle_time_end);
         if (err != ESP_OK) {

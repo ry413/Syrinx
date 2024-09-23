@@ -1,6 +1,6 @@
 {
     "idf.adapterTargetName": "esp32s3",
-    "idf.port": "/dev/tty.usbmodem1101",
+    "idf.port": "/dev/tty.usbmodem2101",
     "idf.flashType": "UART",
     "files.associations": {
         "esp_lcd_panel_rgb.h": "c",
@@ -69,7 +69,8 @@
         "numbers": "c",
         "mqtt.h": "c",
         "mqtt_client.h": "c",
-        "esp_netif_sntp.h": "c"
+        "esp_netif_sntp.h": "c",
+        "*.inc": "c"
     },
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",
