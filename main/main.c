@@ -578,6 +578,7 @@ void app_main() {
     // } else {
     //     ESP_LOGI("eraseNVS", "NVS erased successfully");
     // }
+    // vTaskDelay(10000 / portTICK_PERIOD_MS);
     
     // 初始化NVS
     esp_err_t ret = nvs_flash_init();

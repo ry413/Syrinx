@@ -91,8 +91,8 @@ char bluetooth_ui_pass[5];
 // 当前音量
 int current_volume;
 // 默认音量与最大音量
-uint32_t defaultVolume = 8;
-uint32_t maxVolume = 15;
+uint32_t defaultVolume = 6;
+uint32_t maxVolume = 12;
 
 // ID
 uint32_t system_id = 0;
