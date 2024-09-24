@@ -34,7 +34,7 @@ uint32_t bath_channel_bit = 2;
 const char *error_cmd = NULL;
 int at_error_code = -1;
 
-char *esp32_version = "v0.10.0-Purely";
+char *esp32_version = "v0.9.18-Orion";
 
 
 char **temp_file_names = NULL;          // 储存文件名的数组
