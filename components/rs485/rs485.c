@@ -133,20 +133,6 @@ void create_bath_play_task(void) {
 }
 // 判断指令类型并处理
 void process_command(rs485_packet_t *packet, size_t len) {
-    
-    // // 确保包长度正确
-    // if (len != PACKET_SIZE) {
-    //     ESP_LOGE(TAG, "Invalid packet length: %d", len);
-    //     return;
-    // }
-
-    // // 检查包头和包尾
-    // if (packet->header != PACKET_HEADER || packet->footer != PACKET_FOOTER) {
-    //     ESP_LOGE(TAG, "Invalid packet header/footer: ");
-    //     print_rs485_packet(packet);
-    //     return;
-    // }
-
     // 检查校验和
     uint8_t calculated_chk = calculate_checksum(packet);
     if (calculated_chk != packet->checksum) {
@@ -246,10 +232,6 @@ void process_command(rs485_packet_t *packet, size_t len) {
         if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
             printf("已获得信号量\n");
             lv_obj_t *scr = lv_scr_act();
-            if (scr == ui_Idle_Window) {
-                onScreen(NULL);
-                xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
-            }
             switch (work_mode)
             {
                 case 0:
@@ -547,18 +529,6 @@ void process_command(rs485_packet_t *packet, size_t len) {
     }
     // uart_write_bytes(RS485_UART_PORT, (const char *)packet, sizeof(rs485_packet_t)); // 谁写的这个?
 }
-// void rs485_monitor_task(void *pvParameter) {
-//     rs485_packet_t packet;
-//     while (1) {
-//         int len = uart_read_bytes(RS485_UART_PORT, (uint8_t*)&packet, PACKET_SIZE, portMAX_DELAY);
-//         // print_rs485_packet(&packet);
-//         if (len > 0) {
-//             process_command(&packet, len);
-//         } else if (len < 0) {
-//             ESP_LOGE(TAG, "UART read error: %d", len);
-//         }
-//     }
-// }
 void rs485_monitor_task(void *pvParameter) {
     uint8_t byte;
     rs485_packet_t packet;

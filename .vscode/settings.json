@@ -1,6 +1,6 @@
 {
     "idf.adapterTargetName": "esp32s3",
-    "idf.port": "/dev/tty.usbmodem2101",
+    "idf.port": "/dev/tty.usbmodem101",
     "idf.flashType": "UART",
     "files.associations": {
         "esp_lcd_panel_rgb.h": "c",

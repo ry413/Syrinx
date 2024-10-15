@@ -778,6 +778,10 @@ void leaveMainWindow(lv_event_t *e) {
     }
     // 通常都创建不活动定时器, 无操作一定时间后回到主界面
     else {
+        if (lv_scr_act() == ui_Main_Window) {
+            ESP_LOGE("leaveMainWindow", "从main进入了main");
+            return;
+        }
         printf("别的界面, 创建不活动定时器\n");
         create_inactive_timer();
     }
@@ -1036,8 +1040,12 @@ void offScreen(lv_event_t *e) {
 void onScreen(lv_event_t *e) {
     is_night = false;
     printf("Wake up\n");
+    if (lv_scr_act() == ui_Main_Window) {
+        ESP_LOGE("onScreen", "已在主界面时但是收到了onScreen调用, 那就什么都不做, 就这样修吧");
+        return;
+    }
     // 如果熄屏时在这几个界面, 说明并不想要醒到主界面
-    if (lv_scr_act() == ui_Music_Window || lv_scr_act() == ui_Music_Play_Window || lv_scr_act() == ui_Nature_Sound_Window) {
+    else if (lv_scr_act() == ui_Music_Window || lv_scr_act() == ui_Music_Play_Window || lv_scr_act() == ui_Nature_Sound_Window) {
         set_backlight(backlight_level);
         lv_async_call([](void *param) {
             lv_obj_add_flag(current_screen_on_screen_range, LV_OBJ_FLAG_HIDDEN);
@@ -2764,8 +2772,9 @@ void attempt_restart_esp32(void) {
 
     if (click_count >= ENTER_SETTINGS_WINDOW_CLICK_COUNT) {
         click_count = 0; // 达到点击次数后重置计数
-        bluetooth_send_at_command("AT+CZ", CMD_REBOOT);
-        esp_restart();
+        // bluetooth_send_at_command("AT+CZ", CMD_REBOOT);
+        // esp_restart();
+        esp_err_t err = nvs_flash_erase();
     }
 }
 
@@ -2828,7 +2837,10 @@ void set_playing(bool val) {
 
 void rs485_add_card_wtf_func(void) {
     lv_async_call([](void *param) {
-        lv_scr_load(ui_Main_Window);
+        if (lv_scr_act() != ui_Main_Window) {
+            printf("插卡时不在main, 所以回main\n"); // 所以插卡时在main, 就不load(main)了
+            lv_scr_load(ui_Main_Window);
+        }
         lv_obj_clear_flag(ui_Off_Screen_Btn, LV_OBJ_FLAG_HIDDEN);
         xEventGroupSetBits(rs485_and_lvgl_wtf_group, ADD_CARD_CMD_DONE);
     }, nullptr);
