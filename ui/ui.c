@@ -400,6 +400,7 @@ lv_obj_t * ui_Volume_Settings_Cancel_Btn_Text;
 
 
 lv_obj_t * ui_System_Settings_Panel;
+lv_obj_t * ui_System_Mac_Text;
 lv_obj_t * ui_System_Version_Text;
 lv_obj_t * ui_System_Parting_Line1;
 lv_obj_t * ui_System_ID_Settings;

@@ -604,8 +604,17 @@ void initActions(lv_event_t *e) {
     idle_window = ui_Idle_Window;
     // clear主动返回的QV, 保证主动查询时都能被阻塞
     xEventGroupClearBits(bt_event_group, EVENT_QUERY_VERSION);
-    // 设置版本号
+
+    // 设置版本号和mac地址
     AT_QV();
+
+    uint8_t mac[6];
+    char str_mac[18];
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+    snprintf(str_mac, sizeof(str_mac), "%02X:%02X:%02X:%02X:%02X:%02X", 
+                    mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    lv_label_set_text(ui_System_Mac_Text, str_mac);
     lv_label_set_text(ui_System_Version_Text, final_version);
 
     // 默认选择自然均衡器

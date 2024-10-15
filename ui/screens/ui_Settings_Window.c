@@ -1238,12 +1238,20 @@ void ui_Settings_Window_screen_init(void)
 
     ui_System_Settings_Panel = lv_obj_create(ui_Settings_Window);
     lv_obj_set_width(ui_System_Settings_Panel, 300);
-    lv_obj_set_height(ui_System_Settings_Panel, 283);
+    lv_obj_set_height(ui_System_Settings_Panel, 320);
     lv_obj_set_align(ui_System_Settings_Panel, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_System_Settings_Panel, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_clear_flag(ui_System_Settings_Panel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_border_color(ui_System_Settings_Panel, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_System_Settings_Panel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_System_Mac_Text = lv_label_create(ui_System_Settings_Panel);
+    lv_obj_set_width( ui_System_Mac_Text, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_System_Mac_Text, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_x( ui_System_Mac_Text, 4 );
+    lv_obj_set_y( ui_System_Mac_Text, -144 );
+    lv_obj_set_align( ui_System_Mac_Text, LV_ALIGN_LEFT_MID );
+    lv_label_set_text(ui_System_Mac_Text,"Mac Error");
 
     ui_System_Version_Text = lv_label_create(ui_System_Settings_Panel);
     lv_obj_set_width( ui_System_Version_Text, LV_SIZE_CONTENT);  /// 1
@@ -1407,7 +1415,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_width(ui_System_Settings_Verify_Btn, 155);
     lv_obj_set_height(ui_System_Settings_Verify_Btn, 60);
     lv_obj_set_x(ui_System_Settings_Verify_Btn, -77);
-    lv_obj_set_y(ui_System_Settings_Verify_Btn, 114);
+    lv_obj_set_y(ui_System_Settings_Verify_Btn, 130);
     lv_obj_set_align(ui_System_Settings_Verify_Btn, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_System_Settings_Verify_Btn, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_System_Settings_Verify_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -1434,7 +1442,7 @@ void ui_Settings_Window_screen_init(void)
     lv_obj_set_width(ui_System_Settings_Cancel_Btn, 155);
     lv_obj_set_height(ui_System_Settings_Cancel_Btn, 60);
     lv_obj_set_x(ui_System_Settings_Cancel_Btn, 77);
-    lv_obj_set_y(ui_System_Settings_Cancel_Btn, 114);
+    lv_obj_set_y(ui_System_Settings_Cancel_Btn, 130);
     lv_obj_set_align(ui_System_Settings_Cancel_Btn, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_System_Settings_Cancel_Btn, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_System_Settings_Cancel_Btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);

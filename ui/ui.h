@@ -370,6 +370,7 @@ extern lv_obj_t * ui_Settings_System_Decora_Icon;
 void ui_event_Settings_System_Btn(lv_event_t * e);
 extern lv_obj_t * ui_Settings_System_Btn;
 extern lv_obj_t * ui_System_Settings_Panel;
+extern lv_obj_t * ui_System_Mac_Text;
 extern lv_obj_t * ui_System_Version_Text;
 extern lv_obj_t * ui_System_Parting_Line1;
 extern lv_obj_t * ui_System_ID_Settings;
