@@ -523,6 +523,24 @@ void process_command(rs485_packet_t *packet, size_t len) {
             printf("已释放信号量\n");
         }
     }
+    // 音量+
+    else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x07}, (size_t)5) == 0) {
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
+            addVolume();
+            xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
+        }
+    }
+    // 音量-
+    else if (memcmp(packet->command, (uint8_t[]){0xA8, 0x00, 0x00, 0x00, 0x08}, (size_t)5) == 0) {
+        if (xSemaphoreTake(rs485_handle_semaphore, portMAX_DELAY) == pdTRUE) {
+            printf("已获得信号量\n");
+            decVolume();
+            xSemaphoreGive(rs485_handle_semaphore);
+            printf("已释放信号量\n");
+        }
+    }
     // 未知指令
     else {
         // ESP_LOGE(TAG, "Unknown command");

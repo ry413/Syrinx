@@ -1480,7 +1480,6 @@ void closeVolumeAdjust(lv_event_t * e) {
 }
 // 改变音量
 static void volume_timer_callback(TimerHandle_t xTimer) {
-    // AT_CA(current_volume * 2);
     AT_CA(current_volume);
 }
 void changeVolume(lv_event_t * e) {
@@ -1492,6 +1491,17 @@ void changeVolume(lv_event_t * e) {
     update_header_volume();
     xTimerReset(volume_timer, 0);
     lv_timer_reset(close_volume_adjust_timer);
+}
+void addVolume(void) {
+    current_volume = (current_volume < maxVolume) ? current_volume + 1 : maxVolume;
+    update_header_volume();
+    AT_CA(current_volume);
+}
+
+void decVolume(void) {
+    current_volume = (current_volume > 1) ? current_volume - 1 : 1;
+    update_header_volume();
+    AT_CA(current_volume);
 }
 
 
