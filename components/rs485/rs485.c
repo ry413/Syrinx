@@ -151,6 +151,7 @@ void process_command(rs485_packet_t *packet, size_t len) {
             
             rs485_add_card_wtf_func();
             xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ADD_CARD_CMD_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
+            is_night = false;
             // enable_touch();
             // lv_obj_add_flag(ui_Disabled_Touch_Range, LV_OBJ_FLAG_HIDDEN);
 
@@ -406,6 +407,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 onScreen(NULL);
                 xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
+            // 为了测试阶段的一致性, 固定重建待机timer
+            create_enter_idle_timer(enter_idle_time_level_to_second(enter_idle_time_level));
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     prev_bath_track();
@@ -434,6 +437,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 onScreen(NULL);
                 xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
+            // 为了测试阶段的一致性, 固定重建待机timer
+            create_enter_idle_timer(enter_idle_time_level_to_second(enter_idle_time_level));
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     next_bath_track();
@@ -462,6 +467,8 @@ void process_command(rs485_packet_t *packet, size_t len) {
                 onScreen(NULL);
                 xEventGroupWaitBits(rs485_and_lvgl_wtf_group, ON_SCREEN_DONE, pdTRUE, pdFALSE, portMAX_DELAY);
             }
+            // 为了测试阶段的一致性, 固定重建待机timer
+            create_enter_idle_timer(enter_idle_time_level_to_second(enter_idle_time_level));
             if (work_mode == 2) {
                 if (bath_play_task_handle != NULL) {
                     playPause(NULL);

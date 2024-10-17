@@ -84,7 +84,9 @@ void update_time_task(void *pvParameter)
         global_time += 1;
 
         static int count = 0;
+        // printf("count: %d\n", count);
         if (count >= 10) {
+            // printf("count >= 10\n");
             uint16_t begin = lv_roller_get_selected(ui_Idle_Time_Settings_Begin); // 获取开始时间
             uint16_t end = lv_roller_get_selected(ui_Idle_Time_Settings_End);     // 获取结束时间
             int now = localtime(&global_time)->tm_hour;                           // 获取当前小时
@@ -92,13 +94,16 @@ void update_time_task(void *pvParameter)
             // 如果现在处于设定的时间之间, 还在待机界面, 就进入熄屏
             if ((begin <= end && now >= begin && now < end) ||                   // 情况1: 时间不跨午夜
                 (begin > end && (now >= begin || now < end))) {                  // 情况2: 时间跨午夜
+                // printf("1\n");
                 if (!is_night && lv_scr_act() == ui_Idle_Window) {
+                    // printf("2\n");
                     is_night = true;
                     offScreen(NULL);
                 }
             }
             // 否则, 不处于设定的时间之内, 并处于自动熄屏, 就醒来
             else if (is_night) {
+                // printf("不处于设定时间内, 醒来\n");
                 onScreen(NULL);
             }
             count = 0;
